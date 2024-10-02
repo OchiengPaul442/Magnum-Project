@@ -5,57 +5,65 @@ import { useRouter } from 'next/navigation';
 import Logo from '@public/assets/images/MAIN_LOGO.png';
 import { CustomInputField, Button } from '@components/ui';
 
-const SignInForm = () => {
+const CreatePasswordForm = () => {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleSubmit = () => {
-    console.log('Email:', email);
-    console.log('Password:', password);
-    router.push('/dashboard');
+    if (newPassword === confirmPassword) {
+      console.log('Password successfully created');
+      router.push('/dashboard');
+    } else {
+      alert('Passwords do not match. Please try again.');
+    }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-light-purple-gradient px-4">
+      {/* Logo Section */}
       <div className="mb-4">
         <Image src={Logo} alt="Magnum Logo" width={80} height={80} />
       </div>
 
+      {/* Title */}
       <h2 className="text-2xl font-medium text-purple-700 mb-6">
-        School Admin
+        Create new password
       </h2>
 
       {/* Form Section */}
-      <div className="w-full max-w-md space-y-8 bg-none p-8">
+      <div className="w-full max-w-md space-y-8 p-8">
+        {/* New Password Input */}
         <CustomInputField
-          label="Enter school admin email address"
-          type="text"
-          placeholder="placeholder"
-          value={email}
-          onChange={setEmail}
-          clearable
-        />
-
-        <CustomInputField
-          label="Enter password"
+          label="Create new password"
           type="password"
           placeholder="••••••••"
-          value={password}
-          onChange={setPassword}
+          value={newPassword}
+          onChange={setNewPassword}
           clearable
         />
 
+        {/* Confirm Password Input */}
+        <CustomInputField
+          label="Confirm new password"
+          type="password"
+          placeholder="••••••••"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          clearable
+        />
+
+        {/* Submit Button */}
         <Button
           type="button"
-          onClick={() => handleSubmit()}
+          onClick={handleSubmit}
           className="w-full py-3 bg-purple-700 text-white rounded-full hover:bg-purple-800 transition duration-200 mt-4"
         >
-          Log In
+          continue
         </Button>
       </div>
     </div>
   );
 };
 
-export default SignInForm;
+export default CreatePasswordForm;
