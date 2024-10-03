@@ -11,7 +11,7 @@ const Loading: React.FC = () => {
           <div className="rectangle w-8 h-16 rounded-full"></div>
           <span className="tm-symbol">TM</span>
         </div>
-        <p className="mt-2 text-3xl font-semibold text-white">magnum</p>
+        <p className="mt-2 text-4xl font-semibold text-white">magnum</p>
       </div>
     </div>
   );
