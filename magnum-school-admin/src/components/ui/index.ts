@@ -8,3 +8,5 @@ export {
   InputOTPSlot,
   InputOTPSeparator,
 } from './input-otp';
+export { default as CustomButton } from './CustomButton';
+export { default as SearchInput } from './SearchInput';
