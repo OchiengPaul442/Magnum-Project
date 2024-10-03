@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import Logo from '@public/assets/images/MAIN_LOGO.png';
-import { Button } from '@components/ui';
+import Logo from '@public/assets/images/MAIN_LOGO.webp';
+import { CustomButton } from '@components/ui';
 
 const ForgotPasswordForm = () => {
   const router = useRouter();
@@ -60,18 +60,15 @@ const ForgotPasswordForm = () => {
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-light-purple-gradient px-4">
-      {/* Logo Section at Top Right */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 lg:top-9 lg:right-9">
         <Image src={Logo} alt="Magnum Logo" width={100} height={100} />
       </div>
 
-      {/* Title */}
-      <h2 className="text-3xl font-bold text-purple-800 mb-6">
+      <h2 className="text-2xl lg:text-5xl font-bold text-black mb-10">
         Forgot password
       </h2>
 
-      {/* Description */}
-      <p className="text-lg text-gray-600 mb-8 text-center">
+      <p className="text-lg text-gray-500 mb-8 text-center">
         Enter the 4-digit code that has been sent to your email
       </p>
 
@@ -86,21 +83,19 @@ const ForgotPasswordForm = () => {
             value={digit}
             onChange={(e) => handleInputChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
-            className="w-20 h-20 text-4xl text-center border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
+            className="w-16 h-16 md:w-28 md:h-28 text-4xl text-center border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
           />
         ))}
       </div>
 
-      {/* Continue Button */}
-      <Button
+      <CustomButton
         type="button"
         onClick={handleSubmit}
-        className="w-full max-w-md py-4 bg-purple-700 text-white rounded-full hover:bg-purple-800 transition duration-200 mb-4"
-      >
-        Continue
-      </Button>
+        className="w-full max-w-[480px] mb-6"
+        text="continue"
+        loading={false}
+      />
 
-      {/* Resend Code Link */}
       <button
         type="button"
         onClick={handleResendCode}

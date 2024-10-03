@@ -19,6 +19,25 @@ body {
   }
 }
 
+/* Button loading styles */
+.buttonLoading {
+  width: fit-content;
+  font-weight: bold;
+  font-family: sans-serif;
+  font-size: 18px;
+  padding-bottom: 8px;
+  background: linear-gradient(currentColor 0 0) 0 100%/0% 3px no-repeat;
+  animation: l2 2s linear infinite;
+}
+.buttonLoading:before {
+  content: 'Loading...';
+}
+@keyframes l2 {
+  to {
+    background-size: 100% 3px;
+  }
+}
+
 /* Loader styles */
 .loader {
   display: flex;
@@ -28,7 +47,7 @@ body {
 
 .rectangle {
   background-color: #ffffff;
-  animation: teal-move 1.5s infinite ease-in-out;
+  animation: teal-move 1s infinite ease-in-out;
 }
 
 .rectangle:nth-child(1) {
