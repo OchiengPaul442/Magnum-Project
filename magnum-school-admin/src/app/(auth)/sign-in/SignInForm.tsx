@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
-import { CustomInputField, Button } from '@components/ui';
+import { CustomInputField, CustomButton } from '@components/ui';
 import { motion } from 'framer-motion';
 
 const SignInForm = () => {
@@ -53,13 +53,13 @@ const SignInForm = () => {
             clearable
           />
 
-          <Button
+          <CustomButton
             type="button"
-            onClick={() => handleSubmit()}
-            className="w-full py-3 bg-purple-700 text-white rounded-full hover:bg-purple-800 transition duration-200 mt-4"
-          >
-            Log In
-          </Button>
+            onClick={handleSubmit}
+            className="w-full max-w-[480px] mb-6"
+            text="Log In"
+            loading={false}
+          />
         </div>
       </motion.div>
     </div>
