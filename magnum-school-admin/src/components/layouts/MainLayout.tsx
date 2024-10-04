@@ -24,6 +24,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, showAddButton }) => {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="sticky top-0 z-50"
         >
           <Topbar showAddButton={showAddButton} />
         </motion.div>

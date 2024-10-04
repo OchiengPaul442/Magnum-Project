@@ -71,7 +71,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${lato.variable} antialiased`}>{children}</body>
+      <body className={`${lato.variable} antialiased overflow-hidden`}>
+        {children}
+      </body>
     </html>
   );
 }

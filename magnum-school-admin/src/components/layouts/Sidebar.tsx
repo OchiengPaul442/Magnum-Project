@@ -36,7 +36,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 h-screen bg-white p-4">
+    <div className="w-64 h-screen bg-white p-4 hidden lg:block">
       {/* Logo Section */}
       <div
         onClick={() => handleNavigation('/dashboard')}
