@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 const StudentDetailsForm = ({ stdID }: any) => {
   const router = useRouter();
+  console.log(stdID);
   return (
     <div className="p-6 bg-white rounded-lg">
       <div className="flex justify-between items-center mb-4">
@@ -49,7 +50,7 @@ const StudentDetailsForm = ({ stdID }: any) => {
 
       {/* Student's Parents Section */}
       <h2 className="text-md font-semibold text-gray-900 mb-4">
-        Student's Parents
+        Student&apos;s Parents
       </h2>
       <div className="grid grid-cols-2 gap-6 mb-4">
         <CustomInputField

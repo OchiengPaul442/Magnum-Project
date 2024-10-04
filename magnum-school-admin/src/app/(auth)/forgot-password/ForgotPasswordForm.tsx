@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomButton } from '@components/ui';
+import { motion } from 'framer-motion';
 
 const ForgotPasswordForm = () => {
   const router = useRouter();
@@ -57,7 +58,12 @@ const ForgotPasswordForm = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-light-purple-gradient px-4">
+    <motion.div
+      className="relative flex flex-col items-center justify-center min-h-screen bg-light-purple-gradient px-4"
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+    >
       <div className="absolute top-4 right-4 lg:top-9 lg:right-9">
         <Image src={Logo} alt="Magnum Logo" width={100} height={100} />
       </div>
@@ -101,7 +107,7 @@ const ForgotPasswordForm = () => {
       >
         Resend code
       </button>
-    </div>
+    </motion.div>
   );
 };
 

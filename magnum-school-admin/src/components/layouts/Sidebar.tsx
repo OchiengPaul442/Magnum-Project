@@ -28,7 +28,7 @@ const Sidebar = () => {
       icon: <MdCurrencyExchange />,
     },
     { name: 'Settings', path: '/settings', icon: <FaCog /> },
-    { name: 'Log out', path: '#', icon: <FiLogOut /> },
+    { name: 'Log out', path: '/sign-in', icon: <FiLogOut /> },
   ];
 
   const handleNavigation = (path: string) => {

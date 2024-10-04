@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomInputField, Button } from '@components/ui';
+import { motion } from 'framer-motion';
 
 const SignInForm = () => {
   const router = useRouter();
@@ -13,11 +14,16 @@ const SignInForm = () => {
   const handleSubmit = () => {
     console.log('Email:', email);
     console.log('Password:', password);
-    router.push('/dashboard');
+    router.push('/create-password');
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-light-purple-gradient px-4">
+    <motion.div
+      className="flex flex-col items-center justify-center min-h-screen bg-light-purple-gradient px-4"
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+    >
       <div className="mb-4">
         <Image src={Logo} alt="Magnum Logo" width={80} height={80} />
       </div>
@@ -54,7 +60,7 @@ const SignInForm = () => {
           Log In
         </Button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

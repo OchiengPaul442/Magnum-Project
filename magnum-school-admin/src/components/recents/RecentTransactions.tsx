@@ -38,7 +38,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({
         {transactions.map((transaction, index) => (
           <div
             key={index}
-            className="flex items-center justify-around p-3 rounded-lg bg-white "
+            className="flex items-center justify-around p-3 rounded-lg bg-white border-b border-gray-200"
           >
             <div className="w-8 text-sm text-gray-500">{index + 1}</div>
 
