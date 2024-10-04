@@ -60,7 +60,7 @@ const ChartAnalytics: React.FC<ChartAnalyticsProps> = ({ data }) => {
       </div>
 
       {/* Chart Section */}
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={375}>
         <AreaChart data={data}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">

@@ -23,7 +23,6 @@ const ForgotPasswordForm = () => {
         nextInput.focus();
       }
     } else if (!value && index > 0) {
-      // Move focus to the previous input if the current one is cleared
       const prevInput = document.getElementById(`otp-${index - 1}`);
       if (prevInput) {
         prevInput.focus();
@@ -36,7 +35,6 @@ const ForgotPasswordForm = () => {
     e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      // Move focus to the previous input on backspace if the current field is empty
       const prevInput = document.getElementById(`otp-${index - 1}`);
       if (prevInput) {
         prevInput.focus();
@@ -48,7 +46,7 @@ const ForgotPasswordForm = () => {
     const otpCode = otp.join('');
     console.log('Entered OTP:', otpCode);
     if (otpCode.length === 4) {
-      router.push('/reset-password');
+      router.push('/dashboard');
     } else {
       alert('Please enter the complete 4-digit code.');
     }
