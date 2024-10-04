@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomButton } from '@components/ui';
+import { motion } from 'framer-motion';
 
 const ForgotPasswordForm = () => {
   const router = useRouter();
@@ -23,7 +24,6 @@ const ForgotPasswordForm = () => {
         nextInput.focus();
       }
     } else if (!value && index > 0) {
-      // Move focus to the previous input if the current one is cleared
       const prevInput = document.getElementById(`otp-${index - 1}`);
       if (prevInput) {
         prevInput.focus();
@@ -36,7 +36,6 @@ const ForgotPasswordForm = () => {
     e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      // Move focus to the previous input on backspace if the current field is empty
       const prevInput = document.getElementById(`otp-${index - 1}`);
       if (prevInput) {
         prevInput.focus();
@@ -48,7 +47,7 @@ const ForgotPasswordForm = () => {
     const otpCode = otp.join('');
     console.log('Entered OTP:', otpCode);
     if (otpCode.length === 4) {
-      router.push('/reset-password');
+      router.push('/dashboard');
     } else {
       alert('Please enter the complete 4-digit code.');
     }
@@ -59,50 +58,57 @@ const ForgotPasswordForm = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-light-purple-gradient px-4">
-      <div className="absolute top-4 right-4 lg:top-9 lg:right-9">
-        <Image src={Logo} alt="Magnum Logo" width={100} height={100} />
-      </div>
-
-      <h2 className="text-2xl lg:text-5xl font-bold text-black mb-10">
-        Forgot password
-      </h2>
-
-      <p className="text-lg text-gray-500 mb-8 text-center">
-        Enter the 4-digit code that has been sent to your email
-      </p>
-
-      {/* OTP Input Section */}
-      <div className="flex space-x-6 mb-8">
-        {otp.map((digit, index) => (
-          <input
-            key={index}
-            id={`otp-${index}`}
-            type="text"
-            maxLength={1}
-            value={digit}
-            onChange={(e) => handleInputChange(index, e.target.value)}
-            onKeyDown={(e) => handleKeyDown(index, e)}
-            className="w-16 h-16 md:w-28 md:h-28 text-4xl text-center border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
-          />
-        ))}
-      </div>
-
-      <CustomButton
-        type="button"
-        onClick={handleSubmit}
-        className="w-full max-w-[480px] mb-6"
-        text="continue"
-        loading={false}
-      />
-
-      <button
-        type="button"
-        onClick={handleResendCode}
-        className="text-black font-medium hover:underline"
+    <div className="min-h-screen bg-light-purple-gradient px-4">
+      <motion.div
+        className="flex flex-col items-center justify-center min-h-screen"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
       >
-        Resend code
-      </button>
+        <div className="absolute top-4 right-4 lg:top-9 lg:right-9">
+          <Image src={Logo} alt="Magnum Logo" width={100} height={100} />
+        </div>
+
+        <h2 className="text-2xl lg:text-5xl font-bold text-black mb-10">
+          Forgot password
+        </h2>
+
+        <p className="text-lg text-gray-500 mb-8 text-center">
+          Enter the 4-digit code that has been sent to your email
+        </p>
+
+        {/* OTP Input Section */}
+        <div className="flex space-x-6 mb-8">
+          {otp.map((digit, index) => (
+            <input
+              key={index}
+              id={`otp-${index}`}
+              type="text"
+              maxLength={1}
+              value={digit}
+              onChange={(e) => handleInputChange(index, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(index, e)}
+              className="w-16 h-16 md:w-28 md:h-28 text-4xl text-center border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
+            />
+          ))}
+        </div>
+
+        <CustomButton
+          type="button"
+          onClick={handleSubmit}
+          className="w-full max-w-[480px] mb-6"
+          text="continue"
+          loading={false}
+        />
+
+        <button
+          type="button"
+          onClick={handleResendCode}
+          className="text-black font-medium hover:underline"
+        >
+          Resend code
+        </button>
+      </motion.div>
     </div>
   );
 };

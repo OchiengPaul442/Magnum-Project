@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomInputField, Button } from '@components/ui';
+import { motion } from 'framer-motion';
 
 const SignInForm = () => {
   const router = useRouter();
@@ -13,47 +14,54 @@ const SignInForm = () => {
   const handleSubmit = () => {
     console.log('Email:', email);
     console.log('Password:', password);
-    router.push('/dashboard');
+    router.push('/create-password');
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-light-purple-gradient px-4">
-      <div className="mb-4">
-        <Image src={Logo} alt="Magnum Logo" width={80} height={80} />
-      </div>
+    <div className="min-h-screen bg-light-purple-gradient px-4">
+      <motion.div
+        className="flex flex-col items-center justify-center min-h-screen"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+      >
+        <div className="mb-4">
+          <Image src={Logo} alt="Magnum Logo" width={80} height={80} />
+        </div>
 
-      <h2 className="text-2xl font-medium text-purple-700 mb-6">
-        School Admin
-      </h2>
+        <h2 className="text-2xl font-medium text-purple-700 mb-6">
+          School Admin
+        </h2>
 
-      {/* Form Section */}
-      <div className="w-full max-w-md space-y-8 bg-none p-8">
-        <CustomInputField
-          label="Enter school admin email address"
-          type="text"
-          placeholder="placeholder"
-          value={email}
-          onChange={setEmail}
-          clearable
-        />
+        {/* Form Section */}
+        <div className="w-full max-w-md space-y-8 bg-none p-8">
+          <CustomInputField
+            label="Enter school admin email address"
+            type="text"
+            placeholder="placeholder"
+            value={email}
+            onChange={setEmail}
+            clearable
+          />
 
-        <CustomInputField
-          label="Enter password"
-          type="password"
-          placeholder="••••••••"
-          value={password}
-          onChange={setPassword}
-          clearable
-        />
+          <CustomInputField
+            label="Enter password"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={setPassword}
+            clearable
+          />
 
-        <Button
-          type="button"
-          onClick={() => handleSubmit()}
-          className="w-full py-3 bg-purple-700 text-white rounded-full hover:bg-purple-800 transition duration-200 mt-4"
-        >
-          Log In
-        </Button>
-      </div>
+          <Button
+            type="button"
+            onClick={() => handleSubmit()}
+            className="w-full py-3 bg-purple-700 text-white rounded-full hover:bg-purple-800 transition duration-200 mt-4"
+          >
+            Log In
+          </Button>
+        </div>
+      </motion.div>
     </div>
   );
 };

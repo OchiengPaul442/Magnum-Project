@@ -7,6 +7,7 @@ import {
   AiOutlineEyeInvisible,
   AiOutlineClose,
 } from 'react-icons/ai';
+import { cn } from '@lib/utils';
 
 interface CustomInputFieldProps {
   label?: string;
@@ -60,11 +61,14 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
   };
 
   return (
-    <div className={`w-full max-w-md mb-4 ${containerClassName}`}>
+    <div className={cn('w-full max-w-md mb-4', containerClassName)}>
       {label && (
         <Label
           htmlFor={label}
-          className={`block text-sm font-medium text-gray-500 mb-3 ${labelClassName}`}
+          className={cn(
+            'block text-sm font-medium text-gray-500 mb-3',
+            labelClassName,
+          )}
         >
           {label}
         </Label>
@@ -76,13 +80,19 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
           placeholder={placeholder}
           value={inputValue}
           onChange={handleInputChange}
-          className={`w-full p-6 border rounded-full focus:outline-none bg-white focus:ring-2 focus:ring-purple-600 ${inputClassName}`}
+          className={cn(
+            'w-full p-6 border rounded-full focus:outline-none bg-white focus:ring-2 focus:ring-purple-600',
+            inputClassName,
+          )}
         />
         {type === 'password' ? (
           <button
             type="button"
             onClick={togglePasswordVisibility}
-            className={`absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 ${buttonClassName}`}
+            className={cn(
+              'absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500',
+              buttonClassName,
+            )}
           >
             {passwordVisible ? (
               <AiOutlineEyeInvisible size={20} />
@@ -96,7 +106,10 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
             <button
               type="button"
               onClick={clearInput}
-              className={`absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 ${buttonClassName}`}
+              className={cn(
+                'absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500',
+                buttonClassName,
+              )}
             >
               <AiOutlineClose size={20} />
             </button>
