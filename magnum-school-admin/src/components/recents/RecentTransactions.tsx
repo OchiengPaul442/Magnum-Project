@@ -34,37 +34,38 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({
       </div>
 
       {/* Transactions List */}
-      <div className="space-y-2">
+      <div className="space-y-4">
         {transactions.map((transaction, index) => (
           <div
             key={index}
-            className="flex items-center justify-around p-3 rounded-lg bg-white border-b border-gray-200"
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg lg:rounded-none bg-gray-50 lg:bg-transparent  border-b border-gray-200"
           >
-            <div className="w-8 text-sm text-gray-500">{index + 1}</div>
-
-            <div className="flex-grow flex items-center justify-around space-x-4">
-              <span className="text-gray-800 font-medium">
+            <div className="w-full sm:w-auto flex items-center mb-2 sm:mb-0">
+              <div className="w-8 text-sm text-gray-500">{index + 1}</div>
+              <span className="text-gray-800 font-medium ml-2 truncate">
                 {transaction.name}
               </span>
+            </div>
 
-              <span className="text-gray-600">{transaction.cardNumber}</span>
-
-              <span className="text-gray-800">{transaction.amount}</span>
-
+            <div className="w-full sm:w-auto flex flex-col sm:flex-row sm:items-center justify-around flex-wrap gap-2 sm:gap-4 flex-grow">
+              <span className="text-gray-600 truncate">
+                {transaction.cardNumber}
+              </span>
+              <span className="text-gray-800 font-semibold">
+                {transaction.amount}
+              </span>
               <span
-                className={`
-                    px-2 py-1 rounded-md text-sm font-bold
-                    ${
-                      transaction.transactionType === 'Withdraw'
-                        ? 'bg-yellow-100 text-peach-900'
-                        : 'bg-teal-100 text-teal-600'
-                    }
-                  `}
+                className={`px-2 py-1 rounded-md text-sm font-bold whitespace-nowrap ${
+                  transaction.transactionType === 'Withdraw'
+                    ? 'bg-yellow-100 text-yellow-900'
+                    : 'bg-teal-100 text-teal-600'
+                }`}
               >
                 {transaction.transactionType}
               </span>
-
-              <span className="text-gray-600">{transaction.date}</span>
+              <span className="text-gray-600 whitespace-nowrap">
+                {transaction.date}
+              </span>
             </div>
           </div>
         ))}

@@ -80,6 +80,28 @@ body {
   }
 }
 
+/* SCSS for Custom Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #553c9a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #553c9a #f0f0f0;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
