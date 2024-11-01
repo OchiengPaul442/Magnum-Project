@@ -20,14 +20,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, showAddButton }) => {
       {/* Main Content Section */}
       <main className="flex-grow h-screen overflow-y-auto">
         {/* Topbar Section Animation */}
-        <motion.div
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="sticky top-0 z-50"
-        >
-          <Topbar showAddButton={showAddButton} />
-        </motion.div>
+        <Topbar showAddButton={showAddButton} />
 
         {/* Main Content Section Animation */}
         <motion.div
