@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import '@core/styles/globals.scss';
+import './globals.css';
 
 // Lato font configurations
 const lato = localFont({

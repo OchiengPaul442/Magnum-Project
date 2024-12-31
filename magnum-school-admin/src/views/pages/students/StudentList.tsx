@@ -11,7 +11,7 @@ import {
 } from '@components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { data } from '@data/students';
-import { CustomButton } from '@components/ui';
+import { CustomButton } from '@components/shared';
 import { Parser } from 'json2csv';
 
 const columns = [

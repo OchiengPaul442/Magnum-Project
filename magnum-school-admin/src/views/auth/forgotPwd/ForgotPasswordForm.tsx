@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
-import { CustomButton } from '@components/ui';
+import { CustomButton } from '@components/shared';
 import { motion } from 'framer-motion';
 
 const ForgotPasswordForm = () => {

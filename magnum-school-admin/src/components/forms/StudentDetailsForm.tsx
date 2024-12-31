@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { CustomInputField, CustomButton } from '../ui';
+import { CustomInputField, CustomButton } from '../shared';
 import { MdClose } from 'react-icons/md';
 import { useRouter } from 'next/navigation';
 

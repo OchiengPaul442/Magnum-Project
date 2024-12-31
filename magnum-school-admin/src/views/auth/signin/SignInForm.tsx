@@ -1,20 +1,50 @@
 'use client';
+
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
-import { CustomInputField, CustomButton } from '@components/ui';
+import { CustomInputField, CustomButton } from '@components/shared';
 import { motion } from 'framer-motion';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signInSchema, SignInFormValues } from '@lib/validationSchema';
+import themeConfig from '@configs/themeConfig';
 
 const SignInForm = () => {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = () => {
-    console.log('Email:', email);
-    console.log('Password:', password);
-    router.push('/create-password');
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInFormValues>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: 'admin@innolink.com',
+      password: 'admin',
+    },
+  });
+
+  const onSubmit = async (data: SignInFormValues) => {
+    setLoading(true);
+    setError(null);
+    const res = await signIn('credentials', {
+      redirect: false,
+      email: data.email,
+      password: data.password,
+    });
+
+    setLoading(false);
+
+    if (res?.error) {
+      setError(res.error);
+    } else {
+      router.push(themeConfig.homePageUrl);
+    }
   };
 
   return (
@@ -34,33 +64,53 @@ const SignInForm = () => {
         </h2>
 
         {/* Form Section */}
-        <div className="w-full max-w-md space-y-8 bg-none p-8">
-          <CustomInputField
-            label="Enter school admin email address"
-            type="text"
-            placeholder="placeholder"
-            value={email}
-            onChange={setEmail}
-            clearable
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="w-full max-w-md space-y-8 bg-none p-8"
+        >
+          <Controller
+            name="email"
+            control={control}
+            render={({ field }) => (
+              <CustomInputField
+                label="Enter school admin email address"
+                type="text"
+                placeholder="admin@innolink.com"
+                value={field.value}
+                onChange={field.onChange}
+                clearable
+                error={errors.email?.message}
+              />
+            )}
           />
 
-          <CustomInputField
-            label="Enter password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={setPassword}
-            clearable
+          <Controller
+            name="password"
+            control={control}
+            render={({ field }) => (
+              <CustomInputField
+                label="Enter password"
+                type="password"
+                placeholder="••••••••"
+                value={field.value}
+                onChange={field.onChange}
+                clearable
+                error={errors.password?.message}
+              />
+            )}
           />
+
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
 
           <CustomButton
-            type="button"
-            onClick={handleSubmit}
+            type="submit"
             className="w-full max-w-[480px] mb-6"
-            text="Log In"
-            loading={false}
+            text={loading ? 'Logging In...' : 'Log In'}
+            loading={loading}
           />
-        </div>
+        </form>
       </motion.div>
     </div>
   );

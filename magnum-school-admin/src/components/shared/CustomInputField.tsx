@@ -1,7 +1,8 @@
+// components/shared/CustomInputField.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Input } from './input';
-import { Label } from './label';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 import {
   AiOutlineEye,
   AiOutlineEyeInvisible,
@@ -20,6 +21,7 @@ interface CustomInputFieldProps {
   inputClassName?: string;
   labelClassName?: string;
   buttonClassName?: string;
+  error?: string; // Added error prop
 }
 
 const CustomInputField: React.FC<CustomInputFieldProps> = ({
@@ -33,6 +35,7 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
   inputClassName = '',
   labelClassName = '',
   buttonClassName = '',
+  error, // Destructure error prop
 }) => {
   const [inputValue, setInputValue] = useState(value);
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -83,6 +86,7 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
           className={cn(
             'w-full p-6 border rounded-full focus:outline-none bg-white focus:ring-2 focus:ring-purple-600',
             inputClassName,
+            error ? 'border-red-500' : 'border-gray-300',
           )}
         />
         {type === 'password' ? (
@@ -116,6 +120,7 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
           )
         )}
       </div>
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   );
 };

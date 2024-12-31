@@ -10,6 +10,8 @@ import { FaUsers } from 'react-icons/fa6';
 import { MdSwitchAccount } from 'react-icons/md';
 import { FiLogOut } from 'react-icons/fi';
 import { MdCurrencyExchange } from 'react-icons/md';
+import { signOut } from 'next-auth/react';
+import themeConfig from '@/configs/themeConfig';
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -18,6 +20,7 @@ const Sidebar = () => {
   // Helper function to determine if the link is active
   const isActive = (path: string) => pathname.startsWith(path);
 
+  // Updated navItems with an optional 'action' property
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: <ImHome /> },
     { name: 'Students', path: '/students', icon: <FaUsers /> },
@@ -28,18 +31,24 @@ const Sidebar = () => {
       icon: <MdCurrencyExchange />,
     },
     { name: 'Settings', path: '/settings', icon: <FaCog /> },
-    { name: 'Log out', path: '/sign-in', icon: <FiLogOut /> },
+    { name: 'Log out', action: 'logout', icon: <FiLogOut /> },
   ];
 
-  const handleNavigation = (path: string) => {
-    router.push(path);
+  // Function to handle navigation or actions based on the nav item
+  const handleItemClick = (item: (typeof navItems)[number]) => {
+    if (item.action === 'logout') {
+      // Call signOut and redirect to '/sign-in' after signing out
+      signOut({ callbackUrl: themeConfig.homePageUrl });
+    } else if (item.path) {
+      router.push(item.path);
+    }
   };
 
   return (
     <div className="w-64 h-screen bg-white p-4 hidden lg:block">
       {/* Logo Section */}
       <div
-        onClick={() => handleNavigation('/dashboard')}
+        onClick={() => handleItemClick(navItems[0])}
         className="flex items-center justify-start mb-8 cursor-pointer"
       >
         <Image
@@ -55,15 +64,16 @@ const Sidebar = () => {
       {/* Navigation Items */}
       <nav className="flex flex-col space-y-2 flex-grow">
         {navItems.map((item) => {
-          const active = isActive(item.path);
+          const active = isActive(item.path || '');
           return (
             <button
-              key={item.path}
+              key={item.name}
               type="button"
-              onClick={() => handleNavigation(item.path)}
+              onClick={() => handleItemClick(item)}
               className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 cursor-pointer ${
                 active ? 'bg-gray-100' : ''
               }`}
+              aria-label={item.name}
             >
               <div className="mr-3">
                 {React.cloneElement(item.icon, {

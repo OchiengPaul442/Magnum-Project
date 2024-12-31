@@ -1,22 +1,52 @@
 'use client';
+
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
-import { CustomInputField, CustomButton } from '@components/ui';
+import { CustomInputField, CustomButton } from '@components/shared';
 import { motion } from 'framer-motion';
+import {
+  createPasswordSchema,
+  CreatePasswordFormValues,
+} from '@lib/validationSchema';
 
 const CreatePasswordForm = () => {
   const router = useRouter();
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  const handleSubmit = () => {
-    if (newPassword === confirmPassword) {
-      console.log('Password successfully created');
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreatePasswordFormValues>({
+    resolver: zodResolver(createPasswordSchema),
+    defaultValues: {
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
+
+  const onSubmit = async (data: CreatePasswordFormValues) => {
+    setLoading(true);
+    setServerError(null);
+
+    try {
+      // Replace the following with your actual API call to create/update the password
+
+      // Simulating API call with a timeout
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      console.log('Password successfully created:', data.newPassword);
       router.push('/forgot-password');
-    } else {
-      alert('Passwords do not match. Please try again.');
+    } catch (error: any) {
+      console.error(error);
+      setServerError(error.message || 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,38 +63,63 @@ const CreatePasswordForm = () => {
         </div>
 
         <h2 className="text-2xl font-medium text-purple-700 mb-6">
-          Create new password
+          Create New Password
         </h2>
 
         {/* Form Section */}
-        <div className="w-full max-w-md space-y-8 p-8">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="w-full max-w-md space-y-6 p-8 bg-none"
+        >
           {/* New Password Input */}
-          <CustomInputField
-            label="Create new password"
-            type="password"
-            placeholder="••••••••"
-            value={newPassword}
-            onChange={setNewPassword}
-            clearable
+          <Controller
+            name="newPassword"
+            control={control}
+            render={({ field }) => (
+              <CustomInputField
+                label="Create New Password"
+                type="password"
+                placeholder="••••••••"
+                value={field.value}
+                onChange={field.onChange}
+                clearable
+                error={errors.newPassword?.message}
+              />
+            )}
           />
 
           {/* Confirm Password Input */}
-          <CustomInputField
-            label="Confirm new password"
-            type="password"
-            placeholder="••••••••"
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            clearable
+          <Controller
+            name="confirmPassword"
+            control={control}
+            render={({ field }) => (
+              <CustomInputField
+                label="Confirm New Password"
+                type="password"
+                placeholder="••••••••"
+                value={field.value}
+                onChange={field.onChange}
+                clearable
+                error={errors.confirmPassword?.message}
+              />
+            )}
           />
 
+          {/* Server Error Display */}
+          {serverError && (
+            <div className="text-red-500 text-sm text-center">
+              {serverError}
+            </div>
+          )}
+
+          {/* Submit Button */}
           <CustomButton
-            type="button"
-            onClick={handleSubmit}
+            type="submit"
             className="w-full mt-4"
-            text="continue"
+            text={loading ? 'Submitting...' : 'Continue'}
+            loading={loading}
           />
-        </div>
+        </form>
       </motion.div>
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { CustomButton, SearchInput } from '@components/ui';
+import { CustomButton, SearchInput } from '@components/shared';
 import { FiPlus } from 'react-icons/fi';
 import { RiMenu2Fill } from 'react-icons/ri';
 
