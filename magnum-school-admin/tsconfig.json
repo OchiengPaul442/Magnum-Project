@@ -23,15 +23,17 @@
       "@components/*": ["./src/components/*"],
       "@hooks/*": ["./src/hooks/*"],
       "@lib/*": ["./src/lib/*"],
-      "@services/*": ["./src/services/*"],
       "@utils/*": ["./src/utils/*"],
-      "@styles/*": ["./src/styles/*"],
-      "@store/*": ["./src/store/*"],
       "@middleware/*": ["./src/middleware/*"],
       "@public/*": ["./public/*"],
       "@images/*": ["./public/assets/images/*"],
       "@icons/*": ["./public/assets/icons/*"],
-      "@fonts/*": ["./public/assets/fonts/*"]
+      "@fonts/*": ["./public/assets/fonts/*"],
+      "@views/*": ["./src/views/*"],
+      "@core/*": ["./src/@core/*"],
+      "@data/*": ["./src/data/*"],
+      "@contexts/*": ["./src/contexts/*"],
+      "@hocs/*": ["./src/hocs/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
