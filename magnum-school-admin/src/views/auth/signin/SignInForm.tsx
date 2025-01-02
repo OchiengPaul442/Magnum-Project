@@ -1,3 +1,5 @@
+// pages/sign-in.tsx
+
 'use client';
 
 import React, { useState } from 'react';
@@ -24,26 +26,37 @@ const SignInForm = () => {
   } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
-      email: 'admin@innolink.com',
-      password: 'admin',
+      email: '',
+      password: '',
     },
   });
 
   const onSubmit = async (data: SignInFormValues) => {
     setLoading(true);
     setError(null);
-    const res = await signIn('credentials', {
-      redirect: false,
-      email: data.email,
-      password: data.password,
-    });
+    try {
+      const res = await signIn('credentials', {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+      });
 
-    setLoading(false);
+      setLoading(false);
 
-    if (res?.error) {
-      setError(res.error);
-    } else {
-      router.push(themeConfig.homePageUrl);
+      if (res?.error) {
+        if (res.error === 'OTP_REQUIRED') {
+          // Store email in sessionStorage to use in OTP verification
+          sessionStorage.setItem('pendingEmail', data.email);
+          router.push('/verify-otp');
+        } else {
+          setError(res.error);
+        }
+      } else {
+        router.push(themeConfig.homePageUrl);
+      }
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || 'An unexpected error occurred.');
     }
   };
 
@@ -74,7 +87,7 @@ const SignInForm = () => {
             render={({ field }) => (
               <CustomInputField
                 label="Enter school admin email address"
-                type="text"
+                type="email"
                 placeholder="admin@innolink.com"
                 value={field.value}
                 onChange={field.onChange}
