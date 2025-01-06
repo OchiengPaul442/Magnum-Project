@@ -1,5 +1,3 @@
-// app/server/actions.tsx
-
 'use server';
 
 import axios from 'axios';
