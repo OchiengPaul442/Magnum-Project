@@ -5,7 +5,7 @@ declare module 'next-auth' {
     id: string;
     userCategory?: string;
     accessToken?: string;
-    // add any extra fields from your API
+    first_time_login?: boolean;
   }
 
   interface Session {
@@ -19,6 +19,6 @@ declare module 'next-auth/jwt' {
     id?: string;
     userCategory?: string;
     accessToken?: string;
-    // any extra JWT fields
+    first_time_login?: boolean;
   }
 }

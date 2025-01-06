@@ -7,12 +7,13 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomButton } from '@components/shared';
-import { motion } from 'framer-motion';
 import { signIn } from 'next-auth/react';
 import { handleResendOTP } from '@/app/server/actions';
+import { useSession } from 'next-auth/react';
 
 const VerifyOTP: React.FC = () => {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +31,17 @@ const VerifyOTP: React.FC = () => {
       router.push('/sign-in');
     }
   }, [router]);
+
+  useEffect(() => {
+    // After successful sign-in, check first_time_login
+    if (status === 'authenticated' && session) {
+      if (session.user.first_time_login) {
+        router.push('/create-password');
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  }, [status, session, router]);
 
   const handleInputChange = (index: number, value: string) => {
     // Only allow digits, single char
@@ -68,7 +80,7 @@ const VerifyOTP: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1) Attempt to sign in with OTP
+      // Attempt to sign in with OTP
       const res = await signIn('credentials', {
         redirect: false,
         email,
@@ -78,13 +90,14 @@ const VerifyOTP: React.FC = () => {
       setLoading(false);
 
       if (res?.error) {
-        // e.g. 'Invalid OTP'
-        setError(res.error);
-      } else {
-        // Success: clear pending email & go to dashboard
-        sessionStorage.removeItem('pendingEmail');
-        router.push('/dashboard');
+        // e.g. 'Invalid OTP' or 'OTP_REQUIRED'
+        if (res.error === 'OTP_REQUIRED') {
+          setError('OTP is required for sign-in.');
+        } else {
+          setError(res.error);
+        }
       }
+      // Successful sign-in will be handled by useEffect
     } catch (err: any) {
       setLoading(false);
       setError(err.message || 'An unexpected error occurred.');
@@ -117,12 +130,7 @@ const VerifyOTP: React.FC = () => {
       onSubmit={handleSubmit}
       className="min-h-screen bg-light-purple-gradient px-4"
     >
-      <motion.div
-        className="flex flex-col items-center justify-center min-h-screen"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
-      >
+      <div className="flex flex-col items-center justify-center min-h-screen">
         <div className="absolute top-4 right-4 lg:top-9 lg:right-9">
           <Image src={Logo} alt="Magnum Logo" width={100} height={100} />
         </div>
@@ -174,7 +182,7 @@ const VerifyOTP: React.FC = () => {
         >
           Resend Code
         </button>
-      </motion.div>
+      </div>
     </form>
   );
 };

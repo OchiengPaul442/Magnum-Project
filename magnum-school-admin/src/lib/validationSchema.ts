@@ -14,17 +14,23 @@ export const signInSchema = z.object({
 
 export const createPasswordSchema = z
   .object({
+    oldPassword: z
+      .string()
+      .min(8, 'Old password must be at least 8 characters long'),
     newPassword: z
       .string()
-      .min(6, { message: 'Password must be at least 6 characters' })
-      .nonempty({ message: 'Password is required' }),
+      .min(8, 'New password must be at least 8 characters long')
+      .regex(
+        /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
+        'Password must contain at least one letter and one number',
+      ),
     confirmPassword: z
       .string()
-      .nonempty({ message: 'Please confirm your password' }),
+      .min(8, 'Confirm password must be at least 8 characters long'),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: 'Passwords do not match',
-    path: ['confirmPassword'], // This will assign the error to the confirmPassword field
+    path: ['confirmPassword'],
   });
 
 export const forgotPasswordSchema = z.object({

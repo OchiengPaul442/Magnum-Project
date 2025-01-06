@@ -1,12 +1,13 @@
-import NextAuth, { NextAuthOptions, Session, User } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import { JWT } from 'next-auth/jwt';
+// app/server/authOptions.ts
 
+import NextAuth, { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import {
   handleSignIn,
   handleVerifyOTP,
   VerifyOTPResponse,
 } from '@/app/server/actions';
+import { User } from 'next-auth';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -34,11 +35,11 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          // Step 1: No OTP => Initial sign-in with email/password
+          // Step 1: Initial sign-in with email/password
           if (!otp) {
             const signInResponse = await handleSignIn(email, password || '');
 
-            if (signInResponse.status !== 200) {
+            if (signInResponse.status !== 202) {
               throw new Error(signInResponse.message || 'Failed to sign in');
             }
 
@@ -69,7 +70,8 @@ export const authOptions: NextAuthOptions = {
               email: userData.email,
               image: userData.user_profile_picture,
               userCategory: userData.user_category,
-              accessToken: (verifyResponse.user_data as any).token,
+              accessToken: verifyResponse.user_data.token,
+              first_time_login: verifyResponse.user_data.first_time_login,
             } as User;
           }
 
@@ -89,13 +91,14 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/sign-in',
+    // You can add more custom pages here
   },
   callbacks: {
     /**
      * The 'jwt' callback is called whenever a token is created or updated.
      * We use it to attach custom properties (like token, userCategory, etc.) to the JWT.
      */
-    async jwt({ token, user }: { token: JWT; user?: User }): Promise<JWT> {
+    async jwt({ token, user }): Promise<any> {
       if (user) {
         token.id = user.id;
         token.name = user.name;
@@ -103,17 +106,16 @@ export const authOptions: NextAuthOptions = {
         token.picture = user.image || null;
         token.userCategory = user.userCategory || '';
         token.accessToken = (user as any).accessToken || '';
+        token.first_time_login = user.first_time_login || false;
       }
       return token;
     },
 
-    async session({
-      session,
-      token,
-    }: {
-      session: Session;
-      token: JWT;
-    }): Promise<Session> {
+    /**
+     * The 'session' callback is called whenever a session is checked.
+     * We use it to pass custom properties from the JWT to the session.
+     */
+    async session({ session, token }): Promise<any> {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.name = token.name || '';
@@ -121,9 +123,7 @@ export const authOptions: NextAuthOptions = {
         session.user.image = token.picture || null;
         session.user.userCategory = token.userCategory || '';
         session.user.accessToken = token.accessToken || '';
-
-        // If you stored a custom 'accessToken' or other fields in the JWT, attach them here
-        // (session as any).accessToken = token.accessToken;
+        session.user.first_time_login = token.first_time_login || false;
       }
       return session;
     },

@@ -35,6 +35,11 @@ export interface ResendOTPResponse {
   status: number;
 }
 
+export interface ChangePasswordResponse {
+  status: number;
+  message: string;
+}
+
 /**
  * Handles user sign-in by sending credentials to the API.
  * @param email User's email.
@@ -100,6 +105,7 @@ export const handleVerifyOTP = async (
 /**
  * Handles resending OTP by sending the username to the API.
  * @param email User's email.
+ * @param purpose Purpose of OTP (default is 'login').
  * @returns ResendOTPResponse
  */
 export const handleResendOTP = async (
@@ -120,6 +126,49 @@ export const handleResendOTP = async (
     if (error.response && error.response.data) {
       throw new Error(
         error.response.data.message || 'An error occurred during OTP resend.',
+      );
+    } else {
+      throw new Error('An unexpected error occurred.');
+    }
+  }
+};
+
+/**
+ * Handles password change by sending the required details to the API.
+ * @param oldPassword User's current password.
+ * @param newPassword New password.
+ * @param confirmPassword Confirmation of the new password.
+ * @param token Authorization token.
+ * @returns ChangePasswordResponse
+ */
+export const handleChangePassword = async (
+  oldPassword: string,
+  newPassword: string,
+  confirmPassword: string,
+  token: string,
+): Promise<ChangePasswordResponse> => {
+  try {
+    const response = await axios.post<ChangePasswordResponse>(
+      `${API_URL}/changepassword/`,
+      {
+        old_password: oldPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      },
+      {
+        headers: {
+          Authorization: `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      const apiError: any = error.response.data;
+      throw new Error(
+        apiError.message || 'An error occurred during password change.',
       );
     } else {
       throw new Error('An unexpected error occurred.');

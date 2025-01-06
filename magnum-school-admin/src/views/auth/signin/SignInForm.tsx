@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomInputField, CustomButton } from '@components/shared';
-import { motion } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signInSchema, SignInFormValues } from '@lib/validationSchema';
@@ -62,12 +61,7 @@ const SignInForm = () => {
 
   return (
     <div className="min-h-screen bg-light-purple-gradient px-4">
-      <motion.div
-        className="flex flex-col items-center justify-center min-h-screen"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
-      >
+      <div className="flex flex-col items-center justify-center min-h-screen">
         <div className="mb-4">
           <Image src={Logo} alt="Magnum Logo" width={80} height={80} />
         </div>
@@ -124,7 +118,7 @@ const SignInForm = () => {
             loading={loading}
           />
         </form>
-      </motion.div>
+      </div>
     </div>
   );
 };

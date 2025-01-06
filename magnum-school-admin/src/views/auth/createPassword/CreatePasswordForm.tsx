@@ -1,3 +1,5 @@
+// components/CreatePasswordForm.tsx
+
 'use client';
 
 import React, { useState } from 'react';
@@ -7,16 +9,22 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomInputField, CustomButton } from '@components/shared';
-import { motion } from 'framer-motion';
 import {
   createPasswordSchema,
   CreatePasswordFormValues,
 } from '@lib/validationSchema';
+import {
+  handleChangePassword,
+  ChangePasswordResponse,
+} from '@/app/server/actions';
+import { useSession } from 'next-auth/react';
 
 const CreatePasswordForm = () => {
   const router = useRouter();
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [serverSuccess, setServerSuccess] = useState<string | null>(null);
 
   const {
     control,
@@ -25,26 +33,38 @@ const CreatePasswordForm = () => {
   } = useForm<CreatePasswordFormValues>({
     resolver: zodResolver(createPasswordSchema),
     defaultValues: {
+      oldPassword: '',
       newPassword: '',
       confirmPassword: '',
     },
   });
 
   const onSubmit = async (data: CreatePasswordFormValues) => {
+    if (!session?.user.accessToken) {
+      setServerError('Invalid session. Please sign in again.');
+      return;
+    }
+
     setLoading(true);
     setServerError(null);
+    setServerSuccess(null);
 
     try {
-      // Replace the following with your actual API call to create/update the password
+      const response: ChangePasswordResponse = await handleChangePassword(
+        data.oldPassword,
+        data.newPassword,
+        data.confirmPassword,
+        session.user.accessToken,
+      );
 
-      // Simulating API call with a timeout
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      console.log('Password successfully created:', data.newPassword);
-      router.push('/forgot-password');
+      if (response.status === 200 || response.status === 201) {
+        setServerSuccess(response.message || 'Password successfully changed.');
+        router.push('/dashboard');
+      } else {
+        setServerError(response.message || 'Failed to change password.');
+      }
     } catch (error: any) {
-      console.error(error);
-      setServerError(error.message || 'An unexpected error occurred');
+      setServerError(error.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -52,18 +72,13 @@ const CreatePasswordForm = () => {
 
   return (
     <div className="min-h-screen bg-light-purple-gradient px-4">
-      <motion.div
-        className="flex flex-col items-center justify-center min-h-screen"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
-      >
+      <div className="flex flex-col items-center justify-center min-h-screen">
         <div className="mb-4">
           <Image src={Logo} alt="Magnum Logo" width={80} height={80} />
         </div>
 
         <h2 className="text-2xl font-medium text-purple-700 mb-6">
-          Create New Password
+          Change Password
         </h2>
 
         {/* Form Section */}
@@ -71,13 +86,30 @@ const CreatePasswordForm = () => {
           onSubmit={handleSubmit(onSubmit)}
           className="w-full max-w-md space-y-6 p-8 bg-none"
         >
+          {/* Old Password Input */}
+          <Controller
+            name="oldPassword"
+            control={control}
+            render={({ field }) => (
+              <CustomInputField
+                label="Old Password"
+                type="password"
+                placeholder="••••••••"
+                value={field.value}
+                onChange={field.onChange}
+                clearable
+                error={errors.oldPassword?.message}
+              />
+            )}
+          />
+
           {/* New Password Input */}
           <Controller
             name="newPassword"
             control={control}
             render={({ field }) => (
               <CustomInputField
-                label="Create New Password"
+                label="New Password"
                 type="password"
                 placeholder="••••••••"
                 value={field.value}
@@ -112,15 +144,22 @@ const CreatePasswordForm = () => {
             </div>
           )}
 
+          {/* Server Success Display */}
+          {serverSuccess && (
+            <div className="text-green-500 text-sm text-center">
+              {serverSuccess}
+            </div>
+          )}
+
           {/* Submit Button */}
           <CustomButton
             type="submit"
             className="w-full mt-4"
-            text={loading ? 'Submitting...' : 'Continue'}
+            text={loading ? 'Submitting...' : 'Change Password'}
             loading={loading}
           />
         </form>
-      </motion.div>
+      </div>
     </div>
   );
 };
