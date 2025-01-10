@@ -91,7 +91,6 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/sign-in',
-    // You can add more custom pages here
   },
   callbacks: {
     /**

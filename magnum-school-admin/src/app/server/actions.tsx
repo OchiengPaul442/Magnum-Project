@@ -53,6 +53,7 @@ export const handleSignIn = async (
       username: email,
       password,
     });
+    console.info(response);
 
     return response.data;
   } catch (error: any) {
