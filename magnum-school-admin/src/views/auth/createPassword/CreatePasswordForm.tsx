@@ -54,7 +54,6 @@ const CreatePasswordForm = () => {
         data.oldPassword,
         data.newPassword,
         data.confirmPassword,
-        session.user.accessToken,
       );
 
       if (response.status === 200 || response.status === 201) {

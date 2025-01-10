@@ -1,8 +1,4 @@
-'use server';
-
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import apiClient from '@/utils/apiClient';
 
 // Types for API responses
 export interface SignInResponse {
@@ -49,7 +45,8 @@ export const handleSignIn = async (
   password: string,
 ): Promise<SignInResponse> => {
   try {
-    const response = await axios.post<SignInResponse>(`${API_URL}/login/`, {
+    const client = apiClient(false);
+    const response = await client.post<SignInResponse>('/login/', {
       username: email,
       password,
     });
@@ -57,7 +54,6 @@ export const handleSignIn = async (
 
     return response.data;
   } catch (error: any) {
-    // Handle errors appropriately
     if (error.response && error.response.data) {
       throw new Error(
         error.response.data.message || 'An error occurred during sign-in.',
@@ -79,17 +75,14 @@ export const handleVerifyOTP = async (
   otp: string,
 ): Promise<VerifyOTPResponse> => {
   try {
-    const response = await axios.post<VerifyOTPResponse>(
-      `${API_URL}/verifyotp/`,
-      {
-        username: email,
-        one_time_pin: otp,
-      },
-    );
+    const client = apiClient(false);
+    const response = await client.post<VerifyOTPResponse>('/verifyotp/', {
+      username: email,
+      one_time_pin: otp,
+    });
 
     return response.data;
   } catch (error: any) {
-    // Handle errors appropriately
     if (error.response && error.response.data) {
       throw new Error(
         error.response.data.message ||
@@ -112,13 +105,11 @@ export const handleResendOTP = async (
   purpose: string = 'login',
 ): Promise<ResendOTPResponse> => {
   try {
-    const response = await axios.post<ResendOTPResponse>(
-      `${API_URL}/resendotp/`,
-      {
-        email,
-        purpose,
-      },
-    );
+    const client = apiClient(false);
+    const response = await client.post<ResendOTPResponse>('/resendotp/', {
+      email,
+      purpose,
+    });
 
     return response.data;
   } catch (error: any) {
@@ -144,21 +135,15 @@ export const handleChangePassword = async (
   oldPassword: string,
   newPassword: string,
   confirmPassword: string,
-  token: string,
 ): Promise<ChangePasswordResponse> => {
   try {
-    const response = await axios.post<ChangePasswordResponse>(
-      `${API_URL}/changepassword/`,
+    const client = apiClient(true);
+    const response = await client.post<ChangePasswordResponse>(
+      '/changepassword/',
       {
         old_password: oldPassword,
         new_password: newPassword,
         confirm_password: confirmPassword,
-      },
-      {
-        headers: {
-          Authorization: `Token ${token}`,
-          'Content-Type': 'application/json',
-        },
       },
     );
 
