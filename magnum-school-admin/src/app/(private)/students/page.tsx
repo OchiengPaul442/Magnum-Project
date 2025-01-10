@@ -1,13 +1,21 @@
-import React from 'react';
-import MainLayout from '@components/layouts/MainLayout';
-import StudentList from '@views/pages/students/StudentList';
+import MainLayout from '@/components/layouts/MainLayout';
+import StudentList from '@/views/pages/students/StudentList';
+import { getStudentData } from '@/app/server/students/api';
+import { Suspense } from 'react';
+import LoadingSkeleton from '@/views/pages/students/loading-skeleton';
 
-const page = () => {
+export default function StudentsPage() {
   return (
     <MainLayout>
-      <StudentList />
+      <Suspense fallback={<LoadingSkeleton />}>
+        <StudentListWrapper />
+      </Suspense>
     </MainLayout>
   );
-};
+}
 
-export default page;
+async function StudentListWrapper() {
+  const data = await getStudentData();
+
+  return <StudentList initialData={data.students} />;
+}

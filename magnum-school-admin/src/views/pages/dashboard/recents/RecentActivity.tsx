@@ -1,5 +1,5 @@
-import React from 'react';
-import { cn } from '@lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Activity } from 'lucide-react';
 
 interface Activity {
   id: number;
@@ -11,46 +11,58 @@ interface RecentActivityProps {
   activities: Activity[];
 }
 
-const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) => {
-  const colors = [
-    'bg-teal-500',
-    'bg-blue-500',
-    'bg-red-500',
-    'bg-pink-500',
-    'bg-purple-500',
-  ];
+const colors = [
+  'bg-pink-500',
+  'bg-blue-500',
+  'bg-teal-500',
+  'bg-purple-500',
+  'bg-indigo-500',
+];
+
+export default function RecentActivity({ activities }: RecentActivityProps) {
+  if (!activities?.length) {
+    return (
+      <Card className="border-none shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">
+            Recent Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+          <Activity className="h-12 w-12 text-gray-400 mb-4" />
+          <p className="text-lg font-medium text-gray-900">
+            No recent activity
+          </p>
+          <p className="text-sm text-gray-500 mt-1">
+            Activity will appear here when users interact with the system.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="p-3 bg-white w-full rounded-lg">
-      {/* Header Section */}
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-        Recent Activity
-      </h3>
-
-      {/* Activity List  */}
-      <div className="space-y-3 max-h-[390px] overflow-y-auto">
-        {activities.map((activity) => {
-          const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
-          return (
-            <div
-              key={activity.id}
-              className="flex items-center p-3 rounded-lg bg-gray-50"
-            >
+    <Card className="border-none shadow-sm">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {activities.map((activity, index) => (
+            <div key={activity.id} className="flex items-start gap-3">
               <div
-                className={cn('h-3 w-3 rounded-full mr-4', randomColor)}
-              ></div>
-
-              <div>
-                <p className="text-gray-800 font-medium">{activity.title}</p>
-                <p className="text-sm text-gray-600">{activity.time}</p>
+                className={`h-2.5 w-2.5 rounded-full mt-2 ${colors[index % colors.length]}`}
+              />
+              <div className="flex-1 space-y-1">
+                <p className="text-sm font-medium text-gray-900 leading-none">
+                  {activity.title}
+                </p>
+                <p className="text-xs text-gray-500">{activity.time}</p>
               </div>
             </div>
-          );
-        })}
-      </div>
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
-};
-
-export default RecentActivity;
+}

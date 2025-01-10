@@ -1,4 +1,4 @@
-import apiClient from '@/utils/apiClient';
+import { getApiClient } from '@/utils/apiClient';
 
 // Types for API responses
 export interface SignInResponse {
@@ -45,13 +45,12 @@ export const handleSignIn = async (
   password: string,
 ): Promise<SignInResponse> => {
   try {
-    const client = apiClient(false);
+    const client = await getApiClient(false);
     const response = await client.post<SignInResponse>('/login/', {
       username: email,
       password,
     });
     console.info(response);
-
     return response.data;
   } catch (error: any) {
     if (error.response && error.response.data) {
@@ -75,12 +74,11 @@ export const handleVerifyOTP = async (
   otp: string,
 ): Promise<VerifyOTPResponse> => {
   try {
-    const client = apiClient(false);
+    const client = await getApiClient(false);
     const response = await client.post<VerifyOTPResponse>('/verifyotp/', {
       username: email,
       one_time_pin: otp,
     });
-
     return response.data;
   } catch (error: any) {
     if (error.response && error.response.data) {
@@ -105,12 +103,11 @@ export const handleResendOTP = async (
   purpose: string = 'login',
 ): Promise<ResendOTPResponse> => {
   try {
-    const client = apiClient(false);
+    const client = await getApiClient(false);
     const response = await client.post<ResendOTPResponse>('/resendotp/', {
       email,
       purpose,
     });
-
     return response.data;
   } catch (error: any) {
     if (error.response && error.response.data) {
@@ -128,7 +125,6 @@ export const handleResendOTP = async (
  * @param oldPassword User's current password.
  * @param newPassword New password.
  * @param confirmPassword Confirmation of the new password.
- * @param token Authorization token.
  * @returns ChangePasswordResponse
  */
 export const handleChangePassword = async (
@@ -137,7 +133,7 @@ export const handleChangePassword = async (
   confirmPassword: string,
 ): Promise<ChangePasswordResponse> => {
   try {
-    const client = apiClient(true);
+    const client = await getApiClient(true);
     const response = await client.post<ChangePasswordResponse>(
       '/changepassword/',
       {
@@ -146,7 +142,6 @@ export const handleChangePassword = async (
         confirm_password: confirmPassword,
       },
     );
-
     return response.data;
   } catch (error: any) {
     if (error.response && error.response.data) {

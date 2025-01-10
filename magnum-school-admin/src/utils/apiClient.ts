@@ -1,14 +1,17 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import { getSession } from 'next-auth/react';
+import axios, { AxiosInstance } from 'axios';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 /**
- * Create a function that returns an Axios instance configured based on `useAuth`.
- * @param useAuth - Determines whether to include the Authorization header.
- * @returns Configured Axios instance.
+ * Asynchronously creates and configures an Axios instance,
+ * including the Authorization header if `useAuth` is true.
+ *
+ * @param useAuth - If true, will attach the user token from the session.
+ * @returns A promise that resolves to a configured Axios instance.
  */
-const apiClient = (useAuth: boolean): AxiosInstance => {
+export async function getApiClient(useAuth: boolean): Promise<AxiosInstance> {
   const instance = axios.create({
     baseURL: BASE_URL,
     headers: {
@@ -16,21 +19,19 @@ const apiClient = (useAuth: boolean): AxiosInstance => {
     },
   });
 
-  // Request interceptor to add the Authorization header if `useAuth` is true
-  instance.interceptors.request.use(
-    async (config: InternalAxiosRequestConfig) => {
-      if (useAuth) {
-        const session = await getSession();
-        if (session?.user.accessToken) {
-          config.headers.Authorization = `Token ${session.user.accessToken}`;
-        }
+  if (useAuth) {
+    try {
+      // Retrieve the session on the server side
+      const session = await getServerSession(authOptions);
+      const token = session?.user?.accessToken;
+
+      if (token) {
+        instance.defaults.headers.common['Authorization'] = `Token ${token}`;
       }
-      return config;
-    },
-    (error) => Promise.reject(error),
-  );
+    } catch (error) {
+      console.error('Error retrieving session:', error);
+    }
+  }
 
   return instance;
-};
-
-export default apiClient;
+}

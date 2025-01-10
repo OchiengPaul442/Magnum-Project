@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+
+import { useState } from 'react';
 import ReusableTable from '@/components/shared/tables/ReusableTable';
 import { FaEllipsisV } from 'react-icons/fa';
 import { BsDownload } from 'react-icons/bs';
@@ -8,51 +9,68 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
-import { data } from '@data/students';
-import { CustomButton } from '@components/shared';
 import { Parser } from 'json2csv';
+import { Button } from '@/components/ui/button';
+import { Student } from '@/types/student';
 
 const columns = [
-  { header: "Student's name", accessor: 'name' },
-  { header: 'Card number', accessor: 'cardNumber' },
+  {
+    header: "Student's name",
+    accessor: 'name',
+    Cell: ({ value }: { value: string }) => (
+      <span className="font-medium">{value}</span>
+    ),
+  },
+  {
+    header: 'Card number',
+    accessor: 'cardNumber',
+    Cell: ({ value }: { value: string }) => (
+      <code className="text-sm font-mono">{value}</code>
+    ),
+  },
   {
     header: 'Status',
     accessor: 'status',
     Cell: ({ value }: { value: string }) => (
-      <div className="flex items-center space-x-2 mr-4">
+      <div className="flex items-center gap-2">
         <span
-          className={`h-3 w-3 rounded-full ${
+          className={`h-2.5 w-2.5 rounded-full ${
             value === 'Activated' ? 'bg-teal-500' : 'bg-red-500'
           }`}
-        ></span>
+        />
         <span
-          className={`h-3 w-3 rounded-full ${
-            value === 'Activated' ? '' : 'text-gray-400'
-          }`}
+          className={value === 'Activated' ? 'text-teal-700' : 'text-red-700'}
         >
           {value}
         </span>
       </div>
     ),
   },
-  { header: 'Balance', accessor: 'balance' },
+  {
+    header: 'Balance',
+    accessor: 'balance',
+    Cell: ({ value }: { value: string }) => (
+      <span className="font-medium">
+        UGX {new Intl.NumberFormat().format(parseInt(value))}
+      </span>
+    ),
+  },
   {
     header: '',
     accessor: 'actions',
     Cell: ({ row }: { row: any }) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center justify-center p-2 rounded-full text-gray-600 hover:bg-gray-100">
-            <FaEllipsisV className="text-purple-700 text-lg" />
-          </button>
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <FaEllipsisV className="h-4 w-4" />
+            <span className="sr-only">Open menu</span>
+          </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
+        <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onSelect={() => {
-              row.navigateToDetails(row.id);
-            }}
+            onClick={() => row.navigateToDetails(row.original.id)}
           >
             View Details
           </DropdownMenuItem>
@@ -62,84 +80,92 @@ const columns = [
   },
 ];
 
-const StudentList = () => {
+interface StudentListProps {
+  initialData: Student[];
+}
+
+export default function StudentList({ initialData }: StudentListProps) {
+  const [students] = useState<Student[]>(initialData);
   const [filter, setFilter] = useState<'All' | 'Activated' | 'Deactivated'>(
     'All',
   );
-
   const router = useRouter();
 
-  // Filter data based on the selected filter
   const filteredData =
     filter === 'All'
-      ? data
-      : data.filter((student) => student.status === filter);
+      ? students
+      : students.filter((student) => student.status === filter);
 
-  // Add navigation function to each row
-  const tableData = filteredData.map((item) => ({
-    ...item,
-    navigateToDetails: (id: any) => {
-      router.push(`/students/${id}`);
-    },
+  const tableData = filteredData?.map((student) => ({
+    ...student,
+    navigateToDetails: (id: string) => router.push(`/students/${id}`),
   }));
 
-  // Function to download CSV
   const downloadCSV = () => {
-    const parser = new Parser();
-    const csvData = parser.parse(filteredData);
-    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'student_list.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const parser = new Parser();
+      const csvData = parser.parse(filteredData);
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'students.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error(error);
+    }
   };
 
+  if (students?.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <h2 className="text-2xl font-semibold mb-2">No Students Available</h2>
+        <p className="text-gray-600">
+          There are currently no students in the system.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      {/* Filter Section */}
-      <div className="flex justify-between items-center mb-6 bg-white rounded-lg p-3">
-        <div className="flex items-center space-x-4">
-          <span className="text-lg font-semibold text-gray-800">Filters:</span>
-          <button
-            onClick={() => setFilter('Activated')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${
-              filter === 'Activated'
-                ? 'bg-teal-100 text-teal-800'
-                : 'bg-gray-50 text-gray-600'
-            }`}
-          >
-            Activated
-          </button>
-          <button
-            onClick={() => setFilter('Deactivated')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${
-              filter === 'Deactivated'
-                ? 'bg-teal-100 text-teal-800'
-                : 'bg-gray-50 text-gray-600'
-            }`}
-          >
-            Deactivated
-          </button>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-white rounded-lg p-4 shadow-sm">
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-medium text-gray-700">Filters:</span>
+          <div className="flex gap-2">
+            {(['All', 'Activated', 'Deactivated'] as const).map((status) => (
+              <Button
+                key={status}
+                variant={filter === status ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setFilter(status)}
+              >
+                {status}
+              </Button>
+            ))}
+          </div>
         </div>
-        <CustomButton
-          text="Download CSV"
-          icon={<BsDownload />}
+        <Button
+          variant="outline"
+          size="sm"
           onClick={downloadCSV}
-          className="flex items-center space-x-2 px-4 py-2 rounded-md bg-gray-50 text-gray-800 hover:bg-gray-200 transition duration-200"
-        />
+          className="flex items-center gap-2"
+        >
+          <BsDownload className="h-4 w-4" />
+          Download CSV
+        </Button>
       </div>
 
-      {/* Student Table */}
-      <ReusableTable
-        columns={columns}
-        data={tableData}
-        rowsPerPageOptions={[10, 25, 50]}
-      />
+      <div className="bg-white rounded-lg shadow-sm">
+        <ReusableTable
+          columns={columns}
+          data={tableData}
+          rowsPerPageOptions={[10, 25, 50]}
+        />
+      </div>
     </div>
   );
-};
-
-export default StudentList;
+}

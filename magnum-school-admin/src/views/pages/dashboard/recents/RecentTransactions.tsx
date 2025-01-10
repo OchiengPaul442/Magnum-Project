@@ -1,5 +1,10 @@
-import React from 'react';
+'use client';
+
 import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { FileText } from 'lucide-react';
 
 interface Transaction {
   name: string;
@@ -13,65 +18,84 @@ interface RecentTransactionsProps {
   transactions: Transaction[];
 }
 
-const RecentTransactions: React.FC<RecentTransactionsProps> = ({
+export default function RecentTransactions({
   transactions,
-}) => {
+}: RecentTransactionsProps) {
   const router = useRouter();
 
+  if (!transactions?.length) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>Recent Transactions</CardTitle>
+          <Button variant="link" onClick={() => router.push('/transactions')}>
+            See All
+          </Button>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+          <FileText className="h-12 w-12 text-gray-400 mb-4" />
+          <p className="text-lg font-medium text-gray-900">
+            No transactions yet
+          </p>
+          <p className="text-sm text-gray-500 mt-1">
+            Transactions will appear here when they are made.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="p-4 bg-white rounded-lg">
-      {/* Header Section */}
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">
+    <Card className="border-none shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-lg font-semibold">
           Recent Transactions
-        </h3>
-        <button
+        </CardTitle>
+        <Button
+          variant="link"
           onClick={() => router.push('/transactions')}
-          className="text-teal-700 text-sm font-medium underline"
+          className="text-teal-600 font-medium hover:text-teal-700"
         >
           See All
-        </button>
-      </div>
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <div className="divide-y divide-gray-100">
+          {transactions.map((transaction, index) => (
+            <div
+              key={index}
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 first:pt-0 last:pb-0"
+            >
+              <div className="w-full sm:w-auto flex items-center mb-2 sm:mb-0">
+                <div className="w-8 text-sm text-gray-500">{index + 1}</div>
+                <span className="text-gray-900 font-medium ml-2 truncate">
+                  {transaction.name}
+                </span>
+              </div>
 
-      {/* Transactions List */}
-      <div className="space-y-4">
-        {transactions.map((transaction, index) => (
-          <div
-            key={index}
-            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg lg:rounded-none bg-gray-50 lg:bg-transparent  border-b border-gray-200"
-          >
-            <div className="w-full sm:w-auto flex items-center mb-2 sm:mb-0">
-              <div className="w-8 text-sm text-gray-500">{index + 1}</div>
-              <span className="text-gray-800 font-medium ml-2 truncate">
-                {transaction.name}
-              </span>
+              <div className="w-full sm:w-auto flex flex-col sm:flex-row sm:items-center justify-start sm:justify-end flex-wrap gap-2 sm:gap-6">
+                <span className="text-gray-600 font-medium">
+                  {transaction.cardNumber}
+                </span>
+                <span className="text-gray-900 font-semibold">
+                  UGX {parseInt(transaction.amount).toLocaleString()}
+                </span>
+                <Badge
+                  variant={
+                    transaction.transactionType.toLowerCase() === 'withdraw'
+                      ? 'warning'
+                      : 'success'
+                  }
+                  className="capitalize px-3 py-1"
+                >
+                  {transaction.transactionType}
+                </Badge>
+                <span className="text-gray-600">{transaction.date}</span>
+              </div>
             </div>
-
-            <div className="w-full sm:w-auto flex flex-col sm:flex-row sm:items-center justify-around flex-wrap gap-2 sm:gap-4 flex-grow">
-              <span className="text-gray-600 truncate">
-                {transaction.cardNumber}
-              </span>
-              <span className="text-gray-800 font-semibold">
-                {transaction.amount}
-              </span>
-              <span
-                className={`px-2 py-1 rounded-md text-sm font-bold whitespace-nowrap ${
-                  transaction.transactionType === 'Withdraw'
-                    ? 'bg-yellow-100 text-yellow-900'
-                    : 'bg-teal-100 text-teal-600'
-                }`}
-              >
-                {transaction.transactionType}
-              </span>
-              <span className="text-gray-600 whitespace-nowrap">
-                {transaction.date}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
-};
-
-export default RecentTransactions;
+}
