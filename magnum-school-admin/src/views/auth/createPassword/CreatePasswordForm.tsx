@@ -4,7 +4,6 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
@@ -18,9 +17,10 @@ import {
   ChangePasswordResponse,
 } from '@/app/server/actions';
 import { useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
+import themeConfig from '@/configs/themeConfig';
 
 const CreatePasswordForm = () => {
-  const router = useRouter();
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -59,7 +59,8 @@ const CreatePasswordForm = () => {
 
       if (response.status === 200 || response.status === 201) {
         setServerSuccess(response.message || 'Password successfully changed.');
-        router.push('/dashboard');
+
+        signOut({ callbackUrl: themeConfig.signOutUrl });
       } else {
         setServerError(response.message || 'Failed to change password.');
       }

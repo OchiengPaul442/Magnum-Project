@@ -38,7 +38,7 @@ const Sidebar = () => {
   const handleItemClick = (item: (typeof navItems)[number]) => {
     if (item.action === 'logout') {
       // Call signOut and redirect to '/sign-in' after signing out
-      signOut({ callbackUrl: themeConfig.homePageUrl });
+      signOut({ callbackUrl: themeConfig.signOutUrl });
     } else if (item.path) {
       router.push(item.path);
     }
