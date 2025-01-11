@@ -1,38 +1,11 @@
-import { getApiClient } from '@/utils/apiClient';
-
-// Types for API responses
-export interface SignInResponse {
-  message: string;
-  requires_otp: boolean;
-  status: number;
-}
-
-export interface VerifyOTPResponse {
-  message: string;
-  user_data: {
-    user_data: {
-      id: number;
-      user_profile_picture: string | null;
-      first_name: string;
-      last_name: string;
-      email: string;
-      user_category: string;
-    };
-    first_time_login: boolean;
-    token: string;
-  };
-  status: number;
-}
-
-export interface ResendOTPResponse {
-  message: string;
-  status: number;
-}
-
-export interface ChangePasswordResponse {
-  status: number;
-  message: string;
-}
+import apiClient, { secureApiClient } from '@/utils/apiClient';
+import { handleApiError } from '@/utils/handleApiErrors';
+import {
+  SignInResponse,
+  VerifyOTPResponse,
+  ResendOTPResponse,
+  ChangePasswordResponse,
+} from '@/types/auth';
 
 /**
  * Handles user sign-in by sending credentials to the API.
@@ -45,20 +18,13 @@ export const handleSignIn = async (
   password: string,
 ): Promise<SignInResponse> => {
   try {
-    const client = await getApiClient(false);
-    const response = await client.post<SignInResponse>('/login/', {
+    const response = await apiClient.post<SignInResponse>('/login/', {
       username: email,
       password,
     });
     return response.data;
   } catch (error: any) {
-    if (error.response && error.response.data) {
-      throw new Error(
-        error.response.data.message || 'An error occurred during sign-in.',
-      );
-    } else {
-      throw new Error('An unexpected error occurred.');
-    }
+    return handleApiError(error);
   }
 };
 
@@ -73,21 +39,13 @@ export const handleVerifyOTP = async (
   otp: string,
 ): Promise<VerifyOTPResponse> => {
   try {
-    const client = await getApiClient(false);
-    const response = await client.post<VerifyOTPResponse>('/verifyotp/', {
+    const response = await apiClient.post<VerifyOTPResponse>('/verifyotp/', {
       username: email,
       one_time_pin: otp,
     });
     return response.data;
   } catch (error: any) {
-    if (error.response && error.response.data) {
-      throw new Error(
-        error.response.data.message ||
-          'An error occurred during OTP verification.',
-      );
-    } else {
-      throw new Error('An unexpected error occurred.');
-    }
+    return handleApiError(error);
   }
 };
 
@@ -102,20 +60,13 @@ export const handleResendOTP = async (
   purpose: string = 'login',
 ): Promise<ResendOTPResponse> => {
   try {
-    const client = await getApiClient(false);
-    const response = await client.post<ResendOTPResponse>('/resendotp/', {
+    const response = await apiClient.post<ResendOTPResponse>('/resendotp/', {
       email,
       purpose,
     });
     return response.data;
   } catch (error: any) {
-    if (error.response && error.response.data) {
-      throw new Error(
-        error.response.data.message || 'An error occurred during OTP resend.',
-      );
-    } else {
-      throw new Error('An unexpected error occurred.');
-    }
+    return handleApiError(error);
   }
 };
 
@@ -132,8 +83,7 @@ export const handleChangePassword = async (
   confirmPassword: string,
 ): Promise<ChangePasswordResponse> => {
   try {
-    const client = await getApiClient(true);
-    const response = await client.post<ChangePasswordResponse>(
+    const response = await secureApiClient.post<ChangePasswordResponse>(
       '/changepassword/',
       {
         old_password: oldPassword,
@@ -143,13 +93,6 @@ export const handleChangePassword = async (
     );
     return response.data;
   } catch (error: any) {
-    if (error.response && error.response.data) {
-      const apiError: any = error.response.data;
-      throw new Error(
-        apiError.message || 'An error occurred during password change.',
-      );
-    } else {
-      throw new Error('An unexpected error occurred.');
-    }
+    return handleApiError(error);
   }
 };

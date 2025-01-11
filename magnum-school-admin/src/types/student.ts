@@ -6,6 +6,10 @@ export interface Student {
   balance: string;
 }
 
+export interface StudentData {
+  students: Student[];
+}
+
 export interface StudentResponse {
   message: string;
   students: Student[];

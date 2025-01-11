@@ -83,13 +83,14 @@ export default function RecentTransactions({
                 <Badge
                   variant={
                     transaction.transactionType.toLowerCase() === 'withdraw'
-                      ? 'warning'
-                      : 'success'
+                      ? 'destructive' // Map 'warning' to 'destructive'
+                      : 'default' // Map 'success' to 'default'
                   }
                   className="capitalize px-3 py-1"
                 >
                   {transaction.transactionType}
                 </Badge>
+
                 <span className="text-gray-600">{transaction.date}</span>
               </div>
             </div>

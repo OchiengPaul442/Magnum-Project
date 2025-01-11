@@ -23,24 +23,50 @@ interface ChartAnalyticsProps {
   data: { month: string; total: number }[];
 }
 
+// Custom YAxis component with default parameters
+const CustomYAxis = ({
+  tickFormatter = (value: number) => `${value}`,
+  axisLine = true,
+  tickLine = true,
+  reversed = false,
+  ...props
+}: {
+  tickFormatter?: (value: number) => string;
+  axisLine?: boolean;
+  tickLine?: boolean;
+  reversed?: boolean;
+  [key: string]: any;
+}) => {
+  return (
+    <YAxis
+      tickFormatter={tickFormatter}
+      axisLine={axisLine}
+      tickLine={tickLine}
+      reversed={reversed}
+      {...props}
+    />
+  );
+};
+
 export default function ChartAnalytics({ data }: ChartAnalyticsProps) {
   const [selectedMonth, setSelectedMonth] = useState<string>('September');
 
+  // Find the total for the selected month
+  const selectedData = data.find((d) => d.month === selectedMonth);
+  const totalTransactions = selectedData ? selectedData.total : 0;
+
   return (
     <Card className="border-none shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <h3 className="text-base text-gray-800">
-          Total Monthly Transactions: UGX{' '}
-          {data
-            ?.find((d) => d.month === selectedMonth)
-            ?.total.toLocaleString() ?? 0}
+          Total Monthly Transactions: UGX {totalTransactions.toLocaleString()}
         </h3>
         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
           <SelectTrigger className="w-[180px] bg-gray-50">
             <SelectValue placeholder="Select month" />
           </SelectTrigger>
           <SelectContent>
-            {data?.map((entry) => (
+            {data.map((entry) => (
               <SelectItem key={entry.month} value={entry.month}>
                 {entry.month} 2024
               </SelectItem>
@@ -59,13 +85,19 @@ export default function ChartAnalytics({ data }: ChartAnalyticsProps) {
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
-              horizontal={true}
+              horizontal
               vertical={false}
               stroke="#E5E7EB"
             />
-            <XAxis dataKey="month" axisLine={false} tickLine={false} />
-            <YAxis
-              tickFormatter={(value) => `${value.toLocaleString()}`}
+            {/* Remove x-axis labels by setting tick={false} */}
+            <XAxis
+              dataKey="month"
+              axisLine={false}
+              tickLine={false}
+              tick={false}
+            />
+            <CustomYAxis
+              tickFormatter={(value: number) => `UGX ${value.toLocaleString()}`}
               axisLine={false}
               tickLine={false}
               reversed

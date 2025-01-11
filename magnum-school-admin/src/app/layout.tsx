@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
+import Loading from '@/components/loading';
+import { Suspense } from 'react';
 
 // Lato font configurations
 const lato = localFont({
@@ -72,7 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${lato.variable} antialiased overflow-hidden`}>
-        {children}
+        <Suspense fallback={<Loading />}>{children}</Suspense>
       </body>
     </html>
   );

@@ -1,19 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import ReusableTable from '@/components/shared/tables/ReusableTable';
+import { useRouter } from 'next/navigation';
+import { Parser } from 'json2csv';
 import { FaEllipsisV } from 'react-icons/fa';
 import { BsDownload } from 'react-icons/bs';
+import ReusableTable from '@/components/shared/tables/ReusableTable';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useRouter } from 'next/navigation';
-import { Parser } from 'json2csv';
-import { Button } from '@/components/ui/button';
-import { Student } from '@/types/student';
+import { useStudentData } from '@core/hooks/useStudentData';
+import LoadingSkeleton from './loading-skeleton';
 
 const columns = [
   {
@@ -80,23 +81,25 @@ const columns = [
   },
 ];
 
-interface StudentListProps {
-  initialData: Student[];
-}
-
-export default function StudentList({ initialData }: StudentListProps) {
-  const [students] = useState<Student[]>(initialData);
+export default function StudentList() {
+  const { students, isLoading, isError } = useStudentData();
   const [filter, setFilter] = useState<'All' | 'Activated' | 'Deactivated'>(
     'All',
   );
   const router = useRouter();
+
+  if (isLoading) return <LoadingSkeleton />;
+  if (isError)
+    return (
+      <div className="text-red-500 text-center">Error loading student data</div>
+    );
 
   const filteredData =
     filter === 'All'
       ? students
       : students.filter((student) => student.status === filter);
 
-  const tableData = filteredData?.map((student) => ({
+  const tableData = filteredData.map((student) => ({
     ...student,
     navigateToDetails: (id: string) => router.push(`/students/${id}`),
   }));
@@ -119,7 +122,7 @@ export default function StudentList({ initialData }: StudentListProps) {
     }
   };
 
-  if (students?.length === 0) {
+  if (students.length === 0) {
     return (
       <div className="text-center py-10">
         <h2 className="text-2xl font-semibold mb-2">No Students Available</h2>

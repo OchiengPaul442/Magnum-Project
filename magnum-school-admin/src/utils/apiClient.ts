@@ -1,37 +1,31 @@
-import axios, { AxiosInstance } from 'axios';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { getSession } from 'next-auth/react';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
-/**
- * Asynchronously creates and configures an Axios instance,
- * including the Authorization header if `useAuth` is true.
- *
- * @param useAuth - If true, will attach the user token from the session.
- * @returns A promise that resolves to a configured Axios instance.
- */
-export async function getApiClient(useAuth: boolean): Promise<AxiosInstance> {
-  const instance = axios.create({
+const createApiClient = (config?: AxiosRequestConfig): AxiosInstance => {
+  return axios.create({
     baseURL: BASE_URL,
     headers: {
       'Content-Type': 'application/json',
     },
+    ...config,
   });
+};
 
-  if (useAuth) {
-    try {
-      // Retrieve the session on the server side
-      const session = await getServerSession(authOptions);
-      const token = session?.user?.accessToken;
+const apiClient = createApiClient();
 
-      if (token) {
-        instance.defaults.headers.common['Authorization'] = `Token ${token}`;
-      }
-    } catch (error) {
-      console.error('Error retrieving session:', error);
-    }
+export const secureApiClient = createApiClient();
+
+secureApiClient.interceptors.request.use(async (config) => {
+  const session = await getSession();
+  const token = session?.user?.accessToken;
+
+  if (token) {
+    config.headers['Authorization'] = `Token ${token}`;
   }
 
-  return instance;
-}
+  return config;
+});
+
+export default apiClient;
