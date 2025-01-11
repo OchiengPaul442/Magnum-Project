@@ -12,10 +12,8 @@ import {
   createPasswordSchema,
   CreatePasswordFormValues,
 } from '@lib/validationSchema';
-import {
-  handleChangePassword,
-  ChangePasswordResponse,
-} from '@/app/server/actions';
+import { handleChangePassword } from '@/app/server/actions';
+import { ChangePasswordResponse } from '@/types/auth';
 import { useSession } from 'next-auth/react';
 import { signOut } from 'next-auth/react';
 import themeConfig from '@/configs/themeConfig';

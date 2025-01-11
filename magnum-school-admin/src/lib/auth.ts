@@ -1,12 +1,7 @@
-// app/server/authOptions.ts
-
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import {
-  handleSignIn,
-  handleVerifyOTP,
-  VerifyOTPResponse,
-} from '@/app/server/actions';
+import { handleSignIn, handleVerifyOTP } from '@/app/server/actions';
+import { VerifyOTPResponse } from '@/types/auth';
 import { User } from 'next-auth';
 
 export const authOptions: NextAuthOptions = {
