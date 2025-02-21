@@ -1,8 +1,12 @@
-import React from 'react';
 import MainLayout from '@components/layouts/MainLayout';
+import VendorPage from '@/views/pages/vendors/vendorPage';
 
 const page = () => {
-  return <MainLayout>coming soon</MainLayout>;
+  return (
+    <MainLayout>
+      <VendorPage />
+    </MainLayout>
+  );
 };
 
 export default page;
