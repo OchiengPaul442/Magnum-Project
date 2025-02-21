@@ -1,4 +1,3 @@
-// Type Imports
 import type { ChildrenType } from '@core/types';
 
 // Component Imports
@@ -9,10 +8,9 @@ const Layout = async (props: ChildrenType) => {
   const { children } = props;
 
   return (
-    // <Provider>
-    //   <AuthGuard>{children}</AuthGuard>
-    // </Provider>
-    <div>{children}</div>
+    <Provider>
+      <AuthGuard>{children}</AuthGuard>
+    </Provider>
   );
 };
 

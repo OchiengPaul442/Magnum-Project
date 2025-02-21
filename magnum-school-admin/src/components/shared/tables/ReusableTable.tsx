@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { cn } from '@lib/utils';
 
+interface TableColumn {
+  header: string;
+  accessor: string;
+  Cell?: (cell: { value: any; row: any }) => React.ReactNode;
+}
+
 interface TableProps {
-  columns: any[];
+  columns: TableColumn[];
   data: any[];
   rowsPerPageOptions?: number[];
 }
@@ -17,24 +23,35 @@ const ReusableTable: React.FC<TableProps> = ({
 
   const totalPages = Math.ceil(data.length / rowsPerPage);
 
-  const handlePageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleRowsPerPageChange = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
     setRowsPerPage(parseInt(event.target.value));
-    setCurrentPage(0); // Reset to the first page when rows per page change
+    setCurrentPage(0); // Reset to first page when rows per page changes
   };
 
   const startIndex = currentPage * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const currentData = data.slice(startIndex, endIndex);
 
+  const handlePrevious = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleNext = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
+  };
+
   return (
-    <div>
-      <div className="min-w-[550px] overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+    <div className="space-y-4">
+      {/* Responsive container for the table */}
+      <div className="overflow-x-auto bg-white rounded-lg shadow">
+        <table className="w-full border-collapse text-sm text-gray-700">
+          <thead className="bg-gray-50 text-gray-600 border-b border-gray-200">
             <tr>
               <th
                 scope="col"
-                className="px-6 py-4 text-left text-sm font-light text-gray-700"
+                className="px-6 py-4 text-left font-medium w-[60px]"
               >
                 No.
               </th>
@@ -42,82 +59,106 @@ const ReusableTable: React.FC<TableProps> = ({
                 <th
                   key={index}
                   scope="col"
-                  className="px-6 py-4 text-left text-sm font-semibold text-gray-700"
+                  className="px-6 py-4 text-left font-medium"
                 >
                   {column.header}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {currentData.map((row, rowIndex) => (
-              <tr key={rowIndex}>
-                <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
-                  {startIndex + rowIndex + 1}
+          <tbody>
+            {currentData.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length + 1}
+                  className="px-6 py-4 text-center text-gray-500"
+                >
+                  No data available
                 </td>
-                {columns.map((column, colIndex) => (
-                  <td
-                    key={colIndex}
-                    className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
-                  >
-                    {column.Cell
-                      ? column.Cell({ value: row[column.accessor], row })
-                      : row[column.accessor]}
-                  </td>
-                ))}
               </tr>
-            ))}
+            ) : (
+              currentData.map((row, rowIndex) => (
+                <tr
+                  key={rowIndex}
+                  className="border-b border-gray-100 last:border-none odd:bg-white even:bg-[#EEECF3]"
+                >
+                  {/* Serial Number */}
+                  <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                    {startIndex + rowIndex + 1}
+                  </td>
+
+                  {/* Data Columns */}
+                  {columns.map((column, colIndex) => (
+                    <td
+                      key={colIndex}
+                      className="px-6 py-4 text-gray-700 whitespace-nowrap"
+                    >
+                      {column.Cell
+                        ? column.Cell({
+                            value: row[column.accessor],
+                            row,
+                          })
+                        : row[column.accessor]}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
-        <div className="flex justify-start items-center p-4">
+      </div>
+
+      {/* Table Footer: Pagination & Rows per page */}
+      {data.length > 0 && (
+        <div className="flex flex-col items-center justify-between gap-4 md:flex-row md:gap-0">
+          {/* Pagination */}
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+              onClick={handlePrevious}
               disabled={currentPage === 0}
               className={cn(
-                'text-sm p-2',
+                'px-3 py-1.5 text-sm rounded-md border border-gray-200',
                 currentPage === 0
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-700 hover:text-gray-900',
+                  ? 'cursor-not-allowed text-gray-400 bg-gray-50'
+                  : 'text-gray-700 hover:bg-gray-100',
               )}
             >
               Previous
             </button>
-            <span className="text-sm text-gray-700">
-              {currentPage + 1} of {totalPages}
+            <span className="text-sm text-gray-600">
+              Page {currentPage + 1} of {totalPages || 1}
             </span>
             <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
-              }
+              onClick={handleNext}
               disabled={currentPage >= totalPages - 1}
               className={cn(
-                'text-sm p-2',
+                'px-3 py-1.5 text-sm rounded-md border border-gray-200',
                 currentPage >= totalPages - 1
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-700 hover:text-gray-900',
+                  ? 'cursor-not-allowed text-gray-400 bg-gray-50'
+                  : 'text-gray-700 hover:bg-gray-100',
               )}
             >
               Next
             </button>
           </div>
-        </div>
-      </div>
 
-      <div className="text-sm flex justify-end items-center py-3 w-full text-gray-700">
-        <p>Rows per page:&nbsp;</p>
-        <select
-          value={rowsPerPage}
-          onChange={handlePageChange}
-          className="border border-gray-300 bg-white w-full max-w-[120px] rounded-md p-2"
-        >
-          {rowsPerPageOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </div>
+          {/* Rows per page */}
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <span>Rows per page:</span>
+            <select
+              value={rowsPerPage}
+              onChange={handleRowsPerPageChange}
+              className="border border-gray-300 bg-white rounded-md px-2 py-1 text-sm focus:outline-none"
+            >
+              {rowsPerPageOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
