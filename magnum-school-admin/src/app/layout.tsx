@@ -1,6 +1,7 @@
+import './globals.css';
+import { Toaster } from 'sonner';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import './globals.css';
 import Loading from '@/components/loading';
 import { Suspense } from 'react';
 
@@ -75,6 +76,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${lato.variable} antialiased overflow-hidden`}>
         <Suspense fallback={<Loading />}>{children}</Suspense>
+        <Toaster richColors position="bottom-right" />
       </body>
     </html>
   );

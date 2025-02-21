@@ -12,7 +12,7 @@ import { cn } from '@lib/utils';
 
 interface CustomInputFieldProps {
   label?: string;
-  type?: 'text' | 'password' | 'email';
+  type?: 'text' | 'password' | 'email' | 'number' | 'date';
   placeholder?: string;
   value?: string;
   onChange?: (value: string) => void;

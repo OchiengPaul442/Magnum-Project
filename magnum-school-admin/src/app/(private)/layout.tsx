@@ -9,9 +9,10 @@ const Layout = async (props: ChildrenType) => {
   const { children } = props;
 
   return (
-    <Provider>
-      <AuthGuard>{children}</AuthGuard>
-    </Provider>
+    // <Provider>
+    //   <AuthGuard>{children}</AuthGuard>
+    // </Provider>
+    <div>{children}</div>
   );
 };
 

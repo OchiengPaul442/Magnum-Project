@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useStudentData } from '@core/hooks/useStudentData';
 import LoadingSkeleton from './loading-skeleton';
+import ErrorState from '@/components/shared/ErrorState';
+import NoData from '@/components/shared/NoData';
 
 const columns = [
   {
@@ -82,22 +84,39 @@ const columns = [
 ];
 
 export default function StudentList() {
-  const { students, isLoading, isError } = useStudentData();
+  const { students, isLoading, isError, mutate } = useStudentData();
   const [filter, setFilter] = useState<'All' | 'Activated' | 'Deactivated'>(
     'All',
   );
   const router = useRouter();
 
   if (isLoading) return <LoadingSkeleton />;
+
   if (isError)
     return (
-      <div className="text-red-500 text-center">Error loading student data</div>
+      <ErrorState
+        title="Error Loading Student Data"
+        description="There was an error while fetching student data. Please try again."
+        actionLabel="Retry"
+        onActionClick={() => mutate()}
+      />
     );
 
   const filteredData =
     filter === 'All'
       ? students
       : students.filter((student) => student.status === filter);
+
+  if (students.length === 0) {
+    return (
+      <NoData
+        title="No Students Available"
+        description="There are currently no students in the system."
+        actionLabel="Refresh"
+        onActionClick={() => mutate()}
+      />
+    );
+  }
 
   const tableData = filteredData.map((student) => ({
     ...student,
@@ -121,17 +140,6 @@ export default function StudentList() {
       console.error(error);
     }
   };
-
-  if (students.length === 0) {
-    return (
-      <div className="text-center py-10">
-        <h2 className="text-2xl font-semibold mb-2">No Students Available</h2>
-        <p className="text-gray-600">
-          There are currently no students in the system.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
