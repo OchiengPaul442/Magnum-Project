@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,14 +10,23 @@ import {
 } from '@/components/ui/dialog';
 import CustomButton from '@/components/shared/CustomButton';
 import AddStudentForm from '../forms/AddStudentForm';
+import { useStudentData } from '@/@core/hooks/useStudentData';
 
 export function AddStudentDialog() {
+  const { refetch } = useStudentData();
+  const [open, setOpen] = useState(false);
+
+  const handleSuccess = () => {
+    setOpen(false);
+    refetch();
+  };
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <CustomButton
           type="button"
-          onClick={() => null} // DialogTrigger handles opening
+          onClick={() => setOpen(true)}
           text="Add a student"
           className="bg-purple-700 text-sm gap-4 text-white px-6 py-3 rounded-lg hover:bg-purple-800 transition duration-200 flex items-center"
         />
@@ -26,7 +35,7 @@ export function AddStudentDialog() {
         <DialogHeader>
           <DialogTitle>Student Details</DialogTitle>
         </DialogHeader>
-        <AddStudentForm />
+        <AddStudentForm onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );

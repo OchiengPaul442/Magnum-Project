@@ -1,4 +1,3 @@
-// components/shared/CustomInputField.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Input } from '../ui/input';
@@ -21,7 +20,11 @@ interface CustomInputFieldProps {
   inputClassName?: string;
   labelClassName?: string;
   buttonClassName?: string;
-  error?: string; // Added error prop
+  error?: string;
+  /**
+   * Whether the input should be read-only.
+   */
+  readOnly?: boolean; // <-- Added readOnly prop
 }
 
 const CustomInputField: React.FC<CustomInputFieldProps> = ({
@@ -35,7 +38,8 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
   inputClassName = '',
   labelClassName = '',
   buttonClassName = '',
-  error, // Destructure error prop
+  error,
+  readOnly = false, // default is false
 }) => {
   const [inputValue, setInputValue] = useState(value);
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -45,6 +49,7 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
   }, [value]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) return; // If readOnly, do not update
     const newValue = e.target.value;
     setInputValue(newValue);
     if (onChange) {
@@ -57,6 +62,7 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
   };
 
   const clearInput = () => {
+    if (readOnly) return; // If readOnly, do not clear
     setInputValue('');
     if (onChange) {
       onChange('');
@@ -83,10 +89,12 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
           placeholder={placeholder}
           value={inputValue}
           onChange={handleInputChange}
+          readOnly={readOnly} // Pass readOnly to the <Input>
           className={cn(
             'w-full p-6 border rounded-full focus:outline-none bg-white focus:ring-2 focus:ring-purple-600',
             inputClassName,
             error ? 'border-red-500' : 'border-gray-300',
+            readOnly && 'cursor-not-allowed opacity-70', // Style readOnly
           )}
         />
         {type === 'password' ? (
@@ -97,6 +105,7 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
               'absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500',
               buttonClassName,
             )}
+            disabled={readOnly} // disable button if readOnly
           >
             {passwordVisible ? (
               <AiOutlineEyeInvisible size={20} />
@@ -114,6 +123,7 @@ const CustomInputField: React.FC<CustomInputFieldProps> = ({
                 'absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500',
                 buttonClassName,
               )}
+              disabled={readOnly} // disable clear button if readOnly
             >
               <AiOutlineClose size={20} />
             </button>

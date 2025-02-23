@@ -4,10 +4,14 @@ import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { format, isValid, parse } from 'date-fns';
+import { toast } from 'sonner';
+
 import CustomInputField from '@/components/shared/CustomInputField';
 import CustomButton from '@/components/shared/CustomButton';
+import { CustomDatePicker } from '../shared/CustomDatePicker';
+import { useRegisterNewStudent } from '@/@core/hooks/useStudentData';
 
-// 1. Define your form schema
 const formSchema = z.object({
   firstName: z.string().min(2, {
     message: 'First name must be at least 2 characters.',
@@ -15,11 +19,20 @@ const formSchema = z.object({
   lastName: z.string().min(2, {
     message: 'Last name must be at least 2 characters.',
   }),
-  // If you want to keep a date picker, use type="date" below and
-  // remove the placeholder or note that it might not appear in some browsers.
-  dateOfBirth: z.string().min(1, {
-    message: 'Date of birth is required.',
-  }),
+  dateOfBirth: z.string().refine(
+    (date) => {
+      if (!date) return false;
+      const parsed = parse(date, 'MM/dd/yyyy', new Date());
+      return (
+        isValid(parsed) &&
+        parsed < new Date() &&
+        parsed > new Date('1900-01-01')
+      );
+    },
+    {
+      message: 'Please enter a valid date of birth',
+    },
+  ),
   ssid: z.string().min(1, {
     message: 'School number (SSID) is required.',
   }),
@@ -35,6 +48,8 @@ interface AddStudentFormProps {
 }
 
 const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
+  const { registerNewStudent, isRegistering } = useRegisterNewStudent();
+
   const {
     control,
     handleSubmit,
@@ -50,21 +65,32 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
     },
   });
 
-  // 2. Handle form submission
-  const onSubmit = (data: FormData) => {
-    console.log(data);
-    if (onSuccess) onSuccess();
+  const onSubmit = async (formData: FormData) => {
+    try {
+      const response = await registerNewStudent(formData);
+      console.log('Registration response:', response);
+      toast.success('Student registered successfully!');
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      console.error('Registration error:', err);
+      toast.error('Error registering new student. Please try again.');
+    }
   };
 
-  // 3. Render form fields using react-hook-form's Controller
+  // Prevent form submission on enter key
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  };
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      // spacing between form elements
-      className="space-y-6"
+      className="space-y-6 relative"
+      onKeyDown={handleKeyDown}
     >
-      {/* First & Last Name side by side on larger screens */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 -mb-4">
         <Controller
           name="firstName"
           control={control}
@@ -93,22 +119,36 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
         />
       </div>
 
-      <Controller
-        name="dateOfBirth"
-        control={control}
-        render={({ field }) => (
-          <CustomInputField
-            label="Date of Birth"
-            // Using type="text" so the placeholder shows exactly as in the screenshot
-            // If you want a native date picker, switch to type="date"
-            type="text"
-            placeholder="05/07/2009"
-            value={field.value}
-            onChange={field.onChange}
-            error={errors.dateOfBirth?.message}
-          />
-        )}
-      />
+      <div className="relative">
+        <Controller
+          name="dateOfBirth"
+          control={control}
+          render={({ field }) => {
+            const parsedDate = field.value
+              ? parse(field.value, 'MM/dd/yyyy', new Date())
+              : null;
+
+            const validDate =
+              parsedDate && isValid(parsedDate) ? parsedDate : null;
+
+            return (
+              <CustomDatePicker
+                label="Date of Birth"
+                placeholder="Select date of birth"
+                value={validDate}
+                onChange={(date) => {
+                  if (date) {
+                    field.onChange(format(date, 'MM/dd/yyyy'));
+                  } else {
+                    field.onChange('');
+                  }
+                }}
+                error={errors.dateOfBirth?.message}
+              />
+            );
+          }}
+        />
+      </div>
 
       <Controller
         name="ssid"
@@ -116,7 +156,7 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
         render={({ field }) => (
           <CustomInputField
             label="Student's School Number (SSID)"
-            placeholder="Namulindwa Lisa"
+            placeholder="Enter school number"
             value={field.value}
             onChange={field.onChange}
             error={errors.ssid?.message}
@@ -130,7 +170,7 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
         render={({ field }) => (
           <CustomInputField
             label="Card Number"
-            placeholder="ADC 556 5678035"
+            placeholder="Enter card number"
             value={field.value}
             onChange={field.onChange}
             error={errors.cardNumber?.message}
@@ -140,9 +180,9 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
 
       <CustomButton
         type="submit"
-        onClick={() => null}
-        text="Continue"
-        className="w-full bg-purple-700 hover:bg-purple-800"
+        text={isRegistering ? 'Registering...' : 'Continue'}
+        disabled={isRegistering}
+        className="w-full bg-purple-700 hover:bg-purple-800 text-white rounded-full py-3"
       />
     </form>
   );
