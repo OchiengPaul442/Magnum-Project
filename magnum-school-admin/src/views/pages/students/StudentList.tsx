@@ -17,7 +17,7 @@ import {
 
 import ErrorState from '@/components/shared/ErrorState';
 import NoData from '@/components/shared/NoData';
-import LoadingSkeleton from './loading-skeleton';
+import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 
 import { useStudentData } from '@/@core/hooks/useStudentData';
 import { useStudentsContext } from '@/contexts/StudentsContext';

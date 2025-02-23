@@ -47,11 +47,11 @@ const ReusableTable: React.FC<TableProps> = ({
       {/* Responsive container for the table */}
       <div className="overflow-x-auto bg-white rounded-lg shadow">
         <table className="w-full border-collapse text-sm text-gray-700">
-          <thead className="bg-gray-50 text-gray-600 border-b border-gray-200">
+          <thead className="bg-gray-50 text-gray-700 border-b border-gray-200">
             <tr>
               <th
                 scope="col"
-                className="px-6 py-4 text-left font-medium w-[60px]"
+                className="px-6 py-4 text-left font-bold w-[60px]"
               >
                 No.
               </th>
@@ -59,7 +59,7 @@ const ReusableTable: React.FC<TableProps> = ({
                 <th
                   key={index}
                   scope="col"
-                  className="px-6 py-4 text-left font-medium"
+                  className="px-6 py-4 text-left font-bold"
                 >
                   {column.header}
                 </th>
