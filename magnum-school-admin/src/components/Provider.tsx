@@ -1,4 +1,7 @@
+'use client';
 import { NextAuthProvider } from '@/contexts/nextAuthProvider';
+import { store } from '@/redux-store/store';
+import { Provider as ReduxProvider } from 'react-redux';
 
 const Provider = (props: any) => {
   // Props
@@ -6,7 +9,7 @@ const Provider = (props: any) => {
 
   return (
     <NextAuthProvider basePath={process.env.NEXTAUTH_BASEPATH}>
-      {children}
+      <ReduxProvider store={store}>{children}</ReduxProvider>
     </NextAuthProvider>
   );
 };

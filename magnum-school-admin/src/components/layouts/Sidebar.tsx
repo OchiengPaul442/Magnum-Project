@@ -13,14 +13,17 @@ import { MdCurrencyExchange } from 'react-icons/md';
 import { signOut } from 'next-auth/react';
 import themeConfig from '@/configs/themeConfig';
 
-const Sidebar = () => {
+interface SidebarProps {
+  mobile?: boolean;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ mobile = false }) => {
   const pathname = usePathname();
   const router = useRouter();
 
   // Helper function to determine if the link is active
   const isActive = (path: string) => pathname.startsWith(path);
 
-  // Updated navItems with an optional 'action' property
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: <ImHome /> },
     { name: 'Students', path: '/students', icon: <FaUsers /> },
@@ -34,10 +37,8 @@ const Sidebar = () => {
     { name: 'Log out', action: 'logout', icon: <FiLogOut /> },
   ];
 
-  // Function to handle navigation or actions based on the nav item
   const handleItemClick = (item: (typeof navItems)[number]) => {
     if (item.action === 'logout') {
-      // Call signOut and redirect to '/sign-in' after signing out
       signOut({ callbackUrl: themeConfig.signOutUrl });
     } else if (item.path) {
       router.push(item.path);
@@ -45,7 +46,11 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 h-screen bg-white p-4 hidden lg:block">
+    <div
+      className={`bg-white h-full p-4 ${
+        mobile ? 'w-full' : 'w-64 hidden lg:block'
+      }`}
+    >
       {/* Logo Section */}
       <div
         onClick={() => handleItemClick(navItems[0])}
@@ -77,9 +82,7 @@ const Sidebar = () => {
             >
               <div className="mr-3">
                 {React.cloneElement(item.icon, {
-                  className: `w-5 h-5 ${
-                    active ? 'text-teal-700' : 'text-gray-500'
-                  }`,
+                  className: `w-5 h-5 ${active ? 'text-teal-700' : 'text-gray-500'}`,
                 })}
               </div>
               <span

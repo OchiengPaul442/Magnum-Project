@@ -5,7 +5,9 @@ import { usePathname } from 'next/navigation';
 import { SearchInput } from '@/components/shared';
 import { RiMenu2Fill } from 'react-icons/ri';
 import { AddStudentDialog } from '../dialogs/add-student-dialog';
-import { AddVendorDialog } from '../dialogs/add-vendor-dialog'; // create a similar dialog for vendors
+import { AddVendorDialog } from '../dialogs/add-vendor-dialog';
+import { toggleSidebar } from '@/redux-store/slices/sidebarSlice';
+import { useDispatch } from '@/redux-store/hooks';
 
 interface TopbarProps {
   showAddButton?: boolean;
@@ -13,6 +15,7 @@ interface TopbarProps {
 
 const Topbar: React.FC<TopbarProps> = ({ showAddButton = true }) => {
   const pathname = usePathname();
+  const dispatch = useDispatch();
 
   const isVendorsRoute = pathname.startsWith('/vendors');
 
@@ -22,7 +25,7 @@ const Topbar: React.FC<TopbarProps> = ({ showAddButton = true }) => {
         {/* Mobile Menu Trigger */}
         <button
           type="button"
-          onClick={() => console.log('Open Menu')}
+          onClick={() => dispatch(toggleSidebar())}
           className="lg:hidden"
         >
           <RiMenu2Fill size={30} color="#553C9A" className="mr-3" />
