@@ -1,3 +1,4 @@
+// pages/vendors/[vendorName].tsx
 'use client';
 
 import React from 'react';
@@ -13,26 +14,27 @@ export default function VendorDetailsPage({
   params: { vendorName: string };
 }) {
   const router = useRouter();
-  const { selectedVendor, setSelectedVendor } = useVendorsContext();
+  const { selectedVendor } = useVendorsContext();
 
   if (!selectedVendor || !selectedVendor.raw) {
     return notFound();
   }
 
-  // Compute vendor full name from raw data
-  const fullName = selectedVendor.raw.name;
+  const fullName = selectedVendor.raw.vendor_name;
   if (slugifyStudentName(fullName) !== params.vendorName) {
     return notFound();
   }
 
   const handleClose = () => {
-    setSelectedVendor(null);
     router.push('/vendors');
   };
 
   return (
     <MainLayout>
-      <VendorDetailsForm vendor={selectedVendor.raw} onClose={handleClose} />
+      <VendorDetailsForm
+        vendor={selectedVendor.raw as any}
+        onClose={handleClose}
+      />
     </MainLayout>
   );
 }

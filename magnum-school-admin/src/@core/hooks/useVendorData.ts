@@ -4,19 +4,19 @@ import {
   deactivateVendor,
   getVendors,
 } from '@/app/server/vendors/api';
-import { VendorsData } from '@/types/vendors';
+import { VendorDataItem } from '@/types/vendors';
 import { swrOptions } from '../swrConfigs';
 import useSWRMutation from 'swr/mutation';
 
 export const useVendorData = () => {
-  const { data, error, isLoading, mutate } = useSWR<VendorsData>(
+  const { data, error, isLoading, mutate } = useSWR<VendorDataItem[]>(
     'vendorData',
     getVendors,
     swrOptions,
   );
 
   return {
-    vendors: data?.vendors || [],
+    vendors: data || [],
     isLoading,
     isError: error,
     refetch: mutate,

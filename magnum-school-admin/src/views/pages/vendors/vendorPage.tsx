@@ -1,3 +1,4 @@
+// pages/VendorPage.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -19,9 +20,10 @@ import ErrorState from '@/components/shared/ErrorState';
 import NoData from '@/components/shared/NoData';
 import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 
-import { useVendorData } from '@/@core/hooks/useVendorData';
-import { useVendorsContext, VendorDataItem } from '@/contexts/VendorsContext';
+import { useVendorsContext } from '@/contexts/VendorsContext';
 import { slugifyStudentName } from '@/utils';
+import { VendorDataItem } from '@/types/vendors';
+import { useVendorData } from '@/@core/hooks/useVendorData';
 
 export default function VendorPage() {
   const router = useRouter();
@@ -29,7 +31,6 @@ export default function VendorPage() {
   const [filter, setFilter] = useState<'All' | 'Activated' | 'Deactivated'>(
     'All',
   );
-
   const { setSelectedVendor } = useVendorsContext();
 
   if (isLoading) return <LoadingSkeleton />;
@@ -43,7 +44,6 @@ export default function VendorPage() {
       />
     );
   }
-
   if (!vendors || vendors.length === 0) {
     return (
       <NoData
@@ -55,13 +55,12 @@ export default function VendorPage() {
     );
   }
 
-  // Filter logic with explicit parameter type
+  // Filter vendors by status
   const filteredData = vendors.filter((v: VendorDataItem) => {
     if (filter === 'All') return true;
     return v.status === filter;
   });
 
-  // Define columns for the table
   const columns = [
     {
       header: "Vendor's Name",
@@ -90,9 +89,7 @@ export default function VendorPage() {
       Cell: ({ value }: { value: string }) => (
         <div className="flex items-center gap-2">
           <span
-            className={`h-2.5 w-2.5 rounded-full ${
-              value === 'Activated' ? 'bg-teal-500' : 'bg-red-500'
-            }`}
+            className={`h-2.5 w-2.5 rounded-full ${value === 'Activated' ? 'bg-teal-500' : 'bg-red-500'}`}
           />
           <span
             className={
@@ -118,12 +115,9 @@ export default function VendorPage() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onClick={() => {
-                // Store the raw vendor data in context
-                setSelectedVendor(row.raw);
-                // Compute vendor slug (assuming raw vendor data has a name property)
-                const vendorName = row.raw.name;
+                setSelectedVendor(row);
                 router.push(
-                  `/vendors/${encodeURIComponent(slugifyStudentName(vendorName))}`,
+                  `/vendors/${encodeURIComponent(slugifyStudentName(row.raw.vendor_name))}`,
                 );
               }}
             >
@@ -135,12 +129,10 @@ export default function VendorPage() {
     },
   ];
 
-  // Prepare data for the table with explicit typing in map callback
   const tableData = filteredData.map((vendor: VendorDataItem) => ({
     ...vendor,
   }));
 
-  // CSV Download: Remove raw field from export
   const downloadCSV = () => {
     try {
       const csvExportData = filteredData.map((vendor: VendorDataItem) => ({
@@ -168,7 +160,6 @@ export default function VendorPage() {
 
   return (
     <div className="space-y-6">
-      {/* Filters & Download CSV */}
       <div className="flex justify-between items-center bg-white rounded-lg p-4 shadow-sm">
         <div className="flex items-center gap-4">
           <span className="text-sm font-bold text-gray-700">Filters:</span>
@@ -185,7 +176,6 @@ export default function VendorPage() {
             ))}
           </div>
         </div>
-
         <Button
           variant="outline"
           size="sm"
@@ -196,8 +186,6 @@ export default function VendorPage() {
           Download CSV
         </Button>
       </div>
-
-      {/* Table */}
       <div>
         <ReusableTable
           columns={columns}

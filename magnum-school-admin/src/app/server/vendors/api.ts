@@ -1,11 +1,24 @@
-import { VendorsData } from '@/types/vendors';
+import { APIVendor, GetVendorsResponse, VendorDataItem } from '@/types/vendors';
 import { secureApiClient } from '@/utils/apiClient';
 
-export const getVendors = async () => {
-  const response = await secureApiClient.get<VendorsData>(
+const transformVendor = (vendor: APIVendor): VendorDataItem => {
+  const personnel = vendor.Vendor_Personnel[0];
+  return {
+    id: vendor.id.toString(),
+    name: vendor.vendor_name,
+    email: personnel ? personnel.user.email : '',
+    canteenName: vendor.vendor_name, // or map to a different field if needed
+    status: personnel && personnel.user.is_active ? 'Activated' : 'Deactivated',
+    raw: vendor,
+  };
+};
+export const getVendors = async (): Promise<VendorDataItem[]> => {
+  const response = await secureApiClient.get<GetVendorsResponse>(
     '/getvendorsunderschool/',
   );
-  return response.data;
+  // Transform the API data into our internal shape
+  const vendors = response.data.Vendors.map(transformVendor);
+  return vendors;
 };
 
 // Activate vendor using patch method with vendor_id

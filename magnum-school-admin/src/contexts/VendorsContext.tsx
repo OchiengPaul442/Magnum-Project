@@ -1,15 +1,6 @@
 'use client';
-
+import { VendorDataItem } from '@/types/vendors';
 import React, { createContext, useContext, useState } from 'react';
-
-export interface VendorDataItem {
-  id: string;
-  name: string; // e.g. full name or vendor name
-  email: string;
-  canteenName: string;
-  status: 'Activated' | 'Deactivated';
-  raw: any; // full vendor object returned from the API
-}
 
 interface VendorsContextProps {
   selectedVendor: VendorDataItem | null;

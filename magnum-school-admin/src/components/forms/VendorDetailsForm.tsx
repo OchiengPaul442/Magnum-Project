@@ -1,21 +1,27 @@
+// components/forms/VendorDetailsForm.tsx
 'use client';
 
 import React from 'react';
 import { MdClose } from 'react-icons/md';
 import { CustomInputField, CustomButton } from '@/components/shared';
+import { mutate as globalMutate } from 'swr';
 import {
   useActivateVendor,
   useDeactivateVendor,
 } from '@/@core/hooks/useVendorData';
-import { mutate as globalMutate } from 'swr';
 
 interface VendorDetails {
   id: string;
-  name: string;
-  email: string;
-  canteenName: string;
-  status: 'active' | 'inactive';
-  // add any other fields as needed
+  vendor_name: string;
+  Vendor_Personnel: Array<{
+    id: number;
+    user: {
+      email: string;
+      is_active: boolean;
+      // …other user fields
+    };
+    contact: string;
+  }>;
 }
 
 interface VendorDetailsFormProps {
@@ -32,14 +38,14 @@ const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
 
   const handleToggleStatus = async () => {
     try {
-      const updatedStatus = vendor.status === 'active' ? 'inactive' : 'active';
-      if (vendor.status === 'active') {
+      // Determine new status based on the first personnel’s is_active flag
+      const isActive = vendor.Vendor_Personnel[0]?.user.is_active;
+      if (isActive) {
         await deactivateVendor({ vendor_id: vendor.id });
       } else {
         await activateVendor({ vendor_id: vendor.id });
       }
-      // Optionally update vendor.status locally
-      vendor.status = updatedStatus;
+      // Optionally update vendor locally and trigger a revalidation
       globalMutate('vendorData');
     } catch (err) {
       console.error('Error toggling vendor status:', err);
@@ -49,7 +55,7 @@ const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
   const buttonText =
     isActivating || isDeactivating
       ? 'Processing...'
-      : vendor.status === 'active'
+      : vendor.Vendor_Personnel[0]?.user.is_active
         ? 'Deactivate vendor'
         : 'Activate vendor';
 
@@ -70,28 +76,26 @@ const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
           </button>
         </div>
       </div>
-
-      {/* Vendor Details Section */}
       <div className="grid grid-cols-1 gap-6 mb-8">
         <CustomInputField
           label="Vendor Name"
           type="text"
           placeholder="Enter vendor name"
-          value={vendor.name}
+          value={vendor.vendor_name}
           readOnly
         />
         <CustomInputField
           label="Email"
           type="text"
           placeholder="Enter email"
-          value={vendor.email}
+          value={vendor.Vendor_Personnel[0]?.user.email || ''}
           readOnly
         />
         <CustomInputField
-          label="Canteen Name"
+          label="Contact"
           type="text"
-          placeholder="Enter canteen name"
-          value={vendor.canteenName}
+          placeholder="Enter contact number"
+          value={vendor.Vendor_Personnel[0]?.contact || ''}
           readOnly
         />
       </div>
