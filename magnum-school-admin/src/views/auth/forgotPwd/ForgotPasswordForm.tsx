@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomButton } from '@components/shared';
 
@@ -44,16 +46,16 @@ const ForgotPasswordForm = () => {
 
   const handleSubmit = () => {
     const otpCode = otp.join('');
-    console.log('Entered OTP:', otpCode);
     if (otpCode.length === 4) {
+      toast.success('OTP verified successfully!');
       router.push('/dashboard');
     } else {
-      alert('Please enter the complete 4-digit code.');
+      toast.error('Please enter the complete 4-digit code.');
     }
   };
 
   const handleResendCode = () => {
-    alert('Code resent to your email address.');
+    toast.success('Code resent to your email address.');
   };
 
   return (

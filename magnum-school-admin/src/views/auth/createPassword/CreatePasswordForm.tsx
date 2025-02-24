@@ -1,11 +1,12 @@
-// components/CreatePasswordForm.tsx
-
 'use client';
 
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomInputField, CustomButton } from '@components/shared';
 import {
@@ -14,15 +15,13 @@ import {
 } from '@lib/validationSchema';
 import { handleChangePassword } from '@/app/server/actions';
 import { ChangePasswordResponse } from '@/types/auth';
-import { useSession } from 'next-auth/react';
-import { signOut } from 'next-auth/react';
-import themeConfig from '@/configs/themeConfig';
+import { toast } from 'sonner';
 
 const CreatePasswordForm = () => {
   const { data: session } = useSession();
+  const router = useRouter();
+
   const [loading, setLoading] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [serverSuccess, setServerSuccess] = useState<string | null>(null);
 
   const {
     control,
@@ -38,14 +37,13 @@ const CreatePasswordForm = () => {
   });
 
   const onSubmit = async (data: CreatePasswordFormValues) => {
+    // If session or token is invalid, show an error toast
     if (!session?.user.accessToken) {
-      setServerError('Invalid session. Please sign in again.');
+      toast.error('Invalid session. Please sign in again.');
       return;
     }
 
     setLoading(true);
-    setServerError(null);
-    setServerSuccess(null);
 
     try {
       const response: ChangePasswordResponse = await handleChangePassword(
@@ -55,14 +53,14 @@ const CreatePasswordForm = () => {
       );
 
       if (response.status === 200 || response.status === 201) {
-        setServerSuccess(response.message || 'Password successfully changed.');
-
-        signOut({ callbackUrl: themeConfig.signOutUrl });
+        toast.success(response.message || 'Password changed successfully.');
+        // Redirect to /dashboard instead of signing out
+        router.push('/dashboard');
       } else {
-        setServerError(response.message || 'Failed to change password.');
+        toast.error(response.message || 'Failed to change password.');
       }
     } catch (error: any) {
-      setServerError(error.message || 'An unexpected error occurred.');
+      toast.error(error.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -134,20 +132,6 @@ const CreatePasswordForm = () => {
               />
             )}
           />
-
-          {/* Server Error Display */}
-          {serverError && (
-            <div className="text-red-500 text-sm text-center">
-              {serverError}
-            </div>
-          )}
-
-          {/* Server Success Display */}
-          {serverSuccess && (
-            <div className="text-green-500 text-sm text-center">
-              {serverSuccess}
-            </div>
-          )}
 
           {/* Submit Button */}
           <CustomButton

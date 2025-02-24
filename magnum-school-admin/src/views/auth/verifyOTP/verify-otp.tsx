@@ -1,13 +1,12 @@
-// pages/verify-otp.tsx
-
 'use client';
-
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
+import { toast } from 'sonner';
+
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomButton } from '@components/shared';
-import { signIn } from 'next-auth/react';
 import { handleResendOTP } from '@/app/server/actions';
 import { useSession } from 'next-auth/react';
 
@@ -16,7 +15,6 @@ const VerifyOTP: React.FC = () => {
   const { data: session, status } = useSession();
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState<string>('');
 
   // Refs for OTP inputs to manage focus
@@ -69,11 +67,11 @@ const VerifyOTP: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
-    const otpCode = otp.join(''); // "123456"
+    const otpCode = otp.join('');
+    console.log('Entered OTP:', otpCode);
     if (otpCode.length !== 6) {
-      setError('Please enter the complete 6-digit code.');
+      toast.error('Please enter the complete 6-digit code.');
       return;
     }
 
@@ -90,36 +88,32 @@ const VerifyOTP: React.FC = () => {
       setLoading(false);
 
       if (res?.error) {
-        // e.g. 'Invalid OTP' or 'OTP_REQUIRED'
         if (res.error === 'OTP_REQUIRED') {
-          setError('OTP is required for sign-in.');
+          toast.error('OTP is required for sign-in.');
         } else {
-          setError(res.error);
+          toast.error(res.error);
         }
       }
-      // Successful sign-in will be handled by useEffect
+      // On success, redirection will be handled by useEffect based on session
     } catch (err: any) {
       setLoading(false);
-      setError(err.message || 'An unexpected error occurred.');
+      toast.error(err.message || 'An unexpected error occurred.');
     }
   };
 
   const handleResendCode = async () => {
     if (!email) return;
     setLoading(true);
-    setError(null);
-    const purpose = 'login';
-
     try {
-      const response = await handleResendOTP(email, purpose);
+      const response = await handleResendOTP(email, 'login');
 
       if (response.status === 200 || response.status === 201) {
-        alert(response.message || 'OTP for login sent successfully.');
+        toast.success(response.message || 'OTP for login sent successfully.');
       } else {
-        setError(response.message || 'Failed to resend OTP.');
+        toast.error(response.message || 'Failed to resend OTP.');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to resend OTP.');
+      toast.error(err.message || 'Failed to resend OTP.');
     } finally {
       setLoading(false);
     }
@@ -163,10 +157,6 @@ const VerifyOTP: React.FC = () => {
             />
           ))}
         </div>
-
-        {error && (
-          <div className="text-red-500 text-sm text-center mb-4">{error}</div>
-        )}
 
         <CustomButton
           type="submit"

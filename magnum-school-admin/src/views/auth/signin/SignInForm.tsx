@@ -1,11 +1,10 @@
-// pages/sign-in.tsx
-
 'use client';
-
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import { toast } from 'sonner';
+
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomInputField, CustomButton } from '@components/shared';
 import { useForm, Controller } from 'react-hook-form';
@@ -16,7 +15,6 @@ import themeConfig from '@configs/themeConfig';
 const SignInForm = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const {
     control,
@@ -32,7 +30,6 @@ const SignInForm = () => {
 
   const onSubmit = async (data: SignInFormValues) => {
     setLoading(true);
-    setError(null);
     try {
       const res = await signIn('credentials', {
         redirect: false,
@@ -44,18 +41,18 @@ const SignInForm = () => {
 
       if (res?.error) {
         if (res.error === 'OTP_REQUIRED') {
-          // Store email in sessionStorage to use in OTP verification
+          // Store email in sessionStorage for OTP verification
           sessionStorage.setItem('pendingEmail', data.email);
           router.push('/verify-otp');
         } else {
-          setError(res.error);
+          toast.error(res.error);
         }
       } else {
         router.push(themeConfig.homePageUrl);
       }
     } catch (err: any) {
       setLoading(false);
-      setError(err.message || 'An unexpected error occurred.');
+      toast.error(err.message || 'An unexpected error occurred.');
     }
   };
 
@@ -106,10 +103,6 @@ const SignInForm = () => {
               />
             )}
           />
-
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
 
           <CustomButton
             type="submit"
