@@ -1,3 +1,4 @@
+// components/forms/AddStudentForm.tsx
 'use client';
 
 import React from 'react';
@@ -12,6 +13,7 @@ import CustomButton from '@/components/shared/CustomButton';
 import { CustomDatePicker } from '../shared/CustomDatePicker';
 import { useRegisterNewStudent } from '@/@core/hooks/useStudentData';
 
+// Define the form schema
 const formSchema = z.object({
   firstName: z.string().min(2, {
     message: 'First name must be at least 2 characters.',
@@ -67,17 +69,38 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
 
   const onSubmit = async (formData: FormData) => {
     try {
-      const response = await registerNewStudent(formData);
-      console.log('Registration response:', response);
-      toast.success('Student registered successfully!');
+      // Parse and reformat the date from MM/dd/yyyy to YYYY-MM-DD
+      const parsedDate = parse(formData.dateOfBirth, 'MM/dd/yyyy', new Date());
+      const formattedDob = format(parsedDate, 'yyyy-MM-dd');
+
+      // Build the request body as required by the API
+      const requestBody: any = {
+        student: {
+          ssid: formData.ssid,
+          student_first_name: formData.firstName,
+          student_last_name: formData.lastName,
+          student_dob: formattedDob,
+        },
+        card_number: formData.cardNumber,
+      };
+
+      const response = await registerNewStudent(requestBody as any);
+      if (response.status === 201 || response.status === 200) {
+        toast.success(response.message);
+      } else {
+        toast.error(response.message);
+      }
       if (onSuccess) onSuccess();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Registration error:', err);
-      toast.error('Error registering new student. Please try again.');
+      const errorMessage =
+        err?.response?.data?.message ||
+        'Error registering new student. Please try again.';
+      toast.error(errorMessage);
     }
   };
 
-  // Prevent form submission on enter key
+  // Prevent form submission on Enter key
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -127,10 +150,8 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
             const parsedDate = field.value
               ? parse(field.value, 'MM/dd/yyyy', new Date())
               : null;
-
             const validDate =
               parsedDate && isValid(parsedDate) ? parsedDate : null;
-
             return (
               <CustomDatePicker
                 label="Date of Birth"

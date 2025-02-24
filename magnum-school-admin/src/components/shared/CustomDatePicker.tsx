@@ -1,3 +1,4 @@
+// components/forms/CustomDatePicker.tsx
 import * as React from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
@@ -77,6 +78,9 @@ export const CustomDatePicker: React.FC<DatePickerProps> = ({
             disabled={(date) =>
               date > new Date() || date < new Date('1900-01-01')
             }
+            // Optionally, pass fromDate / toDate to limit year range
+            fromDate={new Date('1900-01-01')}
+            toDate={new Date('2100-12-31')}
             className={cn(
               'rounded-md border-0',
               '[&_button:not(:disabled)]:hover:bg-gray-100',

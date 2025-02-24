@@ -61,3 +61,16 @@ export interface StudentDataItem {
   balance: string;
   raw: RawStudent;
 }
+
+// register types
+
+export interface RegisterStudentRequest {
+  student: Student;
+  card_number: string;
+}
+
+// The endpoint returns an object with a message and status.
+export interface RegisterStudentResponse {
+  message: string;
+  status: number;
+}

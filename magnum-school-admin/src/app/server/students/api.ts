@@ -2,6 +2,7 @@ import { secureApiClient } from '@/utils/apiClient';
 
 import {
   RegisterStudentRequest,
+  RegisterStudentResponse,
   StudentDataItem,
   StudentListResponse,
 } from '@/types/student';
@@ -29,8 +30,10 @@ export const getStudentData = async (): Promise<StudentDataItem[]> => {
     throw error;
   }
 };
-// Register new student post method
-export const registerNewStudent = async (body: RegisterStudentRequest) => {
+
+export const registerNewStudent = async (
+  body: RegisterStudentRequest,
+): Promise<RegisterStudentResponse> => {
   try {
     const response = await secureApiClient.post('/registerstudent/', body);
     return response.data;

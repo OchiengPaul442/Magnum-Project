@@ -6,7 +6,11 @@ import {
   deactivateStudent,
   registerNewStudent,
 } from '@/app/server/students/api';
-import { StudentDataItem } from '@/types/student';
+import {
+  RegisterStudentRequest,
+  RegisterStudentResponse,
+  StudentDataItem,
+} from '@/types/student';
 import { swrOptions } from '../swrConfigs';
 
 export const useStudentData = () => {
@@ -26,9 +30,13 @@ export const useStudentData = () => {
 
 // register a new student
 export const useRegisterNewStudent = () => {
-  const { trigger, data, error, isMutating } = useSWRMutation(
+  const { trigger, data, error, isMutating } = useSWRMutation<
+    RegisterStudentResponse,
+    any,
     '/registerstudent',
-    (_: string, { arg }: { arg: any }) => registerNewStudent(arg),
+    RegisterStudentRequest
+  >('/registerstudent', (_: string, { arg }: { arg: RegisterStudentRequest }) =>
+    registerNewStudent(arg),
   );
 
   return {
