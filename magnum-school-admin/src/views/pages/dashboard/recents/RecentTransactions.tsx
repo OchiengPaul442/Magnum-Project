@@ -1,11 +1,12 @@
 'use client';
 
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText } from 'lucide-react';
-
+import { EmptyStateCard } from '@/components/shared/EmptyStateCard';
 interface Transaction {
   name: string;
   cardNumber: string;
@@ -25,23 +26,14 @@ export default function RecentTransactions({
 
   if (!transactions?.length) {
     return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle>Recent Transactions</CardTitle>
-          <Button variant="link" onClick={() => router.push('/transactions')}>
-            See All
-          </Button>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-          <FileText className="h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-lg font-medium text-gray-900">
-            No transactions yet
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Transactions will appear here when they are made.
-          </p>
-        </CardContent>
-      </Card>
+      <EmptyStateCard
+        title="Recent Transactions"
+        buttonText="See All"
+        onButtonClick={() => router.push('/transactions')}
+        mainMessage="No transactions yet"
+        subMessage="Transactions will appear here when they are made."
+        icon={<FileText className="h-12 w-12 text-gray-400 mb-4" />}
+      />
     );
   }
 
@@ -83,8 +75,8 @@ export default function RecentTransactions({
                 <Badge
                   variant={
                     transaction.transactionType.toLowerCase() === 'withdraw'
-                      ? 'destructive' // Map 'warning' to 'destructive'
-                      : 'default' // Map 'success' to 'default'
+                      ? 'destructive'
+                      : 'default'
                   }
                   className="capitalize px-3 py-1"
                 >

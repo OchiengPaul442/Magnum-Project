@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from '@lib/utils';
+import { FileText } from 'lucide-react';
 
 interface TableColumn {
   header: string;
@@ -12,6 +13,23 @@ interface TableProps {
   data: any[];
   rowsPerPageOptions?: number[];
 }
+
+/**
+ * A simple empty state component for table bodies.
+ */
+const TableEmptyState: React.FC<{
+  icon?: React.ReactNode;
+  mainMessage: string;
+  subMessage: string;
+}> = ({ icon, mainMessage, subMessage }) => {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 text-center">
+      {icon ? icon : <FileText className="h-12 w-12 text-gray-400 mb-4" />}
+      <p className="text-lg font-medium text-gray-900">{mainMessage}</p>
+      <p className="text-sm text-gray-500 mt-1">{subMessage}</p>
+    </div>
+  );
+};
 
 const ReusableTable: React.FC<TableProps> = ({
   columns,
@@ -73,7 +91,11 @@ const ReusableTable: React.FC<TableProps> = ({
                   colSpan={columns.length + 1}
                   className="px-6 py-4 text-center text-gray-500"
                 >
-                  No data available
+                  <TableEmptyState
+                    mainMessage="No data available"
+                    subMessage="There are no rows to display at the moment."
+                    icon={<FileText className="h-12 w-12 text-gray-400 mb-4" />}
+                  />
                 </td>
               </tr>
             ) : (
@@ -86,7 +108,6 @@ const ReusableTable: React.FC<TableProps> = ({
                   <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
                     {startIndex + rowIndex + 1}
                   </td>
-
                   {/* Data Columns */}
                   {columns.map((column, colIndex) => (
                     <td
