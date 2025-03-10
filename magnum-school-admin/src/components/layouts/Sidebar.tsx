@@ -41,9 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobile = false }) => {
 
   return (
     <div
-      className={`bg-white h-full p-4 ${
-        mobile ? 'w-full' : 'w-64 hidden lg:block'
-      }`}
+      className={`bg-white h-full p-4 ${mobile ? 'w-full' : 'w-64 hidden lg:block'}`}
     >
       {/* Logo Section */}
       <div
@@ -63,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobile = false }) => {
       {/* Navigation Items */}
       <nav className="flex flex-col space-y-2 flex-grow">
         {navItems.map((item) => {
-          const active = isActive(item.path || '');
+          const active = item.path ? isActive(item.path) : false;
           return (
             <button
               key={item.name}
@@ -80,9 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobile = false }) => {
                 })}
               </div>
               <span
-                className={`font-medium text-base ${
-                  active ? 'text-teal-700' : 'text-gray-700'
-                }`}
+                className={`font-medium text-base ${active ? 'text-teal-700' : 'text-gray-700'}`}
               >
                 {item.name}
               </span>
