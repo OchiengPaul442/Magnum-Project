@@ -1,8 +1,8 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { handleSignIn, handleVerifyOTP } from '@/app/server/actions';
-import { VerifyOTPResponse } from '@/types/auth';
 import { User } from 'next-auth';
+import { VerifyOTPResponse } from '../types/auth';
 
 export const authOptions: NextAuthOptions = {
   providers: [

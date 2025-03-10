@@ -1,8 +1,8 @@
 import type { ChildrenType } from '@core/types';
 
 // Component Imports
-import AuthGuard from '@/hocs/AuthGuard';
 import Provider from '@/components/Provider';
+import AuthGuard from '@/@core/hocs/AuthGuard';
 
 const Layout = async (props: ChildrenType) => {
   const { children } = props;

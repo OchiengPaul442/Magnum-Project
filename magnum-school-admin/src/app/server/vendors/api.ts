@@ -1,5 +1,9 @@
-import { APIVendor, GetVendorsResponse, VendorDataItem } from '@/types/vendors';
-import { secureApiClient } from '@/utils/apiClient';
+import {
+  APIVendor,
+  GetVendorsResponse,
+  VendorDataItem,
+} from '@/@core/types/vendors';
+import { secureApiClient } from '@/@core/utils/apiClient';
 
 const transformVendor = (vendor: APIVendor): VendorDataItem => {
   const personnel = vendor.Vendor_Personnel[0];

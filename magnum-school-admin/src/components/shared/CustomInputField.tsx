@@ -7,7 +7,7 @@ import {
   AiOutlineEyeInvisible,
   AiOutlineClose,
 } from 'react-icons/ai';
-import { cn } from '@lib/utils';
+import { cn } from '@/@core/lib/utils';
 
 interface CustomInputFieldProps {
   label?: string;

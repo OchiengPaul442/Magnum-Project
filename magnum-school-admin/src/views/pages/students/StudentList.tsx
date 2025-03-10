@@ -21,7 +21,7 @@ import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 
 import { useStudentData } from '@/@core/hooks/useStudentData';
 import { useStudentsContext } from '@/contexts/StudentsContext';
-import { slugifyStudentName } from '@/utils';
+import { slugifyStudentName } from '@/@core/utils';
 
 export default function StudentList() {
   const router = useRouter();

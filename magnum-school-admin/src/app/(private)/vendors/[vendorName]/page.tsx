@@ -1,4 +1,3 @@
-// pages/vendors/[vendorName].tsx
 'use client';
 
 import React from 'react';
@@ -6,8 +5,7 @@ import MainLayout from '@/components/layouts/MainLayout';
 import VendorDetailsForm from '@/components/forms/VendorDetailsForm';
 import { notFound, useRouter } from 'next/navigation';
 import { useVendorsContext } from '@/contexts/VendorsContext';
-import { slugifyStudentName } from '@/utils';
-
+import { slugifyStudentName } from '@/@core/utils';
 export default function VendorDetailsPage({
   params,
 }: {

@@ -1,8 +1,5 @@
-// Third-party Imports
+import { authOptions } from '@/@core/lib/auth';
 import NextAuth from 'next-auth';
-
-// Lib Imports
-import { authOptions } from '@lib/auth';
 
 const handler = NextAuth(authOptions);
 

@@ -1,11 +1,10 @@
-import { secureApiClient } from '@/utils/apiClient';
-
 import {
   RegisterStudentRequest,
   RegisterStudentResponse,
   StudentDataItem,
   StudentListResponse,
-} from '@/types/student';
+} from '@/@core/types/student';
+import { secureApiClient } from '@/@core/utils/apiClient';
 
 // Get student data from server
 export const getStudentData = async (): Promise<StudentDataItem[]> => {

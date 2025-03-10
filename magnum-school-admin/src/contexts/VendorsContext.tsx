@@ -1,5 +1,5 @@
 'use client';
-import { VendorDataItem } from '@/types/vendors';
+import { VendorDataItem } from '@/@core/types/vendors';
 import React, { createContext, useContext, useState } from 'react';
 
 interface VendorsContextProps {

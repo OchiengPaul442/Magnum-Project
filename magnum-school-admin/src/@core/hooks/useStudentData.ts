@@ -6,12 +6,13 @@ import {
   deactivateStudent,
   registerNewStudent,
 } from '@/app/server/students/api';
+
+import { swrOptions } from '../swrConfigs';
 import {
   RegisterStudentRequest,
   RegisterStudentResponse,
   StudentDataItem,
-} from '@/types/student';
-import { swrOptions } from '../swrConfigs';
+} from '../types/student';
 
 export const useStudentData = () => {
   const { data, error, isLoading, mutate } = useSWR<StudentDataItem[]>(

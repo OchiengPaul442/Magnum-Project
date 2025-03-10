@@ -1,4 +1,4 @@
-import { secureApiClient } from '@/utils/apiClient';
+import { secureApiClient } from '@/@core/utils/apiClient';
 
 export const getDashboardData = async () => {
   try {

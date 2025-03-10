@@ -1,9 +1,10 @@
 'use client';
 
+import { cn } from '@/@core/lib/utils';
 import React from 'react';
 import { IconType } from 'react-icons';
 import { MdOutlineInfo } from 'react-icons/md';
-import { cn } from '@/lib/utils';
+
 interface NoDataProps {
   icon?: IconType;
   title?: string;

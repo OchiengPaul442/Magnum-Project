@@ -1,11 +1,11 @@
-import apiClient, { secureApiClient } from '@/utils/apiClient';
-import { handleApiError } from '@/utils/handleApiErrors';
 import {
+  ChangePasswordResponse,
+  ResendOTPResponse,
   SignInResponse,
   VerifyOTPResponse,
-  ResendOTPResponse,
-  ChangePasswordResponse,
-} from '@/types/auth';
+} from '@/@core/types/auth';
+import apiClient, { secureApiClient } from '@/@core/utils/apiClient';
+import { handleApiError } from '@/@core/utils/handleApiErrors';
 
 /**
  * Handles user sign-in by sending credentials to the API.
@@ -89,6 +89,27 @@ export const handleChangePassword = async (
         old_password: oldPassword,
         new_password: newPassword,
         confirm_password: confirmPassword,
+      },
+    );
+    return response.data;
+  } catch (error: any) {
+    return handleApiError(error);
+  }
+};
+
+/**
+ * Handle Forgot Password by sending the required details to the API.
+ * @param email User's email.
+ * @returns ResendOTPResponse
+ */
+export const handleForgotPassword = async (
+  email: string,
+): Promise<ResendOTPResponse> => {
+  try {
+    const response = await apiClient.post<ResendOTPResponse>(
+      '/forgotpassword/',
+      {
+        email,
       },
     );
     return response.data;

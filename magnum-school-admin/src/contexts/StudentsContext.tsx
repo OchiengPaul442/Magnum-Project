@@ -1,5 +1,5 @@
 'use client';
-import { StudentDataItem } from '@/types/student';
+import { StudentDataItem } from '@/@core/types/student';
 import React, { createContext, useState, useContext } from 'react';
 
 interface StudentsContextProps {

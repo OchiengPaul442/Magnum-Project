@@ -1,9 +1,9 @@
 'use client';
 
+import { cn } from '@/@core/lib/utils';
 import React from 'react';
 import { IconType } from 'react-icons';
 import { MdErrorOutline } from 'react-icons/md';
-import { cn } from '@/lib/utils';
 
 interface ErrorStateProps {
   icon?: IconType;

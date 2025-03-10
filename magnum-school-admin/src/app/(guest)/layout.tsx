@@ -2,8 +2,8 @@
 import type { ChildrenType } from '@core/types';
 
 // HOC Imports
-import GuestOnlyRoute from '@hocs/GuestOnlyRoute';
 import Provider from '@/components/Provider';
+import GuestOnlyRoute from '@/@core/hocs/GuestOnlyRoute';
 
 const Layout = async (props: ChildrenType) => {
   const { children } = props;

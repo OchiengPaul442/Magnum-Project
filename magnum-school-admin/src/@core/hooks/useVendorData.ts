@@ -4,9 +4,9 @@ import {
   deactivateVendor,
   getVendors,
 } from '@/app/server/vendors/api';
-import { VendorDataItem } from '@/types/vendors';
 import { swrOptions } from '../swrConfigs';
 import useSWRMutation from 'swr/mutation';
+import { VendorDataItem } from '../types/vendors';
 
 export const useVendorData = () => {
   const { data, error, isLoading, mutate } = useSWR<VendorDataItem[]>(
