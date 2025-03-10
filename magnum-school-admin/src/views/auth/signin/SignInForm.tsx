@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { toast } from 'sonner';
@@ -103,6 +104,16 @@ const SignInForm = () => {
               />
             )}
           />
+
+          {/* Forgot Password Link */}
+          <div className="flex justify-start">
+            <Link
+              href="/forgot-password"
+              className="text-green-600 font-medium hover:underline"
+            >
+              Forgot Password?
+            </Link>
+          </div>
 
           <CustomButton
             type="submit"

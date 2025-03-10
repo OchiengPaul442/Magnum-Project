@@ -7,12 +7,12 @@ import { toast } from 'sonner';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomButton } from '@components/shared';
 
-const ForgotPasswordForm = () => {
+const VerificationCode = () => {
   const router = useRouter();
   const [otp, setOtp] = useState<string[]>(['', '', '', '']);
 
   const handleInputChange = (index: number, value: string) => {
-    if (value.length > 1) return; // Allow only a single character
+    if (value.length > 1) return;
 
     const newOtp = [...otp];
     newOtp[index] = value;
@@ -48,7 +48,7 @@ const ForgotPasswordForm = () => {
     const otpCode = otp.join('');
     if (otpCode.length === 4) {
       toast.success('OTP verified successfully!');
-      router.push('/dashboard');
+      router.push('/forgot-password/reset');
     } else {
       toast.error('Please enter the complete 4-digit code.');
     }
@@ -109,4 +109,4 @@ const ForgotPasswordForm = () => {
   );
 };
 
-export default ForgotPasswordForm;
+export default VerificationCode;

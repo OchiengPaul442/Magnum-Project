@@ -1,10 +1,9 @@
-import React from 'react';
-import ForgotPasswordForm from '@views/auth/forgotPwd/ForgotPasswordForm';
+import EnterEmailForm from '@/views/auth/forgotPwd/EmailForm';
 
 const page = () => {
   return (
     <div>
-      <ForgotPasswordForm />
+      <EnterEmailForm />
     </div>
   );
 };
