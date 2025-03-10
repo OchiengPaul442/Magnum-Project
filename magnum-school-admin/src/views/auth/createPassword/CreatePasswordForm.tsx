@@ -9,13 +9,14 @@ import { useRouter } from 'next/navigation';
 
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomInputField, CustomButton } from '@components/shared';
-import {
-  createPasswordSchema,
-  CreatePasswordFormValues,
-} from '@lib/validationSchema';
+
 import { handleChangePassword } from '@/app/server/actions';
-import { ChangePasswordResponse } from '@/types/auth';
 import { toast } from 'sonner';
+import {
+  CreatePasswordFormValues,
+  createPasswordSchema,
+} from '@/@core/lib/validationSchema';
+import { ChangePasswordResponse } from '@/@core/types/auth';
 
 const CreatePasswordForm = () => {
   const { data: session } = useSession();

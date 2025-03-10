@@ -9,8 +9,8 @@ import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomInputField, CustomButton } from '@components/shared';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { signInSchema, SignInFormValues } from '@lib/validationSchema';
-import themeConfig from '@configs/themeConfig';
+import themeConfig from '@/@core/configs/themeConfig';
+import { SignInFormValues, signInSchema } from '@/@core/lib/validationSchema';
 
 const SignInForm = () => {
   const router = useRouter();
