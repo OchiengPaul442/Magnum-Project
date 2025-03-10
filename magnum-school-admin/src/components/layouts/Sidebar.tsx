@@ -9,9 +9,8 @@ import { ImHome } from 'react-icons/im';
 import { FaUsers } from 'react-icons/fa6';
 import { MdSwitchAccount } from 'react-icons/md';
 import { FiLogOut } from 'react-icons/fi';
-import { MdCurrencyExchange } from 'react-icons/md';
 import { signOut } from 'next-auth/react';
-import themeConfig from '@/configs/themeConfig';
+import themeConfig from '@/@core/configs/themeConfig';
 
 interface SidebarProps {
   mobile?: boolean;
@@ -28,11 +27,6 @@ const Sidebar: React.FC<SidebarProps> = ({ mobile = false }) => {
     { name: 'Dashboard', path: '/dashboard', icon: <ImHome /> },
     { name: 'Students', path: '/students', icon: <FaUsers /> },
     { name: 'Vendors', path: '/vendors', icon: <MdSwitchAccount /> },
-    {
-      name: 'Transactions',
-      path: '/transactions',
-      icon: <MdCurrencyExchange />,
-    },
     { name: 'Settings', path: '/settings', icon: <FaCog /> },
     { name: 'Log out', action: 'logout', icon: <FiLogOut /> },
   ];

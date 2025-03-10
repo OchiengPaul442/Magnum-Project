@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import CustomInputField from '@/components/shared/CustomInputField';
 import CustomButton from '@/components/shared/CustomButton';
 
-// Example vendor registration hook
 import { useRegisterNewVendor } from '@/@core/hooks/useVendorData';
 
 // 1. Define your vendor form schema

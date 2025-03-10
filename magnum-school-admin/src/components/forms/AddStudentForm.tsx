@@ -1,4 +1,3 @@
-// components/forms/AddStudentForm.tsx
 'use client';
 
 import React from 'react';

@@ -1,4 +1,3 @@
-// components/forms/VendorDetailsForm.tsx
 'use client';
 
 import React from 'react';

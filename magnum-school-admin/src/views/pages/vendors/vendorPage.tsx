@@ -21,9 +21,9 @@ import NoData from '@/components/shared/NoData';
 import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 
 import { useVendorsContext } from '@/contexts/VendorsContext';
-import { slugifyStudentName } from '@/utils';
-import { VendorDataItem } from '@/types/vendors';
 import { useVendorData } from '@/@core/hooks/useVendorData';
+import { VendorDataItem } from '@/@core/types/vendors';
+import { slugifyStudentName } from '@/@core/utils';
 
 export default function VendorPage() {
   const router = useRouter();

@@ -21,10 +21,6 @@
     "paths": {
       "@/*": ["./src/*"],
       "@components/*": ["./src/components/*"],
-      "@hooks/*": ["./src/hooks/*"],
-      "@lib/*": ["./src/lib/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@middleware/*": ["./src/middleware/*"],
       "@public/*": ["./public/*"],
       "@images/*": ["./public/assets/images/*"],
       "@icons/*": ["./public/assets/icons/*"],
@@ -32,9 +28,7 @@
       "@views/*": ["./src/views/*"],
       "@core/*": ["./src/@core/*"],
       "@data/*": ["./src/data/*"],
-      "@contexts/*": ["./src/contexts/*"],
-      "@hocs/*": ["./src/hocs/*"],
-      "@configs/*": ["./src/configs/*"]
+      "@contexts/*": ["./src/contexts/*"]
     }
   },
   "include": [

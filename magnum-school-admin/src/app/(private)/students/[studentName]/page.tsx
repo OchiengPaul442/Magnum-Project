@@ -5,7 +5,7 @@ import MainLayout from '@components/layouts/MainLayout';
 import StudentDetailsForm from '@components/forms/StudentDetailsForm';
 import { notFound, useRouter } from 'next/navigation';
 import { useStudentsContext } from '@/contexts/StudentsContext';
-import { slugifyStudentName } from '@/utils';
+import { slugifyStudentName } from '@/@core/utils';
 
 export default function StudentDetailsPage({
   params,
