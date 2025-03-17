@@ -106,10 +106,10 @@ const SignInForm = () => {
           />
 
           {/* Forgot Password Link */}
-          <div className="flex justify-start">
+          <div className="flex justify-end">
             <Link
               href="/forgot-password"
-              className="text-green-600 font-medium hover:underline"
+              className="text-purple-700 font-medium hover:underline"
             >
               Forgot Password?
             </Link>

@@ -16,6 +16,7 @@ const VerifyOTP: React.FC = () => {
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState<string>('');
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Refs for OTP inputs to manage focus
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -41,6 +42,19 @@ const VerifyOTP: React.FC = () => {
     }
   }, [status, session, router]);
 
+  // Auto-submit when all fields are filled
+  useEffect(() => {
+    if (otp.every((digit) => digit !== '') && !loading) {
+      // Short delay to ensure UI updates before submission
+      const timer = setTimeout(() => {
+        formRef.current?.dispatchEvent(
+          new Event('submit', { cancelable: true, bubbles: true }),
+        );
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [otp, loading]);
+
   const handleInputChange = (index: number, value: string) => {
     // Only allow digits, single char
     if (/^\d*$/.test(value) && value.length <= 1) {
@@ -62,6 +76,40 @@ const VerifyOTP: React.FC = () => {
     // Handle backspace to move focus to previous input
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  // Handle paste event for OTP
+  const handlePaste = (
+    e: React.ClipboardEvent<HTMLInputElement>,
+    index: number,
+  ) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').trim();
+
+    // Check if pasted content contains only digits
+    if (/^\d+$/.test(pastedData)) {
+      const digits = pastedData.split('').slice(0, 6);
+
+      // Create a new OTP array
+      const newOtp = [...otp];
+
+      // Fill in the digits starting from the current input position
+      digits.forEach((digit, i) => {
+        if (index + i < 6) {
+          newOtp[index + i] = digit;
+        }
+      });
+
+      setOtp(newOtp);
+
+      // Focus on the next empty input or the last input if all are filled
+      const nextEmptyIndex = newOtp.findIndex((val) => val === '');
+      if (nextEmptyIndex !== -1) {
+        inputRefs.current[nextEmptyIndex]?.focus();
+      } else {
+        inputRefs.current[5]?.focus();
+      }
     }
   };
 
@@ -121,6 +169,7 @@ const VerifyOTP: React.FC = () => {
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className="min-h-screen bg-light-purple-gradient px-4"
     >
@@ -150,10 +199,12 @@ const VerifyOTP: React.FC = () => {
               value={digit}
               onChange={(e) => handleInputChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
+              onPaste={(e) => handlePaste(e, index)}
               ref={(el: any) => (inputRefs.current[index] = el)}
               className="w-12 h-12 md:w-16 md:h-16 text-2xl md:text-3xl text-center border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
               autoFocus={index === 0}
               required
+              aria-label={`OTP digit ${index + 1}`}
             />
           ))}
         </div>

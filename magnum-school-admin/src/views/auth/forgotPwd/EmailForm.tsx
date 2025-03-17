@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
@@ -8,6 +9,7 @@ import { CustomInputField, CustomButton } from '@components/shared';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { handleForgotPassword } from '@/app/server/actions';
 
 // Define a new Zod schema for the forgot password email form.
 const forgotPasswordEmailSchema = z.object({
@@ -35,9 +37,16 @@ const EnterEmailForm = () => {
   const onSubmit = async (data: ForgotPasswordEmailFormValues) => {
     setLoading(true);
     try {
-      console.info('Sending password reset link to:', data.email);
+      // Store the entered email in session storage
+      sessionStorage.setItem('forgotPasswordEmail', data.email);
+
+      const email = data.email;
+
+      // Call the API function to handle forgot password request.
+      await handleForgotPassword(email);
+
       toast.success('Password reset code sent to your email address');
-      router.push('/forgot-password/verification');
+      router.push('/forgot-password/reset');
     } catch (error: any) {
       toast.error(error.message || 'An error occurred');
     } finally {
@@ -83,10 +92,19 @@ const EnterEmailForm = () => {
 
           <CustomButton
             type="submit"
-            className="w-full max-w-[480px] mb-6"
+            className="w-full max-w-[480px] mb-4"
             text={loading ? 'Sending...' : 'Send'}
             loading={loading}
           />
+
+          <div className="w-full max-w-[480px] text-center">
+            <Link
+              href="/sign-in"
+              className="text-sm text-purple-700 hover:underline"
+            >
+              Back to Login
+            </Link>
+          </div>
         </form>
       </div>
     </div>

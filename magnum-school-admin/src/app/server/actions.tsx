@@ -117,3 +117,25 @@ export const handleForgotPassword = async (
     return handleApiError(error);
   }
 };
+
+/*
+ * Handle password reset it takes in a body object
+ * @param body object containing items
+ * @returns ChangePasswordResponse
+ */
+export const handlePasswordReset = async (body: {
+  email: string;
+  otp: string;
+  new_password: string;
+  confirm_password: string;
+}): Promise<ChangePasswordResponse> => {
+  try {
+    const response = await apiClient.post<ChangePasswordResponse>(
+      '/resetpassword/',
+      body,
+    );
+    return response.data;
+  } catch (error: any) {
+    return handleApiError(error);
+  }
+};
