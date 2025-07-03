@@ -21,7 +21,7 @@ import NoData from '@/components/shared/NoData';
 import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 
 import { useVendorsContext } from '@/contexts/VendorsContext';
-import { getVendorData } from '@/app/server/vendors/service';
+import { getVendorData } from '@/app/server/vendors/api';
 import { VendorDataItem } from '@/@core/types/vendors';
 import { slugifyStudentName } from '@/@core/utils';
 
@@ -85,23 +85,16 @@ export default function VendorPage() {
   const columns = [
     {
       header: "Vendor's Name",
-      accessor: 'name',
-      Cell: ({ value }: { value: string }) => (
-        <span className="font-medium">{value}</span>
-      ),
-    },
-    {
-      header: 'Email',
-      accessor: 'email',
-      Cell: ({ value }: { value: string }) => (
-        <span className="text-sm">{value}</span>
-      ),
-    },
-    {
-      header: 'Canteen',
       accessor: 'canteenName',
       Cell: ({ value }: { value: string }) => (
         <span className="font-medium">{value}</span>
+      ),
+    },
+    {
+      header: 'Owner',
+      accessor: 'owner',
+      Cell: ({ value }: { value: string }) => (
+        <span className="text-sm">{value}</span>
       ),
     },
     {
@@ -125,7 +118,7 @@ export default function VendorPage() {
     {
       header: '',
       accessor: 'actions',
-      Cell: ({ row }: { row: any }) => (
+      Cell: ({ row }: { row: VendorDataItem }) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -138,7 +131,7 @@ export default function VendorPage() {
               onClick={() => {
                 setSelectedVendor(row);
                 router.push(
-                  `/vendors/${encodeURIComponent(slugifyStudentName(row.raw.vendor_name))}`,
+                  `/vendors/${encodeURIComponent(slugifyStudentName(row.canteenName))}`,
                 );
               }}
             >
@@ -150,18 +143,16 @@ export default function VendorPage() {
     },
   ];
 
-  const tableData = filteredData.map((vendor: VendorDataItem) => ({
-    ...vendor,
-  }));
+  const tableData = filteredData;
 
   const downloadCSV = () => {
     try {
       const csvExportData = filteredData.map((vendor: VendorDataItem) => ({
-        id: vendor.id,
-        name: vendor.name,
-        email: vendor.email,
-        canteenName: vendor.canteenName,
-        status: vendor.status,
+        ID: vendor.id,
+        Name: vendor.name,
+        Owner: vendor.owner,
+        Canteen: vendor.canteenName,
+        Status: vendor.status,
       }));
       const parser = new Parser();
       const csvData = parser.parse(csvExportData);

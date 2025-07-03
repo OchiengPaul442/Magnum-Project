@@ -1,8 +1,6 @@
 import React from 'react';
-import MainLayout from '@components/layouts/MainLayout';
-
 const page = () => {
-  return <MainLayout>Coming soon</MainLayout>;
+  return <>Coming soon</>;
 };
 
 export default page;

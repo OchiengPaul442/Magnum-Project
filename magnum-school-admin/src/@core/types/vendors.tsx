@@ -30,8 +30,9 @@ export interface GetVendorsResponse {
 export interface VendorDataItem {
   id: string;
   name: string;
-  email: string;
+  owner: string;
   canteenName: string;
   status: 'Activated' | 'Deactivated';
-  raw: APIVendor;
+  operatorCount?: number;
+  raw: any;
 }

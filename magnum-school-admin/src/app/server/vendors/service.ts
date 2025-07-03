@@ -1,10 +1,26 @@
+/**
+ * Get vendor entity details by school (POST version)
+ * @param body { vendor_entity_id: number }
+ * @returns Vendor entity details and related info
+ */
+/**
+ * Get vendor entity details by school (POST version)
+ * @param body { vendor_entity_id: number }
+ * @returns Vendor entity details and related info
+ */
+export const getVendorEntityDetailsBySchool = async (body: {
+  vendor_entity_id: number;
+}) => {
+  const response = await vendorService.post(
+    VENDOR_URLS.GET_VENDOR_ENTITY_DETAILS,
+    body,
+  );
+  return response.data;
+};
+
 import { createService } from '@/@core/utils/serviceFactory';
 import { VENDOR_URLS, VENDOR_CONFIG } from './urls';
-import type {
-  VendorDataItem,
-  GetVendorsResponse,
-  APIVendor,
-} from '@/@core/types/vendors';
+import type { VendorDataItem } from '@/@core/types/vendors';
 
 // Create vendor service instance
 const vendorService = createService({
@@ -15,23 +31,23 @@ const vendorService = createService({
  * Get vendor data from server
  */
 export const getVendorData = async (): Promise<VendorDataItem[]> => {
-  const response = await vendorService.get<GetVendorsResponse>(
-    VENDOR_URLS.GET_VENDORS,
-  );
+  const response = await vendorService.get<any>(VENDOR_URLS.GET_VENDORS);
 
-  return response.data.Vendors.map((vendor: APIVendor) => {
-    const personnel = vendor.Vendor_Personnel[0]; // Get first personnel
-    const isActive = personnel?.user?.is_active || false;
+  // Defensive: support both 'vendors' and 'Vendors' keys
+  const data: any = response.data as any;
+  const vendorList = data.vendors || data.Vendors || [];
 
-    return {
-      id: vendor.id.toString(),
-      name: `${personnel?.user?.first_name || ''} ${personnel?.user?.last_name || ''}`.trim(),
-      canteenName: vendor.vendor_name,
-      status: isActive ? 'Activated' : 'Deactivated',
-      email: personnel?.user?.email || '',
-      raw: vendor,
-    };
-  });
+  // Map the new backend structure to VendorDataItem
+  return vendorList.map((vendor: any) => ({
+    id: vendor.vendor_entity_id?.toString() || '',
+    name: vendor.vendor_entity_name || '',
+    owner: vendor.vendor_owner || '',
+    canteenName: vendor.vendor_entity_name || '',
+    status:
+      vendor.vendor_entity_status === 'active' ? 'Activated' : 'Deactivated',
+    operatorCount: vendor.vendor_entity_operator_count || 0,
+    raw: vendor,
+  }));
 };
 
 /**
@@ -87,11 +103,13 @@ export const deleteVendor = async (body: { vendor_id: string }) => {
 /**
  * Get vendor details by ID
  */
-export const getVendorDetails = async (vendorId: string) => {
-  const response = await vendorService.get(
-    `${VENDOR_URLS.GET_VENDOR_DETAILS}?vendor_id=${vendorId}`,
+export const getVendorDetails = async (body: { vendor_entity_id: number }) => {
+  // Use GET with body (non-standard, but supported by your backend)
+  const response = await vendorService.getWithBody(
+    VENDOR_URLS.GET_VENDOR_ENTITY_DETAILS,
+    undefined,
+    { data: body }, // Pass body as 'data' in AxiosRequestConfig
   );
-
   return response.data;
 };
 

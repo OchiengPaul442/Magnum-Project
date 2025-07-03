@@ -25,63 +25,16 @@ interface VendorDetailsFormProps {
   onClose: () => void;
 }
 
-// Placeholder data
-const fallbackOperators: Operator[] = [
-  {
-    id: '1',
-    name: 'Jane Nabukenya',
-    email: 'jnabukenya@gmail.com',
-    amountTransacted: 'UGX 400,500',
-  },
-  {
-    id: '2',
-    name: 'John Kato',
-    email: 'jkato@example.com',
-    amountTransacted: 'UGX 1,890,000',
-  },
-  {
-    id: '3',
-    name: 'Mary Achieng',
-    email: 'machieng@example.com',
-    amountTransacted: 'UGX 800,700',
-  },
-  {
-    id: '4',
-    name: 'Paul Okello',
-    email: 'pokello@example.com',
-    amountTransacted: 'UGX 3,000,500',
-  },
-  {
-    id: '5',
-    name: 'Susan Achola',
-    email: 'sachola@example.com',
-    amountTransacted: 'UGX 2,100,300',
-  },
-  {
-    id: '6',
-    name: 'Michael Otieno',
-    email: 'motieno@example.com',
-    amountTransacted: 'UGX 750,200',
-  },
-];
-
-const fallbackVendor: Vendor = {
-  entityName: 'Campus Bites',
-  entityOwner: 'Kaddu Richard',
-  salesAmount: 'UGX 5,000,679',
-  operators: fallbackOperators,
-};
-
 const ITEMS_PER_PAGE = 4;
 
 const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
-  vendor = fallbackVendor,
+  vendor,
   onClose,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const operators = vendor.operators;
-  const totalPages = Math.ceil(operators.length / ITEMS_PER_PAGE);
 
+  const operators = vendor?.operators || [];
+  const totalPages = Math.ceil(operators.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentOperators = operators.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
@@ -90,6 +43,15 @@ const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
     setCurrentPage(page);
   };
 
+  if (!vendor) {
+    return (
+      <div className="w-full p-6 bg-white rounded-lg">
+        <span className="block text-gray-500 text-center">
+          No vendor details found.
+        </span>
+      </div>
+    );
+  }
   return (
     <div className="w-full p-6 bg-white rounded-lg">
       {/* Header */}
@@ -129,36 +91,44 @@ const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
         Operators under this entity
       </h3>
       <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
-        <table className="min-w-full">
-          <thead className="bg-purple-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                Operator’s Name
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                Email address
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                Amount transacted
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentOperators.map((op) => (
-              <tr key={op.id} className="border-t border-gray-200">
-                <td className="px-6 py-4 text-gray-800 whitespace-nowrap">
-                  {op.name}
-                </td>
-                <td className="px-6 py-4 text-gray-800 whitespace-nowrap">
-                  {op.email}
-                </td>
-                <td className="px-6 py-4 text-gray-800 whitespace-nowrap">
-                  {op.amountTransacted}
-                </td>
+        {operators.length === 0 ? (
+          <div className="p-8">
+            <span className="block text-gray-500 text-center">
+              No operators found for this vendor.
+            </span>
+          </div>
+        ) : (
+          <table className="min-w-full">
+            <thead className="bg-purple-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  Operator’s Name
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  Email address
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  Amount transacted
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {currentOperators.map((op) => (
+                <tr key={op.id} className="border-t border-gray-200">
+                  <td className="px-6 py-4 text-gray-800 whitespace-nowrap">
+                    {op.name}
+                  </td>
+                  <td className="px-6 py-4 text-gray-800 whitespace-nowrap">
+                    {op.email}
+                  </td>
+                  <td className="px-6 py-4 text-gray-800 whitespace-nowrap">
+                    {op.amountTransacted}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Pagination Controls */}

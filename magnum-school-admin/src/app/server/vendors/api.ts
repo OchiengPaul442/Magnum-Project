@@ -1,4 +1,3 @@
-// Re-export all vendor functions from the new service
 export {
   getVendorData,
   registerNewVendor,
@@ -8,6 +7,7 @@ export {
   deleteVendor,
   getVendorDetails,
   getVendorTransactions,
+  getVendorEntityDetailsBySchool,
 } from './service';
 
 // Legacy export aliases for backward compatibility

@@ -9,16 +9,15 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import CustomButton from '@/components/shared/CustomButton';
-import { useVendorData } from '@/@core/hooks/useVendorData';
+
 import AddVendorForm from '../forms/AddVendorForm';
 
 export function AddVendorDialog() {
-  const { refetch } = useVendorData();
   const [open, setOpen] = useState(false);
 
   const handleSuccess = () => {
     setOpen(false);
-    refetch();
+    // refetch removed: no longer needed
   };
 
   return (

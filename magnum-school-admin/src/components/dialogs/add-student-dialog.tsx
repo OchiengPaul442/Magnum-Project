@@ -8,17 +8,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+
 import CustomButton from '@/components/shared/CustomButton';
 import AddStudentForm from '../forms/AddStudentForm';
-import { useStudentData } from '@/@core/hooks/useStudentData';
 
 export function AddStudentDialog() {
-  const { refetch } = useStudentData();
   const [open, setOpen] = useState(false);
 
   const handleSuccess = () => {
     setOpen(false);
-    refetch();
+    // refetch removed: no longer needed
   };
 
   return (

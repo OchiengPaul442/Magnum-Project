@@ -4,57 +4,58 @@ import { CustomInputField, CustomButton } from '@/components/shared';
 import RecentTransactions, {
   Transaction,
 } from '@/views/pages/students/RecentTransactions';
+import { format } from 'date-fns';
+
+interface CardData {
+  card_number: string;
+  card_serial_number: string;
+  expiration_date: string;
+  status: string;
+  activation_date: string;
+}
+
 interface ParentData {
-  user_name: string;
+  parent_name: string;
+  relation: string;
 }
 
 interface StudentDetails {
-  id: string;
-  student_first_name: string;
-  student_last_name: string;
-  student_account_balance: string;
-  card_number: string;
-  status: 'active' | 'inactive';
-  parents?: ParentData[];
-  transactions?: Transaction[];
+  first_name: string;
+  last_name: string;
+  dob: string;
+  status: string;
+  account_balance: number;
 }
 
 interface StudentDetailsFormProps {
-  student?: StudentDetails;
+  student: StudentDetails;
+  card: CardData;
+  transactions: Transaction[];
+  parents: ParentData[];
   onClose?: () => void;
 }
 
 const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
   student,
+  card,
+  transactions,
+  parents,
   onClose,
 }) => {
-  // Default placeholder data
-  const placeholderStudent: StudentDetails = {
-    id: '1',
-    student_first_name: 'Namulindwa',
-    student_last_name: 'Lisa',
-    student_account_balance: '243000',
-    card_number: 'ADC 556 5678035',
-    status: 'active',
-    parents: [
-      { user_name: 'Mutesi Darline' },
-      { user_name: 'Jeffrey Mulindwa' },
-      { user_name: 'Musisi Kenneth' },
-    ],
-    transactions: undefined,
-  };
-
-  const current = student ?? placeholderStudent;
-  // Always have parents
-  const parents =
-    current.parents && current.parents.length > 0
-      ? current.parents
-      : placeholderStudent.parents!;
-  // Always have transactions
-  const transactions = current.transactions ?? undefined;
   const buttonText =
-    current.status === 'active' ? 'Deactivate card' : 'Activate card';
-  const balanceFormatted = `UGX ${new Intl.NumberFormat().format(parseFloat(current.student_account_balance) || 0)}`;
+    student.status === 'active' ? 'Deactivate card' : 'Activate card';
+  const balanceFormatted = `UGX ${new Intl.NumberFormat().format(student.account_balance || 0)}`;
+
+  // Format dates using date-fns
+  const formattedDob = student.dob ? format(new Date(student.dob), 'PPP') : '';
+  const formattedCardExpiry = card.expiration_date
+    ? format(new Date(card.expiration_date), 'PPP')
+    : '';
+  const formattedActivation = card.activation_date
+    ? format(new Date(card.activation_date), 'PPP')
+    : '';
+
+  // Pagination for transactions is now handled inside RecentTransactions
 
   return (
     <div className="w-full p-6 bg-white rounded-lg">
@@ -78,19 +79,49 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
         <CustomInputField
           label="Student Name"
           type="text"
-          value={`${current.student_first_name} ${current.student_last_name}`}
+          value={`${student.first_name} ${student.last_name}`}
+          readOnly
+        />
+        <CustomInputField
+          label="Date of Birth"
+          type="text"
+          value={formattedDob}
           readOnly
         />
         <CustomInputField
           label="Card Number"
           type="text"
-          value={current.card_number}
+          value={card.card_number}
           readOnly
         />
         <CustomInputField
           label="Current Balance"
           type="text"
           value={balanceFormatted}
+          readOnly
+        />
+        <CustomInputField
+          label="Card Serial Number"
+          type="text"
+          value={card.card_serial_number}
+          readOnly
+        />
+        <CustomInputField
+          label="Card Expiry"
+          type="text"
+          value={formattedCardExpiry}
+          readOnly
+        />
+        <CustomInputField
+          label="Card Status"
+          type="text"
+          value={card.status}
+          readOnly
+        />
+        <CustomInputField
+          label="Card Activation Date"
+          type="text"
+          value={formattedActivation}
           readOnly
         />
       </div>
@@ -105,13 +136,22 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
           <h3 className="text-lg font-semibold text-purple-700 mb-4">
             Student&apos;s Parents
           </h3>
-          <ul className="divide-y divide-gray-200">
-            {parents.map((p, idx) => (
-              <li key={idx} className="py-3">
-                <span className="text-gray-800">{p.user_name}</span>
-              </li>
-            ))}
-          </ul>
+          {parents.length === 0 ? (
+            <div className="text-gray-500">No parents found.</div>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {parents.map((p, idx) => (
+                <li key={idx} className="py-3">
+                  <span className="text-gray-800">{p.parent_name}</span>
+                  {p.relation && (
+                    <span className="ml-2 text-gray-500 text-xs">
+                      ({p.relation})
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>

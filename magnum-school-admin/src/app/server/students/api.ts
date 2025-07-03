@@ -1,4 +1,3 @@
-// Re-export all student functions from the new service
 export {
   getStudentData,
   registerNewStudent,

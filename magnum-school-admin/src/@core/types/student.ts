@@ -34,6 +34,7 @@ interface ParentData {
 }
 
 export interface RawStudent {
+  id?: number | string;
   ssid: string;
   student_first_name: string;
   student_last_name: string;

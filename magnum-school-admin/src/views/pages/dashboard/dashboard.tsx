@@ -1,7 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
-import MainLayout from '@/components/layouts/MainLayout';
+import { useState, useEffect } from 'react';
 import {
   CardAnalytics,
   ChartAnalytics,
@@ -16,13 +15,7 @@ import ErrorState from '@/components/shared/ErrorState';
 import NoData from '@/components/shared/NoData';
 
 export default function DashboardPage() {
-  return (
-    <MainLayout>
-      <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardContent />
-      </Suspense>
-    </MainLayout>
-  );
+  return <DashboardContent />;
 }
 
 function DashboardContent() {

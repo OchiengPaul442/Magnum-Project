@@ -117,6 +117,16 @@ export class ServiceFactory {
   }
 
   // GET request
+  // Custom GET with body (for APIs that require it)
+  async getWithBody<T>(
+    endpoint?: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<ServiceResponse<T>> {
+    // Axios supports GET with body only if you pass it as 'data' in config
+    return this.request<T>('GET', endpoint, data, config);
+  }
+
   async get<T>(
     endpoint?: string,
     config?: AxiosRequestConfig,

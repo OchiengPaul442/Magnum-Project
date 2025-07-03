@@ -1,3 +1,20 @@
+/**
+ * Get student details (POST version)
+ * @param body { student_id: string }
+ * @returns Student details and related info
+ */
+/**
+ * Get student details (POST version)
+ * @param body { student_id: string }
+ * @returns Student details and related info
+ */
+export const getStudentDetailsPost = async (body: { student_id: string }) => {
+  const response = await studentService.post(
+    STUDENT_URLS.GET_STUDENT_DETAILS_POST,
+    body,
+  );
+  return response.data;
+};
 import { createService } from '@/@core/utils/serviceFactory';
 import { STUDENT_URLS, STUDENT_CONFIG } from './urls';
 import type {

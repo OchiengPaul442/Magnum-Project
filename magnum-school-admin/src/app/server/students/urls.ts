@@ -8,6 +8,7 @@ export const STUDENT_URLS = {
   DELETE_STUDENT: '/deletestudent/',
   GET_STUDENT_DETAILS: '/getstudentdetails/',
   GET_STUDENT_TRANSACTIONS: '/getstudenttransactions/',
+  GET_STUDENT_DETAILS_POST: '/getstudentdetails/',
 } as const;
 
 // Student service configuration

@@ -1,4 +1,3 @@
-// Re-export all dashboard functions from the new service
 export {
   getAnalytics,
   getRecentTransactions,
