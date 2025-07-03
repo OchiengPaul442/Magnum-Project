@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomButton } from '@components/shared';
-import { handleResendOTP } from '@/app/server/actions';
+import { handleResendOTP } from '@/app/server/auth/service';
 import { useSession } from 'next-auth/react';
 
 const VerifyOTP: React.FC = () => {
@@ -153,7 +153,7 @@ const VerifyOTP: React.FC = () => {
     if (!email) return;
     setLoading(true);
     try {
-      const response = await handleResendOTP(email, 'login');
+      const response = await handleResendOTP(email);
 
       if (response.status === 200 || response.status === 201) {
         toast.success(response.message || 'OTP for login sent successfully.');

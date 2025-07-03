@@ -1,141 +1,41 @@
-import {
-  ChangePasswordResponse,
-  ResendOTPResponse,
-  SignInResponse,
-  VerifyOTPResponse,
-} from '@/@core/types/auth';
-import apiClient, { secureApiClient } from '@/@core/utils/apiClient';
-import { handleApiError } from '@/@core/utils';
+// Re-export all auth functions from the new auth service
+export {
+  handleSignIn,
+  handleVerifyOTP,
+  handleResendOTP,
+  handleForgotPassword,
+  handleChangePassword,
+  handleLogout,
+} from './auth/service';
 
-/**
- * Handles user sign-in by sending credentials to the API.
- * @param email User's email.
- * @param password User's password.
- * @returns SignInResponse
- */
-export const handleSignIn = async (
-  email: string,
-  password: string,
-): Promise<SignInResponse> => {
-  try {
-    const response = await apiClient.post<SignInResponse>('/login/', {
-      username: email,
-      password,
-    });
-    return response.data;
-  } catch (error: any) {
-    return handleApiError(error);
-  }
-};
+// Re-export student functions
+export {
+  getStudentData,
+  registerNewStudent,
+  activateStudent,
+  deactivateStudent,
+  updateStudent,
+  deleteStudent,
+  getStudentDetails,
+  getStudentTransactions,
+} from './students/service';
 
-/**
- * Handles OTP verification by sending the OTP and username to the API.
- * @param email User's email.
- * @param otp One-time password.
- * @returns VerifyOTPResponse
- */
-export const handleVerifyOTP = async (
-  email: string,
-  otp: string,
-): Promise<VerifyOTPResponse> => {
-  try {
-    const response = await apiClient.post<VerifyOTPResponse>('/verifyotp/', {
-      username: email,
-      one_time_pin: otp,
-    });
-    return response.data;
-  } catch (error: any) {
-    return handleApiError(error);
-  }
-};
+// Re-export vendor functions
+export {
+  getVendorData,
+  registerNewVendor,
+  activateVendor,
+  deactivateVendor,
+  updateVendor,
+  deleteVendor,
+  getVendorDetails,
+  getVendorTransactions,
+} from './vendors/service';
 
-/**
- * Handles resending OTP by sending the username to the API.
- * @param email User's email.
- * @param purpose Purpose of OTP (default is 'login').
- * @returns ResendOTPResponse
- */
-export const handleResendOTP = async (
-  email: string,
-  purpose: string = 'login',
-): Promise<ResendOTPResponse> => {
-  try {
-    const response = await apiClient.post<ResendOTPResponse>('/resendotp/', {
-      email,
-      purpose,
-    });
-    return response.data;
-  } catch (error: any) {
-    return handleApiError(error);
-  }
-};
-
-/**
- * Handles password change by sending the required details to the API.
- * @param oldPassword User's current password.
- * @param newPassword New password.
- * @param confirmPassword Confirmation of the new password.
- * @returns ChangePasswordResponse
- */
-export const handleChangePassword = async (
-  oldPassword: string,
-  newPassword: string,
-  confirmPassword: string,
-): Promise<ChangePasswordResponse> => {
-  try {
-    const response = await secureApiClient.post<ChangePasswordResponse>(
-      '/changepassword/',
-      {
-        old_password: oldPassword,
-        new_password: newPassword,
-        confirm_password: confirmPassword,
-      },
-    );
-    return response.data;
-  } catch (error: any) {
-    return handleApiError(error);
-  }
-};
-
-/**
- * Handle Forgot Password by sending the required details to the API.
- * @param email User's email.
- * @returns ResendOTPResponse
- */
-export const handleForgotPassword = async (
-  email: string,
-): Promise<ResendOTPResponse> => {
-  try {
-    const response = await apiClient.post<ResendOTPResponse>(
-      '/forgotpassword/',
-      {
-        email,
-      },
-    );
-    return response.data;
-  } catch (error: any) {
-    return handleApiError(error);
-  }
-};
-
-/*
- * Handle password reset it takes in a body object
- * @param body object containing items
- * @returns ChangePasswordResponse
- */
-export const handlePasswordReset = async (body: {
-  email: string;
-  otp: string;
-  new_password: string;
-  confirm_password: string;
-}): Promise<ChangePasswordResponse> => {
-  try {
-    const response = await apiClient.post<ChangePasswordResponse>(
-      '/resetpassword/',
-      body,
-    );
-    return response.data;
-  } catch (error: any) {
-    return handleApiError(error);
-  }
-};
+// Re-export dashboard functions
+export {
+  getAnalytics,
+  getRecentTransactions,
+  getActivityFeed,
+  getStatistics,
+} from './dashboard/service';

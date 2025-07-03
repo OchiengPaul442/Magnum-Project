@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import CustomInputField from '@/components/shared/CustomInputField';
 import CustomButton from '@/components/shared/CustomButton';
 import { CustomDatePicker } from '../shared/CustomDatePicker';
-import { useRegisterNewStudent } from '@/@core/hooks/useStudentData';
+import { registerNewStudent } from '@/app/server/students/service';
 
 // Define the form schema
 const formSchema = z.object({
@@ -49,7 +49,7 @@ interface AddStudentFormProps {
 }
 
 const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
-  const { registerNewStudent, isRegistering } = useRegisterNewStudent();
+  const [isRegistering, setIsRegistering] = React.useState(false);
 
   const {
     control,
@@ -68,6 +68,7 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
 
   const onSubmit = async (formData: FormData) => {
     try {
+      setIsRegistering(true);
       // Parse and reformat the date from MM/dd/yyyy to YYYY-MM-DD
       const parsedDate = parse(formData.dateOfBirth, 'MM/dd/yyyy', new Date());
       const formattedDob = format(parsedDate, 'yyyy-MM-dd');
@@ -83,7 +84,7 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
         card_number: formData.cardNumber,
       };
 
-      const response = await registerNewStudent(requestBody as any);
+      const response = await registerNewStudent(requestBody);
       if (response.status === 201 || response.status === 200) {
         toast.success(response.message);
       } else {
@@ -96,6 +97,8 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
         err?.response?.data?.message ||
         'Error registering new student. Please try again.';
       toast.error(errorMessage);
+    } finally {
+      setIsRegistering(false);
     }
   };
 

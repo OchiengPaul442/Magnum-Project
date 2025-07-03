@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Parser } from 'json2csv';
 import { FaEllipsisV } from 'react-icons/fa';
@@ -19,18 +19,40 @@ import ErrorState from '@/components/shared/ErrorState';
 import NoData from '@/components/shared/NoData';
 import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 
-import { useStudentData } from '@/@core/hooks/useStudentData';
+import { getStudentData } from '@/app/server/students/service';
 import { useStudentsContext } from '@/contexts/StudentsContext';
 import { slugifyStudentName } from '@/@core/utils';
+import { StudentDataItem } from '@/@core/types/student';
 
 export default function StudentList() {
   const router = useRouter();
-  const { students, isLoading, isError, refetch } = useStudentData();
+  const [students, setStudents] = useState<StudentDataItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
   const [filter, setFilter] = useState<'All' | 'Activated' | 'Deactivated'>(
     'All',
   );
 
   const { setSelectedStudent } = useStudentsContext();
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    setIsError(false);
+    try {
+      const data = await getStudentData();
+      setStudents(data);
+    } catch (error) {
+      console.error('Error fetching student data:', error);
+      setIsError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   if (isLoading) return <LoadingSkeleton />;
   if (isError) {
@@ -39,7 +61,7 @@ export default function StudentList() {
         title="Error Loading Student Data"
         description="There was an error while fetching student data. Please try again."
         actionLabel="Retry"
-        onActionClick={() => refetch()}
+        onActionClick={fetchData}
       />
     );
   }
@@ -50,7 +72,7 @@ export default function StudentList() {
         title="No Students Available"
         description="There are currently no students in the system."
         actionLabel="Refresh"
-        onActionClick={() => refetch()}
+        onActionClick={fetchData}
       />
     );
   }

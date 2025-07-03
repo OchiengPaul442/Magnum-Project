@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import CustomInputField from '@/components/shared/CustomInputField';
 import CustomButton from '@/components/shared/CustomButton';
 
-import { useRegisterNewVendor } from '@/@core/hooks/useVendorData';
+import { registerNewVendor } from '@/app/server/vendors/service';
 
 // 1. Define your vendor form schema
 const formSchema = z.object({
@@ -34,7 +34,7 @@ interface AddVendorFormProps {
 }
 
 const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
-  const { registerNewVendor, isRegistering } = useRegisterNewVendor();
+  const [isRegistering, setIsRegistering] = React.useState(false);
 
   const {
     control,
@@ -53,6 +53,7 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
   // 2. Handle form submission
   const onSubmit = async (formData: FormData) => {
     try {
+      setIsRegistering(true);
       const response = await registerNewVendor(formData);
       console.log('Registration response:', response);
 
@@ -61,6 +62,8 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
     } catch (err) {
       console.error('Registration error:', err);
       toast.error('Error registering new vendor. Please try again.');
+    } finally {
+      setIsRegistering(false);
     }
   };
 

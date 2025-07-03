@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import {
   CardAnalytics,
@@ -9,7 +9,7 @@ import {
   RecentTransactions,
   DashboardSkeleton,
 } from '@/views/pages/dashboard';
-import { useDashboardData } from '@core/hooks/useDashboardData';
+import { getAnalytics } from '@/app/server/dashboard/service';
 
 // Import custom components for error and no data states
 import ErrorState from '@/components/shared/ErrorState';
@@ -26,7 +26,28 @@ export default function DashboardPage() {
 }
 
 function DashboardContent() {
-  const { data, isLoading, isError, refetch } = useDashboardData();
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    setIsError(false);
+    try {
+      const result = await getAnalytics();
+      setData(result);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setIsError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // Loading state
   if (isLoading) {
@@ -40,7 +61,7 @@ function DashboardContent() {
         title="Error Loading Dashboard"
         description="We encountered an issue while fetching the dashboard data. Please try again."
         actionLabel="Retry"
-        onActionClick={() => refetch()}
+        onActionClick={fetchData}
       />
     );
   }
@@ -58,7 +79,7 @@ function DashboardContent() {
         title="No Dashboard Data"
         description="There is currently no data available to display."
         actionLabel="Refresh"
-        onActionClick={() => refetch()}
+        onActionClick={fetchData}
       />
     );
   }
