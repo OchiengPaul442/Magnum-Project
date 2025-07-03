@@ -5,7 +5,7 @@ import {
   VerifyOTPResponse,
 } from '@/@core/types/auth';
 import apiClient, { secureApiClient } from '@/@core/utils/apiClient';
-import { handleApiError } from '@/@core/utils/handleApiErrors';
+import { handleApiError } from '@/@core/utils';
 
 /**
  * Handles user sign-in by sending credentials to the API.
