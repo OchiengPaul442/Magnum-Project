@@ -13,6 +13,21 @@ const authService = createService({
 });
 
 /**
+ * Handles password reset by sending the new password, confirm password, email, and otp to the API.
+ * @param body { email, otp, new_password, confirm_password }
+ * @returns Basic response
+ */
+export const handleResetPassword = async (body: {
+  email: string;
+  otp: string;
+  new_password: string;
+  confirm_password: string;
+}): Promise<any> => {
+  const response = await authService.post(AUTH_URLS.RESET_PASSWORD, body);
+  return response.data;
+};
+
+/**
  * Handles user sign-in by sending credentials to the API.
  * @param email User's email.
  * @param password User's password.
@@ -74,9 +89,9 @@ export const handleResendOTP = async (
  * @param email User's email.
  * @returns Basic response
  */
-export const handleForgotPassword = async (email: string) => {
+export const handleForgotPassword = async (body: string) => {
   const response = await authService.post(AUTH_URLS.FORGOT_PASSWORD, {
-    username: email,
+    email: body,
   });
 
   return response.data;

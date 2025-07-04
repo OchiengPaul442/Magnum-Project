@@ -5,6 +5,7 @@ export const AUTH_URLS = {
   RESEND_OTP: '/resendotp/',
   FORGOT_PASSWORD: '/forgotpassword/',
   CHANGE_PASSWORD: '/changepassword/',
+  RESET_PASSWORD: '/resetpassword/',
   LOGOUT: '/logout/',
 } as const;
 

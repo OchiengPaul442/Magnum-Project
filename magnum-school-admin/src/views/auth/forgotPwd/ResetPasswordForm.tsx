@@ -6,7 +6,10 @@ import { CustomInputField, CustomButton } from '@components/shared';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { handleChangePassword, handleResendOTP } from '@/app/server/actions';
+import {
+  handleResetPassword,
+  handleResendOTP,
+} from '@/app/server/auth/service';
 import Link from 'next/link';
 
 // Zod schema
@@ -135,7 +138,12 @@ const ResetPasswordForm = () => {
     if (!email) return;
     setLoading(true);
     try {
-      await handleChangePassword(email, data.new_password, data.otp);
+      await handleResetPassword({
+        email,
+        otp: data.otp,
+        new_password: data.new_password,
+        confirm_password: data.confirm_password,
+      });
       toast.success('Password reset successfully');
       router.push('/sign-in');
     } catch (err: any) {

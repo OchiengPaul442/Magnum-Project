@@ -9,7 +9,7 @@ import { CustomInputField, CustomButton } from '@components/shared';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { handleForgotPassword } from '@/app/server/actions';
+import { handleForgotPassword } from '@/app/server/auth/service';
 
 // Define a new Zod schema for the forgot password email form.
 const forgotPasswordEmailSchema = z.object({
@@ -40,15 +40,13 @@ const EnterEmailForm = () => {
       // Store the entered email in session storage
       sessionStorage.setItem('forgotPasswordEmail', data.email);
 
-      const email = data.email;
-
-      // Call the API function to handle forgot password request.
-      await handleForgotPassword(email);
+      // Call the enhanced service function to handle forgot password request.
+      await handleForgotPassword(data.email);
 
       toast.success('Password reset code sent to your email address');
       router.push('/forgot-password/reset');
     } catch (error: any) {
-      toast.error(error.message || 'An error occurred');
+      toast.error(error?.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
