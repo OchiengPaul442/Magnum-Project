@@ -83,12 +83,33 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
         national_id: formData.nationalId,
       };
       const response = await onboardVendorWithOwner(apiBody);
-      console.log('Onboarding response:', response);
+      // Check for error in response (status or error/message field)
+      if (
+        response?.status &&
+        response.status !== 200 &&
+        response.status !== 201
+      ) {
+        toast.error(response?.message || 'Failed to onboard vendor.');
+        return;
+      }
+      if (
+        response?.error ||
+        response?.message?.toLowerCase().includes('error')
+      ) {
+        toast.error(
+          response?.message || response?.error || 'Failed to onboard vendor.',
+        );
+        return;
+      }
       toast.success('Vendor onboarded successfully!');
       if (onSuccess) onSuccess();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Onboarding error:', err);
-      toast.error('Error onboarding new vendor. Please try again.');
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          'Error onboarding new vendor. Please try again.',
+      );
     } finally {
       setIsRegistering(false);
     }
