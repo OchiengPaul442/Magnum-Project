@@ -1,3 +1,11 @@
+/**
+ * Fetches the current user's profile from the API.
+ * @returns User profile data
+ */
+export const getUserProfile = async (): Promise<any> => {
+  const response = await authService.get(AUTH_URLS.GET_USER_PROFILE);
+  return response.data;
+};
 import { createService } from '@/@core/utils/serviceFactory';
 import { AUTH_URLS, AUTH_CONFIG } from './urls';
 import type {

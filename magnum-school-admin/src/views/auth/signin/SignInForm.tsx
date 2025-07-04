@@ -1,4 +1,7 @@
 'use client';
+
+import { useDispatch } from '@/redux-store/hooks';
+import { fetchUserProfile } from '@/redux-store/slices/userProfileThunks';
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -29,6 +32,7 @@ const SignInForm = () => {
     },
   });
 
+  const dispatch = useDispatch();
   const onSubmit = async (data: SignInFormValues) => {
     setLoading(true);
     try {
@@ -49,6 +53,8 @@ const SignInForm = () => {
           toast.error(res.error);
         }
       } else {
+        // Fetch user profile and store in redux after successful login
+        dispatch(fetchUserProfile());
         router.push(themeConfig.homePageUrl);
       }
     } catch (err: any) {
