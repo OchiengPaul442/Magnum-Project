@@ -1,7 +1,7 @@
-// Vendor service URLs
 export const VENDOR_URLS = {
   GET_VENDORS: '/getvendorentitiesunderschool/',
   REGISTER_VENDOR: '/registervendor/',
+  ONBOARD_VENDOR_WITH_OWNER: '/onboardvendorwithowner/',
   ACTIVATE_VENDOR: '/activatevendor/',
   DEACTIVATE_VENDOR: '/deactivatevendor/',
   UPDATE_VENDOR: '/updatevendor/',

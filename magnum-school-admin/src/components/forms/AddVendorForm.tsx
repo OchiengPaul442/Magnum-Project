@@ -9,21 +9,30 @@ import { toast } from 'sonner';
 import CustomInputField from '@/components/shared/CustomInputField';
 import CustomButton from '@/components/shared/CustomButton';
 
-import { registerNewVendor } from '@/app/server/vendors/service';
+import { onboardVendorWithOwner } from '@/app/server/vendors/service';
 
-// 1. Define your vendor form schema
+// 1. Define your vendor form schema (fields required by onboarding API)
 const formSchema = z.object({
-  firstName: z.string().min(2, {
-    message: 'First name must be at least 2 characters.',
+  vendorName: z.string().min(2, {
+    message: 'Vendor name must be at least 2 characters.',
   }),
-  lastName: z.string().min(2, {
-    message: 'Last name must be at least 2 characters.',
+  schoolId: z.coerce.number().min(1, {
+    message: 'School ID is required.',
   }),
-  email: z.string().email({
+  ownerEmail: z.string().email({
     message: 'Please enter a valid email address.',
   }),
-  canteenName: z.string().min(2, {
-    message: 'Canteen name must be at least 2 characters.',
+  ownerFirstName: z.string().min(2, {
+    message: 'First name must be at least 2 characters.',
+  }),
+  ownerLastName: z.string().min(2, {
+    message: 'Last name must be at least 2 characters.',
+  }),
+  contact: z.string().min(7, {
+    message: 'Contact is required.',
+  }),
+  nationalId: z.string().min(5, {
+    message: 'National ID is required.',
   }),
 });
 
@@ -43,10 +52,13 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      canteenName: '',
+      vendorName: '',
+      schoolId: 1,
+      ownerEmail: '',
+      ownerFirstName: '',
+      ownerLastName: '',
+      contact: '',
+      nationalId: '',
     },
   });
 
@@ -54,14 +66,23 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
   const onSubmit = async (formData: FormData) => {
     try {
       setIsRegistering(true);
-      const response = await registerNewVendor(formData);
-      console.log('Registration response:', response);
-
-      toast.success('Vendor registered successfully!');
+      // Map form fields to API body
+      const apiBody = {
+        vendor_name: formData.vendorName,
+        school_id: formData.schoolId,
+        owner_email: formData.ownerEmail,
+        owner_first_name: formData.ownerFirstName,
+        owner_last_name: formData.ownerLastName,
+        contact: formData.contact,
+        national_id: formData.nationalId,
+      };
+      const response = await onboardVendorWithOwner(apiBody);
+      console.log('Onboarding response:', response);
+      toast.success('Vendor onboarded successfully!');
       if (onSuccess) onSuccess();
     } catch (err) {
-      console.error('Registration error:', err);
-      toast.error('Error registering new vendor. Please try again.');
+      console.error('Onboarding error:', err);
+      toast.error('Error onboarding new vendor. Please try again.');
     } finally {
       setIsRegistering(false);
     }
@@ -80,62 +101,108 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
       className="space-y-6 relative"
       onKeyDown={handleKeyDown}
     >
-      {/* First & Last Name side by side */}
+      {/* Vendor Name */}
+      <Controller
+        name="vendorName"
+        control={control}
+        render={({ field }) => (
+          <CustomInputField
+            label="Vendor Name"
+            placeholder="Prime Canteen Services"
+            value={field.value}
+            onChange={field.onChange}
+            error={errors.vendorName?.message}
+          />
+        )}
+      />
+
+      {/* School ID */}
+      <Controller
+        name="schoolId"
+        control={control}
+        render={({ field }) => (
+          <CustomInputField
+            label="School ID"
+            placeholder="1"
+            type="number"
+            value={field.value?.toString()}
+            onChange={(value: string) => field.onChange(Number(value))}
+            error={errors.schoolId?.message}
+          />
+        )}
+      />
+
+      {/* Owner First & Last Name side by side */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 -mb-4">
         <Controller
-          name="firstName"
+          name="ownerFirstName"
           control={control}
           render={({ field }) => (
             <CustomInputField
-              label="First Name"
-              placeholder="Jane"
+              label="Owner First Name"
+              placeholder="John"
               value={field.value}
               onChange={field.onChange}
-              error={errors.firstName?.message}
+              error={errors.ownerFirstName?.message}
             />
           )}
         />
         <Controller
-          name="lastName"
+          name="ownerLastName"
           control={control}
           render={({ field }) => (
             <CustomInputField
-              label="Last Name"
-              placeholder="Doe"
+              label="Owner Last Name"
+              placeholder="Kasaija"
               value={field.value}
               onChange={field.onChange}
-              error={errors.lastName?.message}
+              error={errors.ownerLastName?.message}
             />
           )}
         />
       </div>
 
-      {/* Email address */}
+      {/* Owner Email */}
       <Controller
-        name="email"
+        name="ownerEmail"
         control={control}
         render={({ field }) => (
           <CustomInputField
-            label="Email address"
-            placeholder="janedoe@gmail.com"
+            label="Owner Email"
+            placeholder="kevihed202@boxmach.com"
             value={field.value}
             onChange={field.onChange}
-            error={errors.email?.message}
+            error={errors.ownerEmail?.message}
           />
         )}
       />
 
-      {/* Canteen Name */}
+      {/* Contact */}
       <Controller
-        name="canteenName"
+        name="contact"
         control={control}
         render={({ field }) => (
           <CustomInputField
-            label="Canteen Name"
-            placeholder="Campus Bites"
+            label="Contact"
+            placeholder="0700111222"
             value={field.value}
             onChange={field.onChange}
-            error={errors.canteenName?.message}
+            error={errors.contact?.message}
+          />
+        )}
+      />
+
+      {/* National ID */}
+      <Controller
+        name="nationalId"
+        control={control}
+        render={({ field }) => (
+          <CustomInputField
+            label="National ID"
+            placeholder="CM123456789"
+            value={field.value}
+            onChange={field.onChange}
+            error={errors.nationalId?.message}
           />
         )}
       />

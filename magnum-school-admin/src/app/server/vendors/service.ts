@@ -1,3 +1,5 @@
+// Onboard vendor with owner
+// (single export only, remove duplicate)
 /**
  * Get vendor entity details by school (POST version)
  * @param body { vendor_entity_id: number }
@@ -20,6 +22,27 @@ export const getVendorEntityDetailsBySchool = async (body: {
 
 import { createService } from '@/@core/utils/serviceFactory';
 import { VENDOR_URLS, VENDOR_CONFIG } from './urls';
+
+/**
+ * Onboard vendor with owner
+ * @param body { vendor_name, school_id, owner_email, owner_first_name, owner_last_name, contact, national_id }
+ * @returns Vendor onboarding response
+ */
+export const onboardVendorWithOwner = async (body: {
+  vendor_name: string;
+  school_id: number;
+  owner_email: string;
+  owner_first_name: string;
+  owner_last_name: string;
+  contact: string;
+  national_id: string;
+}): Promise<any> => {
+  const response = await vendorService.post(
+    VENDOR_URLS.ONBOARD_VENDOR_WITH_OWNER,
+    body,
+  );
+  return response.data;
+};
 import type { VendorDataItem } from '@/@core/types/vendors';
 
 // Create vendor service instance
