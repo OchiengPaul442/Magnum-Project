@@ -33,6 +33,17 @@ interface StudentDetailsFormProps {
   transactions: Transaction[];
   parents: ParentData[];
   onClose?: () => void;
+  onToggleStatus?: () => void;
+}
+
+interface StudentDetailsFormProps {
+  student: StudentDetails;
+  card: CardData;
+  transactions: Transaction[];
+  parents: ParentData[];
+  onClose?: () => void;
+  onToggleStatus?: () => void;
+  toggleLoading?: boolean;
 }
 
 const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
@@ -41,6 +52,8 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
   transactions,
   parents,
   onClose,
+  onToggleStatus,
+  toggleLoading = false,
 }) => {
   const buttonText =
     student.status === 'active' ? 'Deactivate card' : 'Activate card';
@@ -64,9 +77,10 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
         <div className="flex items-center gap-4">
           <CustomButton
             type="button"
-            onClick={() => console.log('toggle status')}
-            text={buttonText}
-            className="py-1 px-4 border-2 text-purple-700 border-purple-700 hover:bg-purple-700 hover:text-white rounded-full bg-transparent"
+            onClick={onToggleStatus}
+            text={toggleLoading ? 'Please wait...' : buttonText}
+            disabled={toggleLoading}
+            className={`py-1 px-4 border-2 text-purple-700 border-purple-700 hover:bg-purple-700 hover:text-white rounded-full bg-transparent ${toggleLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
           />
           <button type="button" onClick={onClose ?? (() => {})}>
             <MdClose className="text-gray-500 text-2xl hover:text-gray-900 cursor-pointer" />
