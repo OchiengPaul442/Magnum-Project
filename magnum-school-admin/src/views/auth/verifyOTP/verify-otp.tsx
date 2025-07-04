@@ -31,9 +31,11 @@ const VerifyOTP: React.FC = () => {
     }
   }, [router]);
 
+  // Only redirect once after successful sign-in to avoid loop
+  const hasRedirected = useRef(false);
   useEffect(() => {
-    // After successful sign-in, check first_time_login
-    if (status === 'authenticated' && session) {
+    if (!hasRedirected.current && status === 'authenticated' && session) {
+      hasRedirected.current = true;
       if (session.user.first_time_login) {
         router.push('/create-password');
       } else {
