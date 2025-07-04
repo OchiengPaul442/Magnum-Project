@@ -3,14 +3,15 @@ import React from 'react';
 import VendorDetailsForm from '@/components/forms/VendorDetailsForm';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { getVendorEntityDetailsBySchool } from '@/app/server/vendors/api';
+import { getVendorDetails, getVendorData } from '@/app/server/vendors/api';
 import ErrorState from '@/components/shared/ErrorState';
 import NoData from '@/components/shared/NoData';
+import VendorDetailsSkeleton from '@/components/shared/loaders/vendor-details-skeleton';
 import { useVendorsContext } from '@/contexts/VendorsContext';
 
 export default function VendorDetailsPage() {
   const router = useRouter();
-  const { selectedVendor } = useVendorsContext();
+  const { selectedVendor, setSelectedVendor } = useVendorsContext();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [vendor, setVendor] = useState<{
@@ -26,23 +27,35 @@ export default function VendorDetailsPage() {
   } | null>(null);
 
   useEffect(() => {
+    let ignore = false;
+    setLoading(true);
+    setError(null);
+    setVendor(null);
     const fetchVendor = async () => {
-      setLoading(true);
-      setError(null);
-      setVendor(null);
       try {
-        const vendorId =
+        let vendorId =
           selectedVendor?.raw?.vendor_entity_id || selectedVendor?.id;
+        // If no vendorId in context, try to get from vendor list by matching name in URL
         if (!vendorId) {
-          setError('No vendor selected. Please go back and select a vendor.');
+          const allVendors = await getVendorData();
+          // Try to match by name (slugify if needed)
+          // You may want to parse the vendorName param from the URL if available
+          // For now, fallback to first vendor
+          if (allVendors.length > 0) {
+            vendorId = allVendors[0].raw?.vendor_entity_id || allVendors[0].id;
+            setSelectedVendor(allVendors[0]);
+          }
+        }
+        if (!vendorId) {
+          if (!ignore)
+            setError('No vendor selected. Please go back and select a vendor.');
           return;
         }
-        // Call the correct service to fetch vendor details
-        const details: any = await getVendorEntityDetailsBySchool({
+        const details: any = await getVendorDetails({
           vendor_entity_id: Number(vendorId),
         });
         if (!details || !details.vendor_entity) {
-          setError('No details found for this vendor.');
+          if (!ignore) setError('No details found for this vendor.');
           return;
         }
         const entity = details.vendor_entity;
@@ -62,30 +75,31 @@ export default function VendorDetailsPage() {
               amountTransacted: op.total_transactions?.toString() || '0',
             }))
           : [];
-        setVendor({ entityName, entityOwner, salesAmount, operators });
+        if (!ignore) {
+          setVendor({ entityName, entityOwner, salesAmount, operators });
+          setError(null);
+        }
       } catch (err: any) {
-        setError(
-          err?.response?.data?.message ||
-            'Failed to fetch vendor details. Please try again later.',
-        );
+        if (!ignore) {
+          setError(
+            err?.response?.data?.message ||
+              'Failed to fetch vendor details. Please try again later.',
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     };
     fetchVendor();
-  }, [selectedVendor]);
+    return () => {
+      ignore = true;
+    };
+  }, [selectedVendor, setSelectedVendor]);
 
   const handleClose = () => router.push('/vendors');
 
   if (loading) {
-    return (
-      <NoData
-        title="Loading Vendor Details"
-        description="Fetching vendor details, please wait..."
-        actionLabel="Back to Vendors List"
-        onActionClick={handleClose}
-      />
-    );
+    return <VendorDetailsSkeleton />;
   }
 
   if (error) {

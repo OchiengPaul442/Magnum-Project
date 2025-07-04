@@ -103,12 +103,9 @@ export const deleteVendor = async (body: { vendor_id: string }) => {
 /**
  * Get vendor details by ID
  */
-export const getVendorDetails = async (body: { vendor_entity_id: number }) => {
-  // Use GET with body (non-standard, but supported by your backend)
-  const response = await vendorService.getWithBody(
-    VENDOR_URLS.GET_VENDOR_ENTITY_DETAILS,
-    undefined,
-    { data: body }, // Pass body as 'data' in AxiosRequestConfig
+export const getVendorDetails = async (param: { vendor_entity_id: number }) => {
+  const response = await vendorService.get(
+    `${VENDOR_URLS.GET_VENDOR_ENTITY_DETAILS}?vendor_entity_id=${param.vendor_entity_id}`,
   );
   return response.data;
 };
