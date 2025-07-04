@@ -1,4 +1,3 @@
-// pages/VendorPage.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -23,7 +22,6 @@ import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 import { useVendorsContext } from '@/contexts/VendorsContext';
 import { getVendorData } from '@/app/server/vendors/api';
 import { VendorDataItem } from '@/@core/types/vendors';
-import { slugifyStudentName } from '@/@core/utils';
 
 export default function VendorPage() {
   const router = useRouter();
@@ -130,9 +128,7 @@ export default function VendorPage() {
             <DropdownMenuItem
               onClick={() => {
                 setSelectedVendor(row);
-                router.push(
-                  `/vendors/${encodeURIComponent(slugifyStudentName(row.canteenName))}`,
-                );
+                router.push(`/vendors/${row.id}`);
               }}
             >
               View Details

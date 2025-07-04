@@ -21,7 +21,6 @@ import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 
 import { getStudentData } from '@/app/server/students/service';
 import { useStudentsContext } from '@/contexts/StudentsContext';
-import { slugifyStudentName } from '@/@core/utils';
 import { StudentDataItem } from '@/@core/types/student';
 
 export default function StudentList() {
@@ -145,13 +144,8 @@ export default function StudentList() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onClick={() => {
-                setSelectedStudent(row);
-                // Compute full name from raw data
-                const fullName = `${row.raw.student_first_name} ${row.raw.student_last_name}`;
-
-                router.push(
-                  `/students/${encodeURIComponent(slugifyStudentName(fullName))}`,
-                );
+                setSelectedStudent(row.raw);
+                router.push(`/students/${row.raw.id}`);
               }}
             >
               View Details
