@@ -9,6 +9,7 @@ export const VENDOR_URLS = {
   GET_VENDOR_DETAILS: '/getvendordetails/',
   GET_VENDOR_TRANSACTIONS: '/getvendortransactions/',
   GET_VENDOR_ENTITY_DETAILS: '/getvendorentitydetailsbyschool/',
+  UPDATE_VENDOR_ENTITY_STATUS_BY_SCHOOL: '/updatevendorentitystatusbyschool/',
 } as const;
 
 // Vendor service configuration

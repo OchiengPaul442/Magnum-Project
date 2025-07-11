@@ -1,3 +1,18 @@
+/**
+ * Update vendor entity status by school
+ * @param body { vendor_entity_id: number, new_status: string }
+ * @returns Response from the backend
+ */
+export const updateVendorEntityStatusBySchool = async (body: {
+  vendor_entity_id: number;
+  new_status: string;
+}): Promise<any> => {
+  const response = await vendorService.patch(
+    VENDOR_URLS.UPDATE_VENDOR_ENTITY_STATUS_BY_SCHOOL,
+    body,
+  );
+  return response.data;
+};
 // Onboard vendor with owner
 // (single export only, remove duplicate)
 /**
