@@ -115,12 +115,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
           readOnly
         />
         <CustomInputField
-          label="Card Serial Number"
-          type="text"
-          value={card.card_serial_number}
-          readOnly
-        />
-        <CustomInputField
           label="Card Expiry"
           type="text"
           value={formattedCardExpiry}

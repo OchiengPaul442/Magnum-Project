@@ -96,6 +96,13 @@ export default function VendorPage() {
       ),
     },
     {
+      header: 'Operators',
+      accessor: 'operatorCount',
+      Cell: ({ value }: { value: number }) => (
+        <span className="text-sm font-semibold text-gray-700">{value}</span>
+      ),
+    },
+    {
       header: 'Status',
       accessor: 'status',
       Cell: ({ value }: { value: string }) => (
@@ -139,7 +146,24 @@ export default function VendorPage() {
     },
   ];
 
-  const tableData = filteredData;
+  // Map API data to table data structure
+  const tableData = filteredData.map((vendor: any) => ({
+    ...vendor,
+    canteenName: vendor.canteenName || vendor.vendor_entity_name || vendor.name,
+    owner: vendor.owner || vendor.vendor_owner,
+    status:
+      vendor.status ||
+      (vendor.vendor_entity_status
+        ? vendor.vendor_entity_status === 'active'
+          ? 'Activated'
+          : 'Deactivated'
+        : undefined),
+    operatorCount:
+      vendor.operatorCount !== undefined
+        ? vendor.operatorCount
+        : vendor.vendor_entity_operator_count,
+    id: vendor.id || vendor.vendor_entity_id,
+  }));
 
   const downloadCSV = () => {
     try {
