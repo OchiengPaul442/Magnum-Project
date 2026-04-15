@@ -1,0 +1,116 @@
+# Magnum Admin Dashboard Frontend Guide
+
+This guide maps the frontend dashboard to the current Django API and data model.
+
+## Domain Rules
+
+- Primary roles are `Parent_Personnel`, `Vendor_Personnel`, `School_Personnel`, and `Admin_Personnel`.
+- Students are domain records, not login users today.
+- A student belongs to exactly one school.
+- A parent is a `UserProfile` with `user_category=Parent_Personnel`.
+- Parents connect to students through `ParentStudentRelation`, so one parent can have children in different schools.
+- Vendors belong to schools. Vendor owners and operators are `Vendor_Personnel`.
+- Vendor items belong to vendor entities. Sale items are line items under a `Sale`; they should be shown from sale/vendor detail views unless a dedicated sale-item API is added.
+- Parent balances live in `UserAccount`. Student balances and transaction limits live in `StudentAccount`.
+- Use UUID `id` values for API actions. Friendly IDs such as `MSCHID-########`, `MSTID-########`, and `MVID-########` are for display and search.
+- Admin dashboard sub-roles use Django Groups and Permissions. The user must still have `UserProfile.user_category=Admin_Personnel`.
+
+## Shared UI Conventions
+
+- Every protected request uses `Authorization: Token {{token}}`.
+- List screens should support `search`, `status`, `school_id`, `vendor_id`, `date_from`, `date_to`, `page`, and `page_size` when the endpoint supports that filter.
+- Tables should display friendly IDs, names, status, school/vendor context, and created date.
+- Detail and status actions should send UUID `id` values, not friendly IDs.
+- Never display OTPs, login PINs, card PINs, refresh-token hashes, or raw secrets.
+
+## Screens
+
+| Screen | Purpose | Main Data | Actions | Permission | API |
+| --- | --- | --- | --- | --- | --- |
+| Login and OTP | Admin login flow | Email, password, OTP | Login, verify OTP, refresh token, logout | None before auth | `POST /api/login/`, `POST /api/verifyotp/`, `POST /api/refreshtoken/`, `POST /api/logout/` |
+| Dashboard Overview | Whole-system health | Counts, status totals, money totals, recent records | Navigate to drilldowns | `MagnumApp.view_admin_dashboard` | `GET /api/admin/dashboard/overview/` |
+| Schools | Manage schools | `id`, `school_id`, name, address, status | Filter, search, open detail, change status | `MagnumApp.view_school`, `MagnumApp.change_admin_status` | `GET /api/admin/schools/`, `PATCH /api/admin/schools/<school_id>/status/` |
+| School Detail | One school snapshot | School profile, students, vendors, totals | Open students/vendors | `MagnumApp.view_school` | `GET /api/admin/schools/<school_id>/` |
+| School Personnel | Manage school users | User profile, contact, school | View and future create/update | `MagnumApp.view_userprofile` | Use admin users/profile APIs when expanded |
+| Students | Manage all students | `id`, `student_id`, SSID, name, school, account, card, status | Filter, open detail, change status | `MagnumApp.view_student`, `MagnumApp.change_admin_status` | `GET /api/admin/students/`, `PATCH /api/admin/students/<student_id>/status/` |
+| Student Detail | Student account view | Student, school, parents, account, card, transactions, sales | Review activity | `MagnumApp.view_student` | `GET /api/admin/students/<student_id>/` |
+| Parents | Manage parent users | Profile, contact, child count | Filter, open detail | `MagnumApp.view_userprofile` | `GET /api/admin/parents/` |
+| Parent Detail | Parent and children | Profile, account, students, transactions | Review cross-school children | `MagnumApp.view_userprofile` | `GET /api/admin/parents/<profile_id>/` |
+| Vendors | Manage vendor entities | Vendor, school, owner, status | Filter, open detail, change status | `MagnumApp.view_vendor`, `MagnumApp.change_admin_status` | `GET /api/admin/vendors/`, `PATCH /api/admin/vendors/<vendor_id>/status/` |
+| Vendor Detail | Vendor operations | Owner, operators, items, sales | Review operator/item/sales data | `MagnumApp.view_vendor` | `GET /api/admin/vendors/<vendor_id>/` |
+| Vendor Operators | Review vendor staff | Operator profile, vendor, contact | Future operator status/update | `MagnumApp.view_userprofile` | Included in vendor detail |
+| Vendor Items | Manage vendor catalog visibility | `id`, `item_id`, item name, category, unit, unit price, vendor | Search/filter globally, open item detail, review items under a vendor | `MagnumApp.view_item` | `GET /api/admin/items/`, `GET /api/admin/items/<item_id>/`, also included in `GET /api/admin/vendors/<vendor_id>/` |
+| Sales | Review vendor sales | `id`, `sale_id`, vendor, student, total, date | Filter by school/vendor/date, open sale lines | `MagnumApp.view_sale` | `GET /api/admin/sales/` |
+| Sale Detail | Review one sale | Sale, vendor, student, school, sale items, total | Audit sale line items | `MagnumApp.view_sale` | `GET /api/admin/sales/<sale_id>/` |
+| Sale Items | Review sale line items | `id`, `sale_item_id`, item, quantity, unit price, subtotal | Show inside sale rows/detail; no standalone mutation from admin dashboard | `MagnumApp.view_saleitem` | Included in `GET /api/admin/sales/`, `GET /api/admin/sales/<sale_id>/`, and vendor detail sales |
+| Cards | Manage card inventory | `id`, `card_id`, card number, serial, linked student, linked school, status, expiration date | Filter, search, open detail, create one card, bulk import CSV, assign to student, replace/reissue, change status; never show card PIN | `MagnumApp.view_card`, `MagnumApp.add_card`, `MagnumApp.change_card`, `MagnumApp.change_admin_status` | `GET/POST /api/admin/cards/`, `GET /api/admin/cards/<card_id>/`, `POST /api/admin/cards/bulk-import/`, `POST /api/admin/cards/<card_id>/assign/`, `POST /api/admin/cards/<card_id>/replace/`, `PATCH /api/admin/cards/<card_id>/status/` |
+| Student Accounts | Review student balances and limits | `id`, `student_account_id`, student, school, balance, transaction limit | Search/filter, open detail, recalculate balance | `MagnumApp.view_studentaccount`, `MagnumApp.recalculate_balances` | `GET /api/admin/student-accounts/`, `GET /api/admin/student-accounts/<account_id>/`, `POST /api/admin/student-accounts/<account_id>/recalculate/` |
+| User Accounts | Review parent/vendor/admin balances | `id`, `user_account_id`, user, user category, balance | Search/filter, open detail, recalculate balance | `MagnumApp.view_useraccount`, `MagnumApp.recalculate_balances` | `GET /api/admin/user-accounts/`, `GET /api/admin/user-accounts/<account_id>/`, `POST /api/admin/user-accounts/<account_id>/recalculate/` |
+| Transactions | Review money movement | Reference, `transaction_id`, account holder, amount, status | Filter, open detail | `MagnumApp.view_transaction` | `GET /api/admin/transactions/`, `GET /api/admin/transactions/<transaction_id>/` |
+| Activity Logs | Audit operations | User, action, IP, user agent, timestamp | Filter and future export | `MagnumApp.view_activitylog`, `MagnumApp.export_activity_logs` | `GET /api/admin/activitylogs/` |
+| Admin Users | Manage Magnum admins | Admin profile, groups | Assign groups | `auth.view_user`, `MagnumApp.manage_admin_roles` | `GET /api/admin/users/`, `PATCH /api/admin/users/<user_id>/roles/` |
+| Roles and Permissions | Configure RBAC | Groups and permission strings | Assign groups to admins | `MagnumApp.manage_admin_roles` | `GET /api/admin/groups-permissions/` |
+| Account and Security | Admin session lifecycle | Profile, auth state | Refresh, logout, logout all | Authenticated user | `GET /api/getuserprofile/`, `POST /api/refreshtoken/`, `POST /api/logout/`, `POST /api/logoutall/` |
+
+## Recommended Admin Groups
+
+- `Magnum Super Admin`: all seeded dashboard permissions.
+- `Operations Admin`: broad read-only operational visibility plus status changes.
+- `School Manager`: schools, school users, students, parent relations, and school cards.
+- `Vendor Manager`: vendors, vendor users, items, and sales.
+- `Card Manager`: cards, students, and card status workflows.
+- `Finance Manager`: transactions, accounts, sales, and balance recalculation.
+- `Support Auditor`: read-only support and audit visibility.
+
+## API Response Notes
+
+- List endpoints return `{ data: { results, pagination }, status }`.
+- Detail endpoints return `{ data, status }`.
+- Status endpoints return the updated object in `{ data, status }`.
+- Date and decimal values are returned using Django REST Framework's normal JSON rendering.
+
+## Screen To Postman Checklist
+
+Use the `Web APIs/Admin Dashboard APIs` folder in `MagnumProjectDocuments/Magnum API Collection.postman_collection.json`.
+
+| Screen | Postman Requests |
+| --- | --- |
+| Login and OTP | `Web APIs/Auth/Login Either As School Personnel Or As Admin Personnel`, `Web APIs/Auth/Verify OTP` |
+| Dashboard Overview | `Get Admin Dashboard Overview` |
+| Schools | `List Schools`, `Get School Detail`, `Update School Status`, `Onboard School` |
+| School Detail | `Get School Detail`, then drill into `List Students`, `List Vendors`, `List Cards`, `List Transactions` with `school_id` |
+| School Personnel | `List Admin Users` for admin users today; school-personnel CRUD is a future dedicated workflow |
+| Students | `List Students`, `Get Student Detail`, `Update Student Status` |
+| Student Detail | `Get Student Detail`, `Get Student Account Detail`, `List Transactions`, `List Sales` |
+| Parents | `List Parents`, `Get Parent Detail` |
+| Parent Detail | `Get Parent Detail`, `Get User Account Detail`, `List Transactions` |
+| Vendors | `List Vendors`, `Get Vendor Detail`, `Update Vendor Status` |
+| Vendor Detail | `Get Vendor Detail`, `List Items`, `List Sales`, `List User Accounts` with `vendor_id` |
+| Vendor Operators | `Get Vendor Detail` for current operator list; operator create/update is a future dedicated workflow |
+| Vendor Items | `List Items`, `Get Item Detail`, `Get Vendor Detail` |
+| Sales | `List Sales`, `Get Sale Detail` |
+| Sale Detail | `Get Sale Detail` |
+| Sale Items | `Get Sale Detail`; sale items are embedded in sale responses |
+| Cards | `List Cards`, `Get Card Detail`, `Create Inventory Card`, `Bulk Import Cards CSV`, `Assign Card To Student`, `Replace Student Card`, `Update Card Status` |
+| Student Accounts | `List Student Accounts`, `Get Student Account Detail`, `Recalculate Student Account` |
+| User Accounts | `List User Accounts`, `Get User Account Detail`, `Recalculate User Account` |
+| Transactions | `List Transactions`, `Get Transaction Detail` |
+| Activity Logs | `List Activity Logs` |
+| Admin Users | `List Admin Users`, `Update Admin User Roles` |
+| Roles and Permissions | `Get Admin Groups And Permissions`, `Update Admin User Roles` |
+| Account and Security | `App APIs/Auth/Refresh Token`, `App APIs/Auth/Logout`, `App APIs/Auth/Logout All`, `App APIs/Auth/Get User Profile` |
+
+## Card Inventory Notes
+
+- One-by-one card creation uses `POST /api/admin/cards/` with `card_number`, `card_serial_number`, `card_pin`, `expiration_date`, and optional `status`.
+- Bulk import uses multipart CSV upload at `POST /api/admin/cards/bulk-import/` with field name `file`.
+- CSV columns are `card_number`, `card_serial_number`, `card_pin`, `expiration_date`, and optional `status`.
+- Bulk import is all-or-nothing: if any row is invalid or duplicated, no cards are created.
+- Assignment uses pending, unassigned cards only and activates the card for the selected student.
+- Replacement/reissue blocks and detaches the old card, then assigns and activates the new pending card.
+- Card PINs are write-only; do not render them in tables, detail views, downloads, logs, or errors.
+
+## Current API Gaps To Plan Next
+
+- Item create/update/delete from Magnum Admin if item catalog control should move beyond vendor personnel.
+- Standalone sale item list endpoint if the frontend needs line-item analytics independent of sales.

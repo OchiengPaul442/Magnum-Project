@@ -1,0 +1,70 @@
+"use client";
+
+import React from "react";
+
+import PageHeader from "@/components/layout/page-header";
+import DetailGrid from "@/components/shared/detail-grid";
+import ErrorState from "@/components/shared/error-state";
+import StatusBadge from "@/components/shared/status-badge";
+import { useDetailData } from "@/hooks/use-list-data";
+
+interface TransactionDetail {
+  id: string;
+  transaction_id?: string;
+  account_holder?: string;
+  amount?: string | number;
+  status?: string;
+  reference?: string;
+  created_at?: string;
+}
+
+interface TransactionDetailPageProps {
+  params: { transactionId: string };
+}
+
+export default function TransactionDetailPage({
+  params,
+}: TransactionDetailPageProps) {
+  const { transactionId } = params;
+  const { data, error, isLoading } = useDetailData<TransactionDetail>(
+    `/api/admin/transactions/${transactionId}/`,
+  );
+
+  if (isLoading) {
+    return (
+      <div className="text-sm text-muted-foreground">
+        Loading transaction...
+      </div>
+    );
+  }
+
+  if (error) {
+    return <ErrorState />;
+  }
+
+  const transaction = data?.data;
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Transaction Detail"
+        subtitle="Review transaction metadata and status."
+      />
+      <DetailGrid
+        title="Transaction Summary"
+        fields={[
+          { label: "UUID", value: transaction?.id },
+          { label: "Transaction ID", value: transaction?.transaction_id },
+          { label: "Reference", value: transaction?.reference },
+          { label: "Account Holder", value: transaction?.account_holder },
+          { label: "Amount", value: transaction?.amount },
+          {
+            label: "Status",
+            value: <StatusBadge status={transaction?.status} />,
+          },
+          { label: "Created", value: transaction?.created_at },
+        ]}
+      />
+    </div>
+  );
+}
