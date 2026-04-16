@@ -69,6 +69,7 @@ const proxy = async (request: NextRequest) => {
   const responseHeaders = new Headers(response.headers);
   responseHeaders.delete("content-encoding");
   responseHeaders.delete("transfer-encoding");
+  responseHeaders.delete("set-cookie");
 
   return new NextResponse(response.body, {
     status: response.status,

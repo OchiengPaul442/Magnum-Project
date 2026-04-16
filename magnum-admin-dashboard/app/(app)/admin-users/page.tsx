@@ -11,6 +11,7 @@ import NoData from "@/components/shared/no-data";
 import AssignRolesDialog from "@/components/admin/assign-roles-dialog";
 import { useDetailData, useListData } from "@/hooks/use-list-data";
 import type { ListParams } from "@/lib/api/admin";
+import { normalizeGroupEntries, normalizeStringList } from "@/lib/display";
 
 interface AdminUserRow {
   id: string;
@@ -51,13 +52,9 @@ export default function AdminUsersPage() {
   const totalPages = pagination?.total_pages ?? 1;
 
   const groupPayload = groupData?.data as Record<string, unknown> | undefined;
-  const availableGroups = Array.isArray(groupPayload?.groups)
-    ? (groupPayload?.groups as string[])
-    : groupPayload && typeof groupPayload.groups === "object"
-      ? Object.keys(groupPayload.groups as Record<string, unknown>)
-      : groupPayload
-        ? Object.keys(groupPayload)
-        : [];
+  const availableGroups = normalizeGroupEntries(
+    groupPayload?.groups ?? groupPayload,
+  ).map((group) => group.name);
 
   const columns: DataColumn<AdminUserRow>[] = [
     { key: "user_id", header: "User ID" },
@@ -66,7 +63,7 @@ export default function AdminUsersPage() {
     {
       key: "groups",
       header: "Groups",
-      render: (row) => row.groups?.join(", ") ?? "-",
+      render: (row) => normalizeStringList(row.groups).join(", ") || "-",
     },
     {
       key: "actions",

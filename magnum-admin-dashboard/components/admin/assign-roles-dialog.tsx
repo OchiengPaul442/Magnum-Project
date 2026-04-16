@@ -14,11 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { adminApi } from "@/lib/api/admin";
 import { captureError } from "@/lib/logging";
+import { normalizeStringList } from "@/lib/display";
 
 interface AssignRolesDialogProps {
   userId: string;
-  currentGroups: string[];
-  availableGroups: string[];
+  currentGroups: unknown[];
+  availableGroups: unknown[];
   onSuccess: () => void;
 }
 
@@ -30,12 +31,24 @@ export default function AssignRolesDialog({
 }: AssignRolesDialogProps) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [selected, setSelected] = useState<string[]>(currentGroups);
-
-  const sortedGroups = useMemo(
-    () => [...availableGroups].sort((a, b) => a.localeCompare(b)),
+  const normalizedCurrentGroups = useMemo(
+    () => normalizeStringList(currentGroups),
+    [currentGroups],
+  );
+  const normalizedAvailableGroups = useMemo(
+    () => normalizeStringList(availableGroups),
     [availableGroups],
   );
+  const [selected, setSelected] = useState<string[]>(normalizedCurrentGroups);
+
+  const sortedGroups = useMemo(
+    () => [...normalizedAvailableGroups].sort((a, b) => a.localeCompare(b)),
+    [normalizedAvailableGroups],
+  );
+
+  React.useEffect(() => {
+    setSelected(normalizedCurrentGroups);
+  }, [normalizedCurrentGroups]);
 
   const toggleGroup = (group: string) => {
     setSelected((prev) =>

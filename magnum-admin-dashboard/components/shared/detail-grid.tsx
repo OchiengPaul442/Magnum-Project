@@ -1,6 +1,7 @@
 import React from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDisplayValue } from "@/lib/display";
 
 interface DetailField {
   label: string;
@@ -26,7 +27,7 @@ export default function DetailGrid({ title, fields }: DetailGridProps) {
                 {field.label}
               </p>
               <p className="text-sm font-medium text-foreground">
-                {field.value ?? "-"}
+                {formatDisplayValue(field.value)}
               </p>
             </div>
           ))}

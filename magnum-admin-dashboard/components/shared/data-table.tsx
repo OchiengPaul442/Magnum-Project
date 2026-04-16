@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { formatDisplayValue } from "@/lib/display";
 
 export interface DataColumn<T> {
   key: string;
@@ -100,9 +101,9 @@ export default function DataTable<T>({
                     >
                       {column.render
                         ? column.render(row)
-                        : ((row as Record<string, unknown>)[
-                            column.key
-                          ] as React.ReactNode)}
+                        : formatDisplayValue(
+                            (row as Record<string, unknown>)[column.key],
+                          )}
                     </TableCell>
                   ))}
                 </TableRow>

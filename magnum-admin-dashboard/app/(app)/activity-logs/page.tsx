@@ -10,6 +10,7 @@ import ErrorState from "@/components/shared/error-state";
 import NoData from "@/components/shared/no-data";
 import { useListData } from "@/hooks/use-list-data";
 import type { ListParams } from "@/lib/api/admin";
+import { formatDisplayValue } from "@/lib/display";
 
 interface ActivityRow {
   id: string;
@@ -46,7 +47,11 @@ export default function ActivityLogsPage() {
   const totalPages = pagination?.total_pages ?? 1;
 
   const columns: DataColumn<ActivityRow>[] = [
-    { key: "user", header: "User" },
+    {
+      key: "user",
+      header: "User",
+      render: (row) => formatDisplayValue(row.user),
+    },
     { key: "action", header: "Action" },
     { key: "ip_address", header: "IP" },
     { key: "user_agent", header: "User Agent" },

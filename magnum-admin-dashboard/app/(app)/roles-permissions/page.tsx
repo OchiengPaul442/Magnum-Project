@@ -7,6 +7,7 @@ import ErrorState from "@/components/shared/error-state";
 import ContentLoader from "@/components/shared/content-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDetailData } from "@/hooks/use-list-data";
+import { normalizeGroupEntries } from "@/lib/display";
 
 export default function RolesPermissionsPage() {
   const { data, error, isLoading } = useDetailData<Record<string, unknown>>(
@@ -22,15 +23,7 @@ export default function RolesPermissionsPage() {
   }
 
   const payload = (data?.data as Record<string, unknown>) ?? {};
-  const groupsObject =
-    payload.groups &&
-    typeof payload.groups === "object" &&
-    !Array.isArray(payload.groups)
-      ? (payload.groups as Record<string, string[]>)
-      : {};
-  const groupsArray = Array.isArray(payload.groups)
-    ? (payload.groups as string[])
-    : [];
+  const groups = normalizeGroupEntries(payload.groups ?? payload);
 
   return (
     <div className="space-y-6">
@@ -39,7 +32,7 @@ export default function RolesPermissionsPage() {
         subtitle="Review available admin groups and permissions."
       />
       <div className="grid gap-4">
-        {Object.keys(groupsObject).length === 0 && groupsArray.length === 0 ? (
+        {groups.length === 0 ? (
           <Card>
             <CardContent>
               <p className="text-sm text-muted-foreground">
@@ -48,15 +41,15 @@ export default function RolesPermissionsPage() {
             </CardContent>
           </Card>
         ) : null}
-        {Object.entries(groupsObject).map(([group, permissions]) => (
-          <Card key={group}>
+        {groups.map((group) => (
+          <Card key={group.name}>
             <CardHeader>
-              <CardTitle>{group}</CardTitle>
+              <CardTitle>{group.name}</CardTitle>
             </CardHeader>
             <CardContent>
-              {permissions?.length ? (
+              {group.permissions.length ? (
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  {permissions.map((permission) => (
+                  {group.permissions.map((permission) => (
                     <li key={permission}>{permission}</li>
                   ))}
                 </ul>
@@ -65,18 +58,6 @@ export default function RolesPermissionsPage() {
                   No permissions listed.
                 </p>
               )}
-            </CardContent>
-          </Card>
-        ))}
-        {groupsArray.map((group) => (
-          <Card key={group}>
-            <CardHeader>
-              <CardTitle>{group}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Permissions are not provided in the response.
-              </p>
             </CardContent>
           </Card>
         ))}
