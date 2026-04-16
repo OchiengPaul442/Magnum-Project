@@ -70,7 +70,13 @@ export default function ActivityLogsPage() {
         }
       />
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">Loading logs...</div>
+        <DataTable
+          columns={columns}
+          data={[]}
+          rowKey={(row) => row.id}
+          isLoading
+          loadingRows={6}
+        />
       ) : error ? (
         <ErrorState />
       ) : logs.length === 0 ? (

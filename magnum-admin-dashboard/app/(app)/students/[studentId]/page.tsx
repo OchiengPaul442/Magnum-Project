@@ -6,6 +6,7 @@ import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
 import NoData from "@/components/shared/no-data";
+import LoadingScreen from "@/components/shared/loading-screen";
 import DataTable, { DataColumn } from "@/components/shared/data-table";
 import StatusBadge from "@/components/shared/status-badge";
 import UpdateStatusDialog from "@/components/shared/update-status-dialog";
@@ -70,9 +71,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   });
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">Loading student...</div>
-    );
+    return <LoadingScreen />;
   }
 
   if (error) {

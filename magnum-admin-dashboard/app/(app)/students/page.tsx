@@ -85,7 +85,13 @@ export default function StudentsPage() {
         }
       />
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">Loading students...</div>
+        <DataTable
+          columns={columns}
+          data={[]}
+          rowKey={(row) => row.id}
+          isLoading
+          loadingRows={6}
+        />
       ) : error ? (
         <ErrorState />
       ) : students.length === 0 ? (

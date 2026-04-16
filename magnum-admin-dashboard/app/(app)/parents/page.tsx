@@ -80,7 +80,13 @@ export default function ParentsPage() {
         }
       />
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">Loading parents...</div>
+        <DataTable
+          columns={columns}
+          data={[]}
+          rowKey={(row) => row.id}
+          isLoading
+          loadingRows={6}
+        />
       ) : error ? (
         <ErrorState />
       ) : parents.length === 0 ? (

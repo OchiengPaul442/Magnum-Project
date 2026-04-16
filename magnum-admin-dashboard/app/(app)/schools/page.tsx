@@ -79,7 +79,13 @@ export default function SchoolsPage() {
         }
       />
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">Loading schools...</div>
+        <DataTable
+          columns={columns}
+          data={[]}
+          rowKey={(row) => row.id}
+          isLoading
+          loadingRows={6}
+        />
       ) : error ? (
         <ErrorState />
       ) : schools.length === 0 ? (

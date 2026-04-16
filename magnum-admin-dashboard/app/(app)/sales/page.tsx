@@ -69,7 +69,13 @@ export default function SalesPage() {
         }
       />
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">Loading sales...</div>
+        <DataTable
+          columns={columns}
+          data={[]}
+          rowKey={(row) => row.id}
+          isLoading
+          loadingRows={6}
+        />
       ) : error ? (
         <ErrorState />
       ) : sales.length === 0 ? (

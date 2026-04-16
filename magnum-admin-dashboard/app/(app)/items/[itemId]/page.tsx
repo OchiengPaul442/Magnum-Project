@@ -5,6 +5,7 @@ import React from "react";
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
+import LoadingScreen from "@/components/shared/loading-screen";
 import { useDetailData } from "@/hooks/use-list-data";
 
 interface ItemDetail {
@@ -29,7 +30,7 @@ export default function ItemDetailPage({ params }: ItemDetailPageProps) {
   );
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Loading item...</div>;
+    return <LoadingScreen />;
   }
 
   if (error) {

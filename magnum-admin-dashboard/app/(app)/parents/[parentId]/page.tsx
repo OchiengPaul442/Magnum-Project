@@ -6,6 +6,7 @@ import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
 import NoData from "@/components/shared/no-data";
+import LoadingScreen from "@/components/shared/loading-screen";
 import DataTable, { DataColumn } from "@/components/shared/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDetailData, useListData } from "@/hooks/use-list-data";
@@ -54,9 +55,7 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
   );
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">Loading parent...</div>
-    );
+    return <LoadingScreen />;
   }
 
   if (error) {

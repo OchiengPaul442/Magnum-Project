@@ -99,9 +99,13 @@ export default function AdminUsersPage() {
         }
       />
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">
-          Loading admin users...
-        </div>
+        <DataTable
+          columns={columns}
+          data={[]}
+          rowKey={(row) => row.id}
+          isLoading
+          loadingRows={6}
+        />
       ) : error ? (
         <ErrorState />
       ) : admins.length === 0 ? (

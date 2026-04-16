@@ -77,9 +77,13 @@ export default function TransactionsPage() {
         }
       />
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">
-          Loading transactions...
-        </div>
+        <DataTable
+          columns={columns}
+          data={[]}
+          rowKey={(row) => row.id}
+          isLoading
+          loadingRows={6}
+        />
       ) : error ? (
         <ErrorState />
       ) : transactions.length === 0 ? (

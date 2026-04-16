@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export interface DataColumn<T> {
@@ -23,6 +24,8 @@ interface DataTableProps<T> {
   rowKey: (row: T) => string;
   onRowClick?: (row: T) => void;
   className?: string;
+  isLoading?: boolean;
+  loadingRows?: number;
 }
 
 export default function DataTable<T>({
@@ -31,11 +34,15 @@ export default function DataTable<T>({
   rowKey,
   onRowClick,
   className,
+  isLoading = false,
+  loadingRows = 6,
 }: DataTableProps<T>) {
+  const loadingWidths = ["w-3/4", "w-2/3", "w-5/6", "w-1/2", "w-4/5", "w-3/5"];
+
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-white shadow-sm",
+        "overflow-hidden rounded-2xl border border-border/60 bg-white",
         className,
       )}
     >
@@ -50,30 +57,56 @@ export default function DataTable<T>({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((row, index) => (
-            <TableRow
-              key={rowKey(row)}
-              className={cn(
-                "transition",
-                index % 2 === 1 && "bg-muted/40",
-                onRowClick && "cursor-pointer hover:bg-muted",
-              )}
-              onClick={() => onRowClick?.(row)}
-            >
-              {columns.map((column) => (
-                <TableCell
-                  key={`${rowKey(row)}-${column.key}`}
-                  className={column.className}
+          {isLoading
+            ? Array.from({ length: loadingRows }).map((_, rowIndex) => (
+                <TableRow
+                  key={`skeleton-row-${rowIndex}`}
+                  className={cn(
+                    rowIndex % 2 === 1 && "bg-muted/30",
+                    "pointer-events-none",
+                  )}
                 >
-                  {column.render
-                    ? column.render(row)
-                    : ((row as Record<string, unknown>)[
-                        column.key
-                      ] as React.ReactNode)}
-                </TableCell>
+                  {columns.map((column, columnIndex) => (
+                    <TableCell
+                      key={`skeleton-${rowIndex}-${column.key}`}
+                      className={column.className}
+                    >
+                      <Skeleton
+                        className={cn(
+                          "h-4 rounded-full",
+                          loadingWidths[
+                            (rowIndex + columnIndex) % loadingWidths.length
+                          ],
+                        )}
+                      />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            : data.map((row, index) => (
+                <TableRow
+                  key={rowKey(row)}
+                  className={cn(
+                    "transition-colors",
+                    index % 2 === 1 && "bg-muted/25",
+                    onRowClick && "cursor-pointer hover:bg-muted/35",
+                  )}
+                  onClick={() => onRowClick?.(row)}
+                >
+                  {columns.map((column) => (
+                    <TableCell
+                      key={`${rowKey(row)}-${column.key}`}
+                      className={column.className}
+                    >
+                      {column.render
+                        ? column.render(row)
+                        : ((row as Record<string, unknown>)[
+                            column.key
+                          ] as React.ReactNode)}
+                    </TableCell>
+                  ))}
+                </TableRow>
               ))}
-            </TableRow>
-          ))}
         </TableBody>
       </Table>
     </div>

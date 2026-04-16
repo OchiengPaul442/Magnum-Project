@@ -77,7 +77,13 @@ export default function UserAccountsPage() {
         }
       />
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">Loading accounts...</div>
+        <DataTable
+          columns={columns}
+          data={[]}
+          rowKey={(row) => row.id}
+          isLoading
+          loadingRows={6}
+        />
       ) : error ? (
         <ErrorState />
       ) : accounts.length === 0 ? (

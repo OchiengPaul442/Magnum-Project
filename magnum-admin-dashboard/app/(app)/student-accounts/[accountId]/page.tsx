@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
+import LoadingScreen from "@/components/shared/loading-screen";
 import { Button } from "@/components/ui/button";
 import { useDetailData } from "@/hooks/use-list-data";
 import { adminApi } from "@/lib/api/admin";
@@ -36,9 +37,7 @@ export default function StudentAccountDetailPage({
   const [recalculating, setRecalculating] = useState(false);
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">Loading account...</div>
-    );
+    return <LoadingScreen />;
   }
 
   if (error) {

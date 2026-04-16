@@ -84,9 +84,7 @@ export default function SchoolDetailPage({ params }: SchoolDetailPageProps) {
   );
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">Loading school...</div>
-    );
+    return <LoadingScreen />;
   }
 
   if (error) {
