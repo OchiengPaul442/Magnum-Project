@@ -3,100 +3,205 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { RefreshCw } from "lucide-react";
+import OTPInput from "@/components/shared/otp-input";
 
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
+  CardFooter,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import LoadingScreen from "@/components/shared/loading-screen";
 import { useAuth } from "@/components/providers/auth-provider";
+import { authApi } from "@/lib/api/auth";
 import { captureError } from "@/lib/logging";
+import { cn } from "@/lib/utils";
 
-const schema = z.object({
-  username: z.string().min(3, "Email or username is required"),
-  otp: z.string().min(4, "OTP is required"),
-});
+const OTP_LENGTH = 6;
+const PENDING_USER_KEY = "magnum_pending_user";
 
-type OtpValues = z.infer<typeof schema>;
+// Using a custom, accessible OTP input component (see components/shared/otp-input.tsx)
 
 export default function VerifyOtpPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") ?? "/dashboard";
   const { verifyOtp } = useAuth();
+  const [username, setUsername] = useState<string | null>(null);
+  const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<OtpValues>({ resolver: zodResolver(schema) });
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState<number>(0);
 
   useEffect(() => {
-    const pendingUser = sessionStorage.getItem("magnum_pending_user");
-    if (pendingUser) {
-      setValue("username", pendingUser);
+    const pendingUser = sessionStorage.getItem(PENDING_USER_KEY);
+    if (!pendingUser) {
+      router.replace(`/login?next=${encodeURIComponent(nextPath)}`);
+      return;
     }
-  }, [setValue]);
 
-  const onSubmit = async (values: OtpValues) => {
+    setUsername(pendingUser);
+    setIsHydrated(true);
+  }, [nextPath, router]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!username) {
+      return;
+    }
+
+    if (!new RegExp(`^\\d{${OTP_LENGTH}}$`).test(otp)) {
+      setError("Enter the 6-digit verification code.");
+      return;
+    }
+
+    setIsSubmitting(true);
     setError(null);
+    setStatusMessage(null);
+
     try {
-      await verifyOtp(values);
-      sessionStorage.removeItem("magnum_pending_user");
-      router.push(nextPath);
+      await verifyOtp({ username, otp });
+      sessionStorage.removeItem(PENDING_USER_KEY);
+      router.replace(nextPath);
     } catch (err) {
       captureError(err, { source: "verify-otp" });
       setError("OTP verification failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const handleResend = async () => {
+    if (!username || isResending || resendCooldown > 0) {
+      return;
+    }
+
+    setIsResending(true);
+    setError(null);
+    setStatusMessage(null);
+    setResendCooldown(30);
+
+    try {
+      await authApi.resendOtp({ email: username, purpose: "login" });
+      setOtp("");
+      setStatusMessage("A new 6-digit code has been sent.");
+    } catch (err) {
+      captureError(err, { source: "resend-otp" });
+      setError("We could not resend the code. Please try again.");
+      setResendCooldown(0);
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(id);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [resendCooldown]);
+
+  if (!isHydrated) {
+    return <LoadingScreen />;
+  }
+
   return (
-    <Card className="shadow-xl">
-      <CardHeader>
+    <Card className="w-full shadow-xl">
+      <CardHeader className="text-center">
         <div className="flex items-center justify-center">
-          <Image src="/logos/logo.png" alt="Magnum" width={48} height={48} />
+          <Image
+            src="/logos/logo.png"
+            alt="Magnum"
+            width={48}
+            height={48}
+            className="h-auto w-auto"
+          />
         </div>
-        <CardTitle className="text-2xl">Verify OTP</CardTitle>
+        <CardTitle className="text-2xl">Enter the 6-digit code</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Enter the OTP sent to your email to finish signing in.
+          We sent a verification code to your inbox. Enter it below to finish
+          signing in.
         </p>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="username">Email</Label>
-            <Input
-              id="username"
-              placeholder="admin@magnum.app"
-              {...register("username")}
+
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-6">
+          <div className="flex justify-center">
+            <OTPInput
+              length={OTP_LENGTH}
+              value={otp}
+              autoFocus
+              onChange={(value) => {
+                setOtp(value);
+                setError(null);
+                setStatusMessage(null);
+              }}
             />
-            {errors.username ? (
-              <p className="text-xs text-red-600">{errors.username.message}</p>
-            ) : null}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="otp">OTP</Label>
-            <Input id="otp" placeholder="Enter OTP" {...register("otp")} />
-            {errors.otp ? (
-              <p className="text-xs text-red-600">{errors.otp.message}</p>
-            ) : null}
-          </div>
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+
+          {error ? (
+            <p className="text-center text-sm font-medium text-red-600">
+              {error}
+            </p>
+          ) : null}
+
+          {statusMessage ? (
+            <p className="text-center text-sm font-medium text-emerald-600">
+              {statusMessage}
+            </p>
+          ) : null}
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Verifying..." : "Verify and Continue"}
+
+        <CardFooter className="flex flex-col items-center gap-3">
+          <Button
+            type="submit"
+            disabled={isSubmitting || otp.length !== OTP_LENGTH}
+            className="w-full"
+          >
+            {isSubmitting ? "Verifying..." : "Continue"}
           </Button>
+
+          <div className="flex flex-col items-center gap-3 pt-1">
+            <span className="text-sm text-muted-foreground">
+              Didn&apos;t receive the code?
+            </span>
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto gap-2 p-0 text-sm font-semibold text-[#6f54c5]"
+              disabled={isResending || !username || resendCooldown > 0}
+              aria-disabled={isResending || !username || resendCooldown > 0}
+              title={
+                resendCooldown > 0
+                  ? `Resend available in ${resendCooldown}s`
+                  : undefined
+              }
+              onClick={() => void handleResend()}
+            >
+              <RefreshCw
+                className={cn("h-4 w-4", isResending && "animate-spin")}
+              />
+              {isResending
+                ? "Resending..."
+                : resendCooldown > 0
+                  ? `Resend available (${resendCooldown}s)`
+                  : "Resend code"}
+            </Button>
+          </div>
         </CardFooter>
       </form>
     </Card>

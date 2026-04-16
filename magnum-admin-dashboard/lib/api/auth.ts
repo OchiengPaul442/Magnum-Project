@@ -10,6 +10,11 @@ export interface VerifyOtpPayload {
   otp: string;
 }
 
+export interface ResendOtpPayload {
+  email: string;
+  purpose: "login";
+}
+
 export const authApi = {
   login: async (payload: LoginPayload) => {
     const response = await apiClient.post("/api/login/", payload, noAuthConfig);
@@ -18,6 +23,14 @@ export const authApi = {
   verifyOtp: async (payload: VerifyOtpPayload) => {
     const response = await apiClient.post(
       "/api/verifyotp/",
+      payload,
+      noAuthConfig,
+    );
+    return response.data;
+  },
+  resendOtp: async (payload: ResendOtpPayload) => {
+    const response = await apiClient.post(
+      "/api/resendotp/",
       payload,
       noAuthConfig,
     );

@@ -5,7 +5,8 @@ const API_BASE_URL = process.env.MAGNUM_API_BASE_URL;
 const buildTargetUrl = (request: NextRequest) => {
   const { pathname, search } = request.nextUrl;
   const baseUrl = API_BASE_URL?.replace(/\/$/, "") ?? "";
-  return `${baseUrl}${pathname}${search}`;
+  const targetPath = pathname.endsWith("/") ? pathname : `${pathname}/`;
+  return `${baseUrl}${targetPath}${search}`;
 };
 
 const forwardHeaders = (request: NextRequest) => {

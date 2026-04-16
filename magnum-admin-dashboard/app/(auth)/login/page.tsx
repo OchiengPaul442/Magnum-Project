@@ -56,7 +56,13 @@ export default function LoginPage() {
     <Card className="shadow-xl">
       <CardHeader>
         <div className="flex items-center justify-center">
-          <Image src="/logos/logo.png" alt="Magnum" width={48} height={48} />
+          <Image
+            src="/logos/logo.png"
+            alt="Magnum"
+            width={48}
+            height={48}
+            className="h-auto w-auto"
+          />
         </div>
         <CardTitle className="text-2xl">Sign in to Magnum</CardTitle>
         <p className="text-sm text-muted-foreground">
@@ -85,8 +91,8 @@ export default function LoginPage() {
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button type="submit" disabled={isSubmitting}>
+        <CardFooter className="flex">
+          <Button type="submit" disabled={isSubmitting} className="w-full">
             {isSubmitting ? "Signing in..." : "Continue"}
           </Button>
         </CardFooter>
