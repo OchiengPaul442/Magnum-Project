@@ -14,7 +14,7 @@ import {
   CardFooter,
   CardTitle,
 } from "@/components/ui/card";
-import LoadingScreen from "@/components/shared/loading-screen";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/components/providers/auth-provider";
 import { authApi } from "@/lib/api/auth";
 import { captureError } from "@/lib/logging";
@@ -116,20 +116,47 @@ export default function VerifyOtpPage() {
   }, [resendCooldown]);
 
   if (!isHydrated) {
-    return <LoadingScreen />;
+    return (
+      <Card className="w-full max-w-md shadow-xl" aria-busy="true">
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center">
+            <Skeleton className="h-12 w-12 rounded-2xl" />
+          </div>
+          <Skeleton className="mx-auto h-8 w-52 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="mx-auto h-4 w-[90%] rounded-full" />
+            <Skeleton className="mx-auto h-4 w-[72%] rounded-full" />
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          <div className="flex justify-center gap-2 sm:gap-3" aria-hidden>
+            {Array.from({ length: OTP_LENGTH }).map((_, index) => (
+              <Skeleton
+                key={index}
+                className="h-14 w-11 rounded-2xl sm:h-16 sm:w-12"
+              />
+            ))}
+          </div>
+          <Skeleton className="mx-auto h-4 w-64 rounded-full" />
+        </CardContent>
+
+        <CardFooter className="flex flex-col items-center gap-3">
+          <Skeleton className="h-11 w-full rounded-full" />
+          <div className="flex flex-col items-center gap-3 pt-1">
+            <Skeleton className="h-4 w-44 rounded-full" />
+            <Skeleton className="h-4 w-28 rounded-full" />
+          </div>
+        </CardFooter>
+      </Card>
+    );
   }
 
   return (
-    <Card className="w-full shadow-xl">
+    <Card className="w-full max-w-md shadow-xl">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center">
-          <Image
-            src="/logos/logo.png"
-            alt="Magnum"
-            width={48}
-            height={48}
-            className="h-auto w-auto"
-          />
+          <Image src="/logos/logo.png" alt="Magnum" width={48} height={48} />
         </div>
         <CardTitle className="text-2xl">Enter the 6-digit code</CardTitle>
         <p className="text-sm text-muted-foreground">

@@ -19,6 +19,8 @@ export function setAuthSession(token: string, refreshToken?: string | null) {
   window.localStorage.setItem(TOKEN_KEY, token);
   if (refreshToken) {
     window.localStorage.setItem(REFRESH_KEY, refreshToken);
+  } else {
+    window.localStorage.removeItem(REFRESH_KEY);
   }
   document.cookie = `${AUTH_COOKIE}=1; path=/; sameSite=Lax`;
 }

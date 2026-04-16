@@ -12,6 +12,11 @@ import React, {
 import { authApi } from "@/lib/api/auth";
 import { captureError } from "@/lib/logging";
 import {
+  extractProfile,
+  extractRefreshToken,
+  extractToken,
+} from "@/lib/auth/session";
+import {
   clearAuthSession,
   getAuthToken,
   getRefreshToken,
@@ -35,41 +40,6 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const extractToken = (data: Record<string, unknown> | null | undefined) => {
-  if (!data) return null;
-  return (
-    (data.token as string | undefined) ||
-    (data.access_token as string | undefined) ||
-    (data.accessToken as string | undefined) ||
-    (data.access as string | undefined) ||
-    ((data.data as Record<string, unknown>)?.token as string | undefined) ||
-    ((data.data as Record<string, unknown>)?.access_token as
-      | string
-      | undefined) ||
-    null
-  );
-};
-
-const extractRefreshToken = (
-  data: Record<string, unknown> | null | undefined,
-) => {
-  if (!data) return null;
-  return (
-    (data.refresh_token as string | undefined) ||
-    (data.refreshToken as string | undefined) ||
-    (data.refresh as string | undefined) ||
-    ((data.data as Record<string, unknown>)?.refresh_token as
-      | string
-      | undefined) ||
-    null
-  );
-};
-
-const extractProfile = (data: Record<string, unknown> | null | undefined) => {
-  if (!data) return null;
-  return (data.data as Record<string, unknown>) ?? data;
-};
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
@@ -79,9 +49,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const storedToken = getAuthToken();
     const storedRefresh = getRefreshToken();
-    setToken(storedToken);
-    setRefreshToken(storedRefresh);
-    setIsLoading(false);
+    let isActive = true;
+
+    const restoreSession = async () => {
+      if (storedToken) {
+        if (!isActive) return;
+        setToken(storedToken);
+        setRefreshToken(storedRefresh);
+        setIsLoading(false);
+        return;
+      }
+
+      if (storedRefresh) {
+        try {
+          const response = await authApi.refreshToken(storedRefresh);
+          const nextToken = extractToken(response);
+          const nextRefresh = extractRefreshToken(response) ?? storedRefresh;
+
+          if (nextToken && isActive) {
+            setAuthSession(nextToken, nextRefresh);
+            setToken(nextToken);
+            setRefreshToken(nextRefresh);
+          }
+        } catch (error) {
+          captureError(error, { source: "auth-bootstrap-refresh" });
+          clearAuthSession();
+          if (isActive) {
+            setToken(null);
+            setRefreshToken(null);
+          }
+        }
+      }
+
+      if (isActive) {
+        setIsLoading(false);
+      }
+    };
+
+    void restoreSession();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const fetchProfile = useCallback(async () => {
@@ -95,9 +104,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (payload: { username: string; password: string }) => {
-      return authApi.login(payload);
+      const response = await authApi.login(payload);
+      const extractedToken = extractToken(response);
+      const extractedRefresh = extractRefreshToken(response);
+
+      if (extractedToken) {
+        setAuthSession(extractedToken, extractedRefresh);
+        setToken(extractedToken);
+        setRefreshToken(extractedRefresh ?? null);
+        await fetchProfile();
+      }
+
+      return response;
     },
-    [],
+    [fetchProfile],
   );
 
   const verifyOtp = useCallback(

@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/components/providers/auth-provider";
 import { captureError } from "@/lib/logging";
+import { hasOtpRequirement } from "@/lib/auth/session";
 
 const schema = z.object({
   username: z.string().min(3, "Email or username is required"),
@@ -43,9 +44,16 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginValues) => {
     setError(null);
     try {
-      await login(values);
-      sessionStorage.setItem("magnum_pending_user", values.username);
-      router.push(`/verify-otp?next=${encodeURIComponent(nextPath)}`);
+      const response = await login(values);
+      const responseData = response as Record<string, unknown>;
+
+      if (hasOtpRequirement(responseData)) {
+        sessionStorage.setItem("magnum_pending_user", values.username);
+        router.push(`/verify-otp?next=${encodeURIComponent(nextPath)}`);
+        return;
+      }
+
+      router.replace(nextPath);
     } catch (err) {
       captureError(err, { source: "login" });
       setError("Login failed. Please check your credentials and try again.");
@@ -53,16 +61,10 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="shadow-xl">
+    <Card className="w-full max-w-md shadow-xl">
       <CardHeader>
         <div className="flex items-center justify-center">
-          <Image
-            src="/logos/logo.png"
-            alt="Magnum"
-            width={48}
-            height={48}
-            className="h-auto w-auto"
-          />
+          <Image src="/logos/logo.png" alt="Magnum" width={48} height={48} />
         </div>
         <CardTitle className="text-2xl">Sign in to Magnum</CardTitle>
         <p className="text-sm text-muted-foreground">

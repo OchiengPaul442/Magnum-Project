@@ -23,7 +23,10 @@ export const authApi = {
   verifyOtp: async (payload: VerifyOtpPayload) => {
     const response = await apiClient.post(
       "/api/verifyotp/",
-      payload,
+      {
+        username: payload.username,
+        one_time_pin: payload.otp,
+      },
       noAuthConfig,
     );
     return response.data;
