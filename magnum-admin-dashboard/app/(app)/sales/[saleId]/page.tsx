@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
@@ -31,14 +32,13 @@ interface SaleItemRow {
   subtotal?: string | number;
 }
 
-interface SaleDetailPageProps {
-  params: { saleId: string };
-}
-
-export default function SaleDetailPage({ params }: SaleDetailPageProps) {
-  const { saleId } = params;
+export default function SaleDetailPage() {
+  const routeParams = useParams<{ saleId?: string | string[] }>();
+  const saleId = Array.isArray(routeParams.saleId)
+    ? (routeParams.saleId[0] ?? null)
+    : (routeParams.saleId ?? null);
   const { data, error, isLoading } = useDetailData<SaleDetail>(
-    `/api/admin/sales/${saleId}/`,
+    saleId ? `/api/admin/sales/${saleId}` : null,
   );
 
   if (isLoading) {
@@ -62,7 +62,11 @@ export default function SaleDetailPage({ params }: SaleDetailPageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Sale Detail" subtitle="Audit sale line items." />
+      <PageHeader
+        title="Sale Detail"
+        subtitle="Audit sale line items."
+        backHref="/sales"
+      />
       <DetailGrid
         title="Sale Summary"
         fields={[

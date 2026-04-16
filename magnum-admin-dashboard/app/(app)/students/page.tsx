@@ -10,6 +10,16 @@ import PaginationControls from "@/components/shared/pagination-controls";
 import ErrorState from "@/components/shared/error-state";
 import NoData from "@/components/shared/no-data";
 import StatusBadge from "@/components/shared/status-badge";
+import UpdateStatusDialog from "@/components/shared/update-status-dialog";
+import { adminApi } from "@/lib/api/admin";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal } from "lucide-react";
 import { useListData } from "@/hooks/use-list-data";
 import type { ListParams } from "@/lib/api/admin";
 
@@ -17,9 +27,15 @@ interface StudentRow {
   id: string;
   student_id?: string;
   ssid?: string;
-  student_school_id?: string;
+  full_name?: string;
   first_name?: string;
   last_name?: string;
+  school?: {
+    id?: string;
+    school_id?: string;
+    school_name?: string;
+    school_address?: string;
+  } | null;
   school_name?: string;
   status?: string;
   created_at?: string;
@@ -27,11 +43,15 @@ interface StudentRow {
 
 export default function StudentsPage() {
   const router = useRouter();
+  const [editingStudent, setEditingStudent] = useState<{
+    identifier: string;
+    status?: string;
+  } | null>(null);
   const [filters, setFilters] = useState<ListParams>({
     search: "",
     status: "all",
     page: 1,
-    page_size: 20,
+    page_size: 10,
   });
 
   const params = useMemo(() => {
@@ -42,7 +62,7 @@ export default function StudentsPage() {
     return nextParams;
   }, [filters]);
 
-  const { data, error, isLoading } = useListData<StudentRow>(
+  const { data, error, isLoading, mutate } = useListData<StudentRow>(
     "/api/admin/students/",
     params,
   );
@@ -53,19 +73,67 @@ export default function StudentsPage() {
 
   const columns: DataColumn<StudentRow>[] = [
     { key: "student_id", header: "Student ID" },
-    { key: "student_school_id", header: "SSID" },
+    { key: "ssid", header: "SSID" },
     {
       key: "name",
       header: "Student Name",
-      render: (row) => `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim(),
+      render: (row) =>
+        row.full_name ??
+        `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim(),
     },
-    { key: "school_name", header: "School" },
+    {
+      key: "school_name",
+      header: "School",
+      render: (row) => row.school?.school_name ?? row.school_name,
+    },
     {
       key: "status",
       header: "Status",
       render: (row) => <StatusBadge status={row.status} />,
     },
     { key: "created_at", header: "Created" },
+    {
+      key: "actions",
+      header: "",
+      className: "text-right",
+      render: (row) => (
+        <div
+          className="flex justify-end"
+          data-no-row-click="true"
+          onClick={(event) => event.stopPropagation()}
+          onMouseDown={(event) => event.stopPropagation()}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Actions for ${row.student_id ?? row.id}`}
+                data-no-row-click="true"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onSelect={(event) => {
+                  event.stopPropagation();
+                  setEditingStudent({
+                    identifier: row.id,
+                    status: row.status,
+                  });
+                }}
+              >
+                Edit details
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -111,6 +179,24 @@ export default function StudentsPage() {
             page={pagination?.page ?? 1}
             totalPages={totalPages}
             onPageChange={(page) => setFilters((prev) => ({ ...prev, page }))}
+          />
+          <UpdateStatusDialog
+            open={Boolean(editingStudent)}
+            onOpenChange={(open) => {
+              if (!open) setEditingStudent(null);
+            }}
+            currentStatus={editingStudent?.status}
+            title="Edit Student Status"
+            description="Change the status for this student."
+            onUpdate={async (status) => {
+              if (!editingStudent?.identifier) return;
+              await adminApi.updateStudentStatus(
+                editingStudent.identifier,
+                status,
+              );
+              await mutate?.();
+              setEditingStudent(null);
+            }}
           />
         </div>
       )}

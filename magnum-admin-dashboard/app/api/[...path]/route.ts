@@ -4,10 +4,36 @@ import { getToken } from "next-auth/jwt";
 const API_BASE_URL = process.env.MAGNUM_API_BASE_URL;
 const SKIP_AUTH_HEADER = "x-skip-auth";
 
+const DETAIL_PATH_PREFIXES = [
+  "/api/admin/schools/",
+  "/api/admin/students/",
+  "/api/admin/parents/",
+  "/api/admin/vendors/",
+  "/api/admin/items/",
+  "/api/admin/sales/",
+  "/api/admin/cards/",
+  "/api/admin/student-accounts/",
+  "/api/admin/user-accounts/",
+  "/api/admin/transactions/",
+];
+
 const buildTargetUrl = (request: NextRequest) => {
   const { pathname, search } = request.nextUrl;
   const baseUrl = API_BASE_URL?.replace(/\/$/, "") ?? "";
-  const targetPath = pathname.endsWith("/") ? pathname : `${pathname}/`;
+  const isDetailRoute = DETAIL_PATH_PREFIXES.some((prefix) => {
+    if (!pathname.startsWith(prefix)) {
+      return false;
+    }
+
+    const suffix = pathname.slice(prefix.length);
+    return suffix.length > 0 && !suffix.includes("/");
+  });
+
+  const targetPath = isDetailRoute
+    ? pathname.replace(/\/$/, "")
+    : pathname.endsWith("/")
+      ? pathname
+      : `${pathname}/`;
   return `${baseUrl}${targetPath}${search}`;
 };
 

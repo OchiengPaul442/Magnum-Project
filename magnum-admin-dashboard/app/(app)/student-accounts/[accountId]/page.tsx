@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { toast } from "sonner";
+import { useParams } from "next/navigation";
 
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
@@ -22,17 +23,14 @@ interface StudentAccountDetail {
   created_at?: string;
 }
 
-interface StudentAccountDetailPageProps {
-  params: { accountId: string };
-}
-
-export default function StudentAccountDetailPage({
-  params,
-}: StudentAccountDetailPageProps) {
-  const { accountId } = params;
+export default function StudentAccountDetailPage() {
+  const routeParams = useParams<{ accountId?: string | string[] }>();
+  const accountId = Array.isArray(routeParams.accountId)
+    ? (routeParams.accountId[0] ?? null)
+    : (routeParams.accountId ?? null);
   const { data, error, isLoading, mutate } =
     useDetailData<StudentAccountDetail>(
-      `/api/admin/student-accounts/${accountId}/`,
+      accountId ? `/api/admin/student-accounts/${accountId}` : null,
     );
   const [recalculating, setRecalculating] = useState(false);
 
@@ -47,6 +45,7 @@ export default function StudentAccountDetailPage({
   const account = data?.data;
 
   const handleRecalculate = async () => {
+    if (!accountId) return;
     setRecalculating(true);
     try {
       await adminApi.recalculateStudentAccount(accountId);
@@ -65,6 +64,7 @@ export default function StudentAccountDetailPage({
       <PageHeader
         title="Student Account Detail"
         subtitle="Balance and transaction limit details."
+        backHref="/student-accounts"
         actions={
           <Button onClick={handleRecalculate} disabled={recalculating}>
             {recalculating ? "Recalculating..." : "Recalculate Balance"}

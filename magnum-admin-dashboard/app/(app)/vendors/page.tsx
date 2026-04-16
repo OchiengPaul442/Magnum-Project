@@ -17,8 +17,25 @@ interface VendorRow {
   id: string;
   vendor_id?: string;
   vendor_name?: string;
-  school_name?: string;
-  owner_name?: string;
+  school?: {
+    id?: string;
+    school_id?: string;
+    school_name?: string;
+    school_address?: string;
+  } | null;
+  owner?: {
+    id?: string;
+    user_profile_id?: string;
+    user?: {
+      id?: number;
+      email?: string;
+      first_name?: string;
+      last_name?: string;
+      full_name?: string;
+      is_active?: boolean;
+    } | null;
+    contact?: string;
+  } | null;
   status?: string;
   created_at?: string;
 }
@@ -29,7 +46,7 @@ export default function VendorsPage() {
     search: "",
     status: "all",
     page: 1,
-    page_size: 20,
+    page_size: 10,
   });
 
   const params = useMemo(() => {
@@ -52,8 +69,16 @@ export default function VendorsPage() {
   const columns: DataColumn<VendorRow>[] = [
     { key: "vendor_id", header: "Vendor ID" },
     { key: "vendor_name", header: "Vendor" },
-    { key: "school_name", header: "School" },
-    { key: "owner_name", header: "Owner" },
+    {
+      key: "school_name",
+      header: "School",
+      render: (row) => row.school?.school_name,
+    },
+    {
+      key: "owner_name",
+      header: "Owner",
+      render: (row) => row.owner?.user?.full_name,
+    },
     {
       key: "status",
       header: "Status",

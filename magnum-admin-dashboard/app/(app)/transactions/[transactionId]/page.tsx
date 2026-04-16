@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
@@ -19,16 +20,13 @@ interface TransactionDetail {
   created_at?: string;
 }
 
-interface TransactionDetailPageProps {
-  params: { transactionId: string };
-}
-
-export default function TransactionDetailPage({
-  params,
-}: TransactionDetailPageProps) {
-  const { transactionId } = params;
+export default function TransactionDetailPage() {
+  const routeParams = useParams<{ transactionId?: string | string[] }>();
+  const transactionId = Array.isArray(routeParams.transactionId)
+    ? (routeParams.transactionId[0] ?? null)
+    : (routeParams.transactionId ?? null);
   const { data, error, isLoading } = useDetailData<TransactionDetail>(
-    `/api/admin/transactions/${transactionId}/`,
+    transactionId ? `/api/admin/transactions/${transactionId}` : null,
   );
 
   if (isLoading) {
@@ -46,6 +44,7 @@ export default function TransactionDetailPage({
       <PageHeader
         title="Transaction Detail"
         subtitle="Review transaction metadata and status."
+        backHref="/transactions"
       />
       <DetailGrid
         title="Transaction Summary"

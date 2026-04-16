@@ -27,7 +27,7 @@ export default function StudentAccountsPage() {
     search: "",
     status: "all",
     page: 1,
-    page_size: 20,
+    page_size: 10,
   });
 
   const params = useMemo(() => {

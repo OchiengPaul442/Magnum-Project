@@ -125,7 +125,7 @@ export default function OTPInput({
           pattern="[0-9]*"
           maxLength={1}
           aria-label={`Digit ${i + 1}`}
-          className={`relative h-14 w-11 rounded-2xl border border-slate-200 bg-white text-2xl font-semibold tracking-[0.18em] text-slate-900 shadow-sm text-center transition-all duration-200 sm:h-16 sm:w-12 focus:outline-none focus-visible:outline-none focus:border-[#6f54c5] focus:ring-4 focus:ring-[#6f54c5]/20 ${inputClassName}`}
+          className={`relative h-14 w-11 rounded-2xl border border-slate-200 bg-white text-2xl font-semibold tracking-[0.18em] text-slate-900 shadow-sm text-center transition-all duration-200 sm:h-16 sm:w-12 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ${inputClassName}`}
           onChange={(e) => handleChange(e, i)}
           onKeyDown={(e) => handleKeyDown(e, i)}
           onFocus={(e) => e.target.select()}

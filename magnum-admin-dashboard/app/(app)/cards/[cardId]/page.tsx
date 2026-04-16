@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
@@ -24,14 +25,13 @@ interface CardDetail {
   created_at?: string;
 }
 
-interface CardDetailPageProps {
-  params: { cardId: string };
-}
-
-export default function CardDetailPage({ params }: CardDetailPageProps) {
-  const { cardId } = params;
+export default function CardDetailPage() {
+  const routeParams = useParams<{ cardId?: string | string[] }>();
+  const cardId = Array.isArray(routeParams.cardId)
+    ? (routeParams.cardId[0] ?? null)
+    : (routeParams.cardId ?? null);
   const { data, error, isLoading, mutate } = useDetailData<CardDetail>(
-    `/api/admin/cards/${cardId}/`,
+    cardId ? `/api/admin/cards/${cardId}` : null,
   );
 
   if (isLoading) {
@@ -49,12 +49,19 @@ export default function CardDetailPage({ params }: CardDetailPageProps) {
       <PageHeader
         title="Card Detail"
         subtitle="Card profile and assignment status."
+        backHref="/cards"
         actions={
           <>
-            <AssignCardDialog cardId={cardId} onSuccess={() => mutate()} />
-            <ReplaceCardDialog cardId={cardId} onSuccess={() => mutate()} />
+            <AssignCardDialog
+              cardId={cardId ?? ""}
+              onSuccess={() => mutate()}
+            />
+            <ReplaceCardDialog
+              cardId={cardId ?? ""}
+              onSuccess={() => mutate()}
+            />
             <UpdateCardStatusDialog
-              cardId={cardId}
+              cardId={cardId ?? ""}
               onSuccess={() => mutate()}
             />
           </>

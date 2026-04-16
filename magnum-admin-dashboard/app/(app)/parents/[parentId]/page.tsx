@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
@@ -9,23 +10,37 @@ import NoData from "@/components/shared/no-data";
 import ContentLoader from "@/components/shared/content-loader";
 import DataTable, { DataColumn } from "@/components/shared/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useDetailData, useListData } from "@/hooks/use-list-data";
+import { useDetailData } from "@/hooks/use-list-data";
 import StatusBadge from "@/components/shared/status-badge";
 
 interface ParentDetail {
   id: string;
-  profile_id?: string;
-  first_name?: string;
-  last_name?: string;
-  email?: string;
+  user_profile_id?: string;
+  user?: {
+    id?: number;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    full_name?: string;
+    is_active?: boolean;
+  } | null;
   contact?: string;
+  user_category?: string;
+  account?: {
+    id?: string;
+    user_account_id?: string;
+    balance?: string | number;
+  } | null;
   created_at?: string;
+  updated_at?: string;
   students?: StudentRow[];
+  transactions?: TransactionRow[];
 }
 
 interface StudentRow {
   id: string;
   student_id?: string;
+  full_name?: string;
   first_name?: string;
   last_name?: string;
   school_name?: string;
@@ -39,19 +54,13 @@ interface TransactionRow {
   status?: string;
 }
 
-interface ParentDetailPageProps {
-  params: { parentId: string };
-}
-
-export default function ParentDetailPage({ params }: ParentDetailPageProps) {
-  const { parentId } = params;
+export default function ParentDetailPage() {
+  const routeParams = useParams<{ parentId?: string | string[] }>();
+  const parentId = Array.isArray(routeParams.parentId)
+    ? (routeParams.parentId[0] ?? null)
+    : (routeParams.parentId ?? null);
   const { data, error, isLoading } = useDetailData<ParentDetail>(
-    `/api/admin/parents/${parentId}/`,
-  );
-
-  const { data: transactionsData } = useListData<TransactionRow>(
-    "/api/admin/transactions/",
-    { parent_id: parentId, page: 1, page_size: 5 },
+    parentId ? `/api/admin/parents/${parentId}` : null,
   );
 
   if (isLoading) {
@@ -64,13 +73,16 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
 
   const parent = data?.data;
   const students = parent?.students ?? [];
+  const transactions = parent?.transactions ?? [];
 
   const studentColumns: DataColumn<StudentRow>[] = [
     { key: "student_id", header: "Student ID" },
     {
       key: "name",
       header: "Student Name",
-      render: (row) => `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim(),
+      render: (row) =>
+        row.full_name ??
+        `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim(),
     },
     { key: "school_name", header: "School" },
     {
@@ -95,19 +107,24 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
       <PageHeader
         title="Parent Detail"
         subtitle="Parent profile and activity."
+        backHref="/parents"
       />
       <DetailGrid
         title="Parent Profile"
         fields={[
           { label: "UUID", value: parent?.id },
-          { label: "Profile ID", value: parent?.profile_id },
+          { label: "Profile ID", value: parent?.user_profile_id },
           {
             label: "Name",
             value:
-              `${parent?.first_name ?? ""} ${parent?.last_name ?? ""}`.trim(),
+              parent?.user?.full_name ??
+              `${parent?.user?.first_name ?? ""} ${parent?.user?.last_name ?? ""}`.trim(),
           },
-          { label: "Email", value: parent?.email },
+          { label: "Email", value: parent?.user?.email },
           { label: "Contact", value: parent?.contact },
+          { label: "Category", value: parent?.user_category },
+          { label: "Account ID", value: parent?.account?.user_account_id },
+          { label: "Balance", value: parent?.account?.balance },
           { label: "Created", value: parent?.created_at },
         ]}
       />
@@ -131,10 +148,10 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
           )}
         </TabsContent>
         <TabsContent value="transactions">
-          {transactionsData?.data?.results?.length ? (
+          {transactions.length ? (
             <DataTable
               columns={transactionColumns}
-              data={transactionsData.data.results}
+              data={transactions}
               rowKey={(row) => row.id}
             />
           ) : (

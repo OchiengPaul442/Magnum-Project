@@ -39,6 +39,10 @@ export default function DataTable<T>({
   loadingRows = 6,
 }: DataTableProps<T>) {
   const loadingWidths = ["w-3/4", "w-2/3", "w-5/6", "w-1/2", "w-4/5", "w-3/5"];
+  const isDateLikeColumn = (key: string) =>
+    /(^|_)(created_at|updated_at|timestamp|expiration_date|expires_at|date)$/.test(
+      key.toLowerCase(),
+    );
 
   return (
     <div
@@ -92,12 +96,25 @@ export default function DataTable<T>({
                     index % 2 === 1 && "bg-muted/25",
                     onRowClick && "cursor-pointer hover:bg-muted/35",
                   )}
-                  onClick={() => onRowClick?.(row)}
+                  onClick={(event) => {
+                    const target = event.target;
+                    if (
+                      target instanceof Element &&
+                      target.closest('[data-no-row-click="true"]')
+                    ) {
+                      return;
+                    }
+
+                    onRowClick?.(row);
+                  }}
                 >
                   {columns.map((column) => (
                     <TableCell
                       key={`${rowKey(row)}-${column.key}`}
-                      className={column.className}
+                      className={cn(
+                        column.className,
+                        isDateLikeColumn(column.key) && "whitespace-nowrap",
+                      )}
                     >
                       {column.render
                         ? column.render(row)

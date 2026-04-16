@@ -118,10 +118,7 @@ export default function Sidebar({
     >
       <div className={cn("flex-none px-4 py-5", isCollapsed && "px-2")}>
         {/* Brand */}
-        <Brand
-          collapsed={isCollapsed}
-          className={cn(isCollapsed && "justify-center")}
-        />
+        <Brand collapsed={isCollapsed} />
       </div>
 
       <div

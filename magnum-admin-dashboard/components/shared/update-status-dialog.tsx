@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -27,6 +27,11 @@ interface UpdateStatusDialogProps {
   currentStatus?: string | null;
   onUpdate: (status: string) => Promise<void>;
   triggerLabel?: string;
+  children?: React.ReactNode;
+  /** Controlled open state */
+  open?: boolean;
+  /** Controlled open change callback */
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function UpdateStatusDialog({
@@ -35,17 +40,36 @@ export default function UpdateStatusDialog({
   currentStatus,
   onUpdate,
   triggerLabel = "Update Status",
+  children,
+  open: openProp,
+  onOpenChange,
 }: UpdateStatusDialogProps) {
-  const [open, setOpen] = useState(false);
+  const isControlled = typeof openProp === "boolean";
+  const [openState, setOpenState] = useState<boolean>(openProp ?? false);
   const [status, setStatus] = useState(currentStatus ?? "active");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setStatus(currentStatus ?? "active");
+  }, [currentStatus]);
+
+  useEffect(() => {
+    if (isControlled) {
+      setOpenState(Boolean(openProp));
+    }
+  }, [openProp, isControlled]);
+
+  const handleOpenChange = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next);
+    if (!isControlled) setOpenState(next);
+  };
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
       await onUpdate(status);
       toast.success("Status updated");
-      setOpen(false);
+      handleOpenChange(false);
     } catch (error) {
       captureError(error, { source: "update-status" });
       toast.error("Failed to update status");
@@ -55,10 +79,14 @@ export default function UpdateStatusDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">{triggerLabel}</Button>
-      </DialogTrigger>
+    <Dialog open={openState} onOpenChange={handleOpenChange}>
+      {children ? (
+        <DialogTrigger asChild>{children}</DialogTrigger>
+      ) : !isControlled ? (
+        <DialogTrigger asChild>
+          <Button variant="outline">{triggerLabel}</Button>
+        </DialogTrigger>
+      ) : null}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

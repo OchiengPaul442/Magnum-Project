@@ -29,7 +29,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
         placeholder={placeholder}
         value={value}
         onChange={(event) => onChange?.(event.target.value)}
-        className="flex-grow bg-transparent focus:outline-none text-gray-700"
+        className="flex-grow bg-transparent text-gray-700 focus:outline-none focus:ring-0"
       />
     </div>
   );

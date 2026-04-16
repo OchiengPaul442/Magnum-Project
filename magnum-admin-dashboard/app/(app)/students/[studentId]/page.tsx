@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
@@ -19,11 +20,18 @@ interface StudentDetail {
   student_id?: string;
   student_school_id?: string;
   ssid?: string;
+  full_name?: string;
   first_name?: string;
   last_name?: string;
   status?: string;
   school_name?: string;
   created_at?: string;
+  school?: {
+    id?: string;
+    school_id?: string;
+    school_name?: string;
+    school_address?: string;
+  } | null;
   parents?: ParentRow[];
 }
 
@@ -49,26 +57,31 @@ interface SaleRow {
   created_at?: string;
 }
 
-interface StudentDetailPageProps {
-  params: { studentId: string };
-}
-
-export default function StudentDetailPage({ params }: StudentDetailPageProps) {
-  const { studentId } = params;
-  const { data, error, isLoading } = useDetailData<StudentDetail>(
-    `/api/admin/students/${studentId}/`,
+export default function StudentDetailPage() {
+  const routeParams = useParams<{ studentId?: string | string[] }>();
+  const studentId = Array.isArray(routeParams.studentId)
+    ? (routeParams.studentId[0] ?? null)
+    : (routeParams.studentId ?? null);
+  const { data, error, isLoading, mutate } = useDetailData<StudentDetail>(
+    studentId ? `/api/admin/students/${studentId}` : null,
   );
+
+  const student = data?.data;
+  const studentNumber = student?.student_id ?? null;
 
   const { data: transactionsData } = useListData<TransactionRow>(
     "/api/admin/transactions/",
-    { student_id: studentId, page: 1, page_size: 5 },
+    studentNumber
+      ? { student_id: studentNumber, page: 1, page_size: 10 }
+      : null,
   );
 
-  const { data: salesData } = useListData<SaleRow>("/api/admin/sales/", {
-    student_id: studentId,
-    page: 1,
-    page_size: 5,
-  });
+  const { data: salesData } = useListData<SaleRow>(
+    "/api/admin/sales/",
+    studentNumber
+      ? { student_id: studentNumber, page: 1, page_size: 10 }
+      : null,
+  );
 
   if (isLoading) {
     return <ContentLoader />;
@@ -78,7 +91,6 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     return <ErrorState />;
   }
 
-  const student = data?.data;
   const parents = student?.parents ?? [];
 
   const parentColumns: DataColumn<ParentRow>[] = [
@@ -112,14 +124,20 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       <PageHeader
         title="Student Detail"
         subtitle="Student profile and activity."
+        backHref="/students"
         actions={
           <UpdateStatusDialog
             title="Update Student Status"
             description="Change the status for this student."
             currentStatus={student?.status}
-            onUpdate={(status) =>
-              adminApi.updateStudentStatus(studentId, status)
-            }
+            onUpdate={async (status) => {
+              if (!studentId) return;
+              await adminApi.updateStudentStatus(
+                student?.id ?? studentId,
+                status,
+              );
+              await mutate?.();
+            }}
           />
         }
       />
@@ -132,9 +150,13 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
           {
             label: "Name",
             value:
+              student?.full_name ??
               `${student?.first_name ?? ""} ${student?.last_name ?? ""}`.trim(),
           },
-          { label: "School", value: student?.school_name },
+          {
+            label: "School",
+            value: student?.school?.school_name ?? student?.school_name,
+          },
           { label: "Status", value: <StatusBadge status={student?.status} /> },
           { label: "Created", value: student?.created_at },
         ]}

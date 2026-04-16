@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
@@ -11,19 +12,38 @@ import DataTable, { DataColumn } from "@/components/shared/data-table";
 import StatusBadge from "@/components/shared/status-badge";
 import UpdateStatusDialog from "@/components/shared/update-status-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useDetailData, useListData } from "@/hooks/use-list-data";
+import { useDetailData } from "@/hooks/use-list-data";
 import { adminApi } from "@/lib/api/admin";
 
 interface VendorDetail {
   id: string;
   vendor_id?: string;
   vendor_name?: string;
-  owner_name?: string;
-  owner_email?: string;
-  school_name?: string;
+  school?: {
+    id?: string;
+    school_id?: string;
+    school_name?: string;
+    school_address?: string;
+  } | null;
+  owner?: {
+    id?: string;
+    user_profile_id?: string;
+    user?: {
+      id?: number;
+      email?: string;
+      first_name?: string;
+      last_name?: string;
+      full_name?: string;
+      is_active?: boolean;
+    } | null;
+    contact?: string;
+    user_category?: string;
+  } | null;
   status?: string;
   created_at?: string;
   operators?: OperatorRow[];
+  items?: ItemRow[];
+  sales?: SaleRow[];
 }
 
 interface OperatorRow {
@@ -49,38 +69,13 @@ interface SaleRow {
   created_at?: string;
 }
 
-interface AccountRow {
-  id: string;
-  user_account_id?: string;
-  balance?: string | number;
-  status?: string;
-}
-
-interface VendorDetailPageProps {
-  params: { vendorId: string };
-}
-
-export default function VendorDetailPage({ params }: VendorDetailPageProps) {
-  const { vendorId } = params;
-  const { data, error, isLoading } = useDetailData<VendorDetail>(
-    `/api/admin/vendors/${vendorId}/`,
-  );
-
-  const { data: itemsData } = useListData<ItemRow>("/api/admin/items/", {
-    vendor_id: vendorId,
-    page: 1,
-    page_size: 5,
-  });
-
-  const { data: salesData } = useListData<SaleRow>("/api/admin/sales/", {
-    vendor_id: vendorId,
-    page: 1,
-    page_size: 5,
-  });
-
-  const { data: accountsData } = useListData<AccountRow>(
-    "/api/admin/user-accounts/",
-    { vendor_id: vendorId, page: 1, page_size: 5 },
+export default function VendorDetailPage() {
+  const routeParams = useParams<{ vendorId?: string | string[] }>();
+  const vendorId = Array.isArray(routeParams.vendorId)
+    ? (routeParams.vendorId[0] ?? null)
+    : (routeParams.vendorId ?? null);
+  const { data, error, isLoading, mutate } = useDetailData<VendorDetail>(
+    vendorId ? `/api/admin/vendors/${vendorId}` : null,
   );
 
   if (isLoading) {
@@ -93,13 +88,18 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
 
   const vendor = data?.data;
   const operators = vendor?.operators ?? [];
+  const items = vendor?.items ?? [];
+  const sales = vendor?.sales ?? [];
 
   const operatorColumns: DataColumn<OperatorRow>[] = [
     { key: "profile_id", header: "Profile ID" },
     {
       key: "name",
       header: "Operator Name",
-      render: (row) => `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim(),
+      render: (row) =>
+        row.first_name || row.last_name
+          ? `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim()
+          : row.email,
     },
     { key: "email", header: "Email" },
   ];
@@ -117,27 +117,22 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
     { key: "created_at", header: "Created" },
   ];
 
-  const accountColumns: DataColumn<AccountRow>[] = [
-    { key: "user_account_id", header: "Account ID" },
-    { key: "balance", header: "Balance" },
-    {
-      key: "status",
-      header: "Status",
-      render: (row) => <StatusBadge status={row.status} />,
-    },
-  ];
-
   return (
     <div className="space-y-6">
       <PageHeader
         title="Vendor Detail"
         subtitle="Vendor operations and activity."
+        backHref="/vendors"
         actions={
           <UpdateStatusDialog
             title="Update Vendor Status"
             description="Change the status for this vendor."
             currentStatus={vendor?.status}
-            onUpdate={(status) => adminApi.updateVendorStatus(vendorId, status)}
+            onUpdate={async (status) => {
+              if (!vendorId) return;
+              await adminApi.updateVendorStatus(vendorId, status);
+              await mutate?.();
+            }}
           />
         }
       />
@@ -147,9 +142,10 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
           { label: "UUID", value: vendor?.id },
           { label: "Vendor ID", value: vendor?.vendor_id },
           { label: "Vendor", value: vendor?.vendor_name },
-          { label: "Owner", value: vendor?.owner_name },
-          { label: "Owner Email", value: vendor?.owner_email },
-          { label: "School", value: vendor?.school_name },
+          { label: "Owner", value: vendor?.owner?.user?.full_name },
+          { label: "Owner Email", value: vendor?.owner?.user?.email },
+          { label: "Contact", value: vendor?.owner?.contact },
+          { label: "School", value: vendor?.school?.school_name },
           { label: "Status", value: <StatusBadge status={vendor?.status} /> },
           { label: "Created", value: vendor?.created_at },
         ]}
@@ -176,10 +172,10 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
           )}
         </TabsContent>
         <TabsContent value="items">
-          {itemsData?.data?.results?.length ? (
+          {items.length ? (
             <DataTable
               columns={itemColumns}
-              data={itemsData.data.results}
+              data={items}
               rowKey={(row) => row.id}
             />
           ) : (
@@ -190,10 +186,10 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
           )}
         </TabsContent>
         <TabsContent value="sales">
-          {salesData?.data?.results?.length ? (
+          {sales.length ? (
             <DataTable
               columns={saleColumns}
-              data={salesData.data.results}
+              data={sales}
               rowKey={(row) => row.id}
             />
           ) : (
@@ -204,18 +200,10 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
           )}
         </TabsContent>
         <TabsContent value="accounts">
-          {accountsData?.data?.results?.length ? (
-            <DataTable
-              columns={accountColumns}
-              data={accountsData.data.results}
-              rowKey={(row) => row.id}
-            />
-          ) : (
-            <NoData
-              title="No accounts"
-              description="No user accounts found for this vendor."
-            />
-          )}
+          <NoData
+            title="No accounts"
+            description="No user accounts found for this vendor."
+          />
         </TabsContent>
       </Tabs>
     </div>

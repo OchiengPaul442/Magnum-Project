@@ -43,7 +43,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }, [sidebarCollapsed]);
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-[#F6F5FA] text-foreground">
+    <div className="flex h-[100dvh] overflow-hidden bg-[#FCFBFA] text-foreground">
       <Sidebar collapsed={sidebarCollapsed} />
       <MobileSidebar open={mobileOpen} onOpenChange={setMobileOpen} />
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -53,7 +53,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           onCollapseToggle={() => setSidebarCollapsed((value) => !value)}
         />
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col px-4 py-4 sm:px-6 lg:px-8">
+          <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col px-4 pt-4 pb-2 sm:px-6 lg:px-8">
             <div className="flex-1">{children}</div>
             <AppFooter className="mt-auto" />
           </div>

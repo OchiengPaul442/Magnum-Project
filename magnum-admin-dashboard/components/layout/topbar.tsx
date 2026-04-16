@@ -18,8 +18,8 @@ export default function Topbar({
   onCollapseToggle,
 }: TopbarProps) {
   return (
-    <div className="flex h-16 items-center gap-2 border-0 bg-white px-4 sm:px-6">
-      <div className="flex items-center gap-2">
+    <div className="flex h-16 items-center gap-3 border-0 bg-white px-4 sm:px-6">
+      <div className="flex min-w-0 items-center gap-3">
         <Button
           variant="ghost"
           size="icon"
@@ -43,6 +43,10 @@ export default function Topbar({
             <ChevronsLeft className="h-5 w-5" />
           )}
         </Button>
+
+        <p className="min-w-0 truncate text-sm font-semibold text-foreground sm:text-base lg:text-lg">
+          Admin Dashboard
+        </p>
       </div>
 
       <div className="ml-auto flex w-full max-w-xl items-center justify-end">

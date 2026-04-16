@@ -14,12 +14,18 @@ import type { ListParams } from "@/lib/api/admin";
 
 interface ParentRow {
   id: string;
-  profile_id?: string;
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  child_count?: number;
-  children_count?: number;
+  user_profile_id?: string;
+  user?: {
+    id?: number;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    full_name?: string;
+    is_active?: boolean;
+  } | null;
+  contact?: string;
+  user_category?: string;
+  created_at?: string;
 }
 
 export default function ParentsPage() {
@@ -28,7 +34,7 @@ export default function ParentsPage() {
     search: "",
     status: "all",
     page: 1,
-    page_size: 20,
+    page_size: 10,
   });
 
   const params = useMemo(() => {
@@ -49,18 +55,22 @@ export default function ParentsPage() {
   const totalPages = pagination?.total_pages ?? 1;
 
   const columns: DataColumn<ParentRow>[] = [
-    { key: "profile_id", header: "Profile ID" },
+    { key: "user_profile_id", header: "Profile ID" },
     {
       key: "name",
       header: "Parent Name",
-      render: (row) => `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim(),
+      render: (row) =>
+        row.user?.full_name ??
+        `${row.user?.first_name ?? ""} ${row.user?.last_name ?? ""}`.trim(),
     },
-    { key: "email", header: "Email" },
+    { key: "email", header: "Email", render: (row) => row.user?.email },
+    { key: "contact", header: "Contact" },
     {
-      key: "child_count",
-      header: "Children",
-      render: (row) => row.child_count ?? row.children_count ?? "-",
+      key: "user_category",
+      header: "Category",
+      render: (row) => row.user_category,
     },
+    { key: "created_at", header: "Created" },
   ];
 
   return (

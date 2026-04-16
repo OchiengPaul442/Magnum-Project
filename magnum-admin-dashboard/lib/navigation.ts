@@ -1,12 +1,14 @@
 import {
   Activity,
+  ArrowLeftRight,
   BadgeDollarSign,
   Building2,
   ClipboardList,
   CreditCard,
+  KeyRound,
   LayoutDashboard,
   Receipt,
-  Settings,
+  ShieldCheck,
   ShoppingBag,
   UserCircle2,
   Users,
@@ -23,11 +25,6 @@ export const NAV_SECTIONS = [
     label: "Core Records",
     items: [
       { label: "Schools", href: "/schools", icon: Building2 },
-      {
-        label: "School Personnel",
-        href: "/school-personnel",
-        icon: UsersRound,
-      },
       { label: "Students", href: "/students", icon: Users },
       { label: "Parents", href: "/parents", icon: UserCircle2 },
       { label: "Vendors", href: "/vendors", icon: ShoppingBag },
@@ -41,7 +38,7 @@ export const NAV_SECTIONS = [
       { label: "Cards", href: "/cards", icon: CreditCard },
       { label: "Student Accounts", href: "/student-accounts", icon: Wallet },
       { label: "User Accounts", href: "/user-accounts", icon: BadgeDollarSign },
-      { label: "Transactions", href: "/transactions", icon: BadgeDollarSign },
+      { label: "Transactions", href: "/transactions", icon: ArrowLeftRight },
     ],
   },
   {
@@ -52,9 +49,9 @@ export const NAV_SECTIONS = [
       {
         label: "Roles & Permissions",
         href: "/roles-permissions",
-        icon: Settings,
+        icon: KeyRound,
       },
-      { label: "Account & Security", href: "/account", icon: Settings },
+      { label: "Account & Security", href: "/account", icon: ShieldCheck },
     ],
   },
 ];

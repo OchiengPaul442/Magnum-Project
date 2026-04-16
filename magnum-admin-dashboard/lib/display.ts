@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
+import { formatDateLike } from "@/lib/format-date";
 
 const WRAPPER_KEYS = new Set([
   "status",
@@ -24,6 +25,9 @@ const firstString = (record: Record<string, unknown>, keys: string[]) => {
   }
   return null;
 };
+
+const noWrap = (value: string) =>
+  createElement("span", { className: "whitespace-nowrap" }, value);
 
 const toDisplayText = (value: unknown): string | null => {
   if (value === null || value === undefined || value === false) {
@@ -105,8 +109,20 @@ const toDisplayText = (value: unknown): string | null => {
 };
 
 export const formatDisplayValue = (value: unknown): ReactNode => {
+  if (value instanceof Date) {
+    const dateText = formatDateLike(value);
+    return dateText === "--" ? dateText : noWrap(dateText);
+  }
+
+  if (typeof value === "string") {
+    const dateText = formatDateLike(value);
+    if (dateText !== "--") {
+      return noWrap(dateText);
+    }
+  }
+
   const text = toDisplayText(value);
-  return text ?? "-";
+  return text ?? "--";
 };
 
 export const normalizeStringList = (value: unknown): string[] => {

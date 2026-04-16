@@ -9,29 +9,13 @@ interface BrandProps {
 
 export default function Brand({ collapsed = false, className }: BrandProps) {
   return (
-    <div
-      className={cn(
-        "flex items-center gap-3",
-        collapsed && "justify-center",
-        className,
-      )}
-    >
+    <div className={cn("flex items-center justify-start", className)}>
       <Image
         src="/logos/logo.png"
-        alt="Magnum"
+        alt="Magnum logo"
         width={collapsed ? 40 : 44}
         height={collapsed ? 40 : 44}
       />
-      {!collapsed ? (
-        <div className="leading-tight">
-          <p className="text-sm uppercase tracking-[0.22em] text-muted-foreground">
-            Magnum
-          </p>
-          <p className="text-base font-semibold text-foreground">
-            Admin Dashboard
-          </p>
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -11,7 +11,7 @@ export default function AppFooter({ className }: AppFooterProps) {
   return (
     <footer
       className={cn(
-        "flex-none py-3 text-center text-xs text-muted-foreground",
+        "flex-none py-2 text-center text-xs text-muted-foreground",
         className,
       )}
     >

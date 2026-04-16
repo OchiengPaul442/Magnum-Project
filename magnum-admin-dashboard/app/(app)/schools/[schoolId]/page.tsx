@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter, useParams } from "next/navigation";
 
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
@@ -13,12 +14,13 @@ import UpdateStatusDialog from "@/components/shared/update-status-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDetailData, useListData } from "@/hooks/use-list-data";
 import { adminApi } from "@/lib/api/admin";
+import { formatDateTime } from "@/lib/format-date";
 
 interface SchoolRow {
   id: string;
   school_id?: string;
-  name?: string;
-  address?: string;
+  school_name?: string;
+  school_address?: string;
   status?: string;
   created_at?: string;
 }
@@ -52,37 +54,47 @@ interface TransactionRow {
   status?: string;
 }
 
-interface SchoolDetailPageProps {
-  params: { schoolId: string };
-}
+export default function SchoolDetailPage() {
+  const router = useRouter();
+  const routeParams = useParams<{ schoolId?: string | string[] }>();
+  const schoolId = Array.isArray(routeParams.schoolId)
+    ? (routeParams.schoolId[0] ?? null)
+    : (routeParams.schoolId ?? null);
 
-export default function SchoolDetailPage({ params }: SchoolDetailPageProps) {
-  const { schoolId } = params;
-  const { data, error, isLoading } = useDetailData<SchoolRow>(
-    `/api/admin/schools/${schoolId}/`,
+  const { data, error, isLoading, mutate } = useDetailData<SchoolRow>(
+    schoolId ? `/api/admin/schools/${schoolId}` : null,
   );
 
   const { data: studentsData } = useListData<StudentRow>(
     "/api/admin/students/",
-    { school_id: schoolId, page: 1, page_size: 5 },
+    schoolId ? { school_id: schoolId, page: 1, page_size: 10 } : null,
   );
 
-  const { data: vendorsData } = useListData<VendorRow>("/api/admin/vendors/", {
-    school_id: schoolId,
-    page: 1,
-    page_size: 5,
-  });
+  const { data: vendorsData } = useListData<VendorRow>(
+    "/api/admin/vendors/",
+    schoolId ? { school_id: schoolId, page: 1, page_size: 10 } : null,
+  );
 
-  const { data: cardsData } = useListData<CardRow>("/api/admin/cards/", {
-    school_id: schoolId,
-    page: 1,
-    page_size: 5,
-  });
+  const { data: cardsData } = useListData<CardRow>(
+    "/api/admin/cards/",
+    schoolId ? { school_id: schoolId, page: 1, page_size: 10 } : null,
+  );
 
   const { data: transactionsData } = useListData<TransactionRow>(
     "/api/admin/transactions/",
-    { school_id: schoolId, page: 1, page_size: 5 },
+    schoolId ? { school_id: schoolId, page: 1, page_size: 10 } : null,
   );
+
+  if (!schoolId) {
+    return (
+      <ErrorState
+        title="School not found"
+        description="The school identifier is missing from the route."
+        actionLabel="Back to schools"
+        onActionClick={() => router.push("/schools")}
+      />
+    );
+  }
 
   if (isLoading) {
     return <ContentLoader />;
@@ -143,12 +155,16 @@ export default function SchoolDetailPage({ params }: SchoolDetailPageProps) {
       <PageHeader
         title="School Detail"
         subtitle="School profile and recent activity."
+        backHref="/schools"
         actions={
           <UpdateStatusDialog
             title="Update School Status"
             description="Change the status for this school."
             currentStatus={school?.status}
-            onUpdate={(status) => adminApi.updateSchoolStatus(schoolId, status)}
+            onUpdate={async (status) => {
+              await adminApi.updateSchoolStatus(schoolId, status);
+              await mutate?.();
+            }}
           />
         }
       />
@@ -157,10 +173,10 @@ export default function SchoolDetailPage({ params }: SchoolDetailPageProps) {
         fields={[
           { label: "UUID", value: school?.id },
           { label: "School ID", value: school?.school_id },
-          { label: "Name", value: school?.name },
-          { label: "Address", value: school?.address },
+          { label: "Name", value: school?.school_name },
+          { label: "Address", value: school?.school_address },
           { label: "Status", value: <StatusBadge status={school?.status} /> },
-          { label: "Created", value: school?.created_at },
+          { label: "Created", value: formatDateTime(school?.created_at) },
         ]}
       />
       <Tabs defaultValue="students" className="space-y-4">

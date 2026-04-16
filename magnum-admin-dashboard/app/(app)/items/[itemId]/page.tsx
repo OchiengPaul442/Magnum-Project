@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
@@ -19,14 +20,13 @@ interface ItemDetail {
   created_at?: string;
 }
 
-interface ItemDetailPageProps {
-  params: { itemId: string };
-}
-
-export default function ItemDetailPage({ params }: ItemDetailPageProps) {
-  const { itemId } = params;
+export default function ItemDetailPage() {
+  const routeParams = useParams<{ itemId?: string | string[] }>();
+  const itemId = Array.isArray(routeParams.itemId)
+    ? (routeParams.itemId[0] ?? null)
+    : (routeParams.itemId ?? null);
   const { data, error, isLoading } = useDetailData<ItemDetail>(
-    `/api/admin/items/${itemId}/`,
+    itemId ? `/api/admin/items/${itemId}` : null,
   );
 
   if (isLoading) {
@@ -41,7 +41,11 @@ export default function ItemDetailPage({ params }: ItemDetailPageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Item Detail" subtitle="Review the catalog item." />
+      <PageHeader
+        title="Item Detail"
+        subtitle="Review the catalog item."
+        backHref="/items"
+      />
       <DetailGrid
         title="Item Profile"
         fields={[
