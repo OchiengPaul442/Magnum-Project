@@ -1,10 +1,11 @@
 "use client";
 
 import { SWRConfig } from "swr";
-import { Toaster } from "sonner";
 import NextTopLoader from "nextjs-toploader";
-import { AuthProvider } from "@/components/providers/auth-provider";
+import { SessionProvider } from "next-auth/react";
+
 import ErrorBoundary from "@/components/shared/error-boundary";
+import AppToaster from "@/components/shared/app-toaster";
 import { apiFetcher } from "@/lib/api/client";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -15,7 +16,7 @@ interface ProvidersProps {
 export default function Providers({ children }: ProvidersProps) {
   return (
     <TooltipProvider delayDuration={0}>
-      <AuthProvider>
+      <SessionProvider>
         <NextTopLoader
           color="hsl(var(--primary))"
           crawlSpeed={200}
@@ -32,10 +33,10 @@ export default function Providers({ children }: ProvidersProps) {
             }}
           >
             {children}
-            <Toaster richColors position="bottom-right" />
+            <AppToaster />
           </SWRConfig>
         </ErrorBoundary>
-      </AuthProvider>
+      </SessionProvider>
     </TooltipProvider>
   );
 }

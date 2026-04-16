@@ -6,7 +6,7 @@ import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
 import NoData from "@/components/shared/no-data";
-import LoadingScreen from "@/components/shared/loading-screen";
+import ContentLoader from "@/components/shared/content-loader";
 import DataTable, { DataColumn } from "@/components/shared/data-table";
 import { useDetailData } from "@/hooks/use-list-data";
 
@@ -42,7 +42,7 @@ export default function SaleDetailPage({ params }: SaleDetailPageProps) {
   );
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <ContentLoader />;
   }
 
   if (error) {

@@ -4,7 +4,7 @@ import React from "react";
 
 import PageHeader from "@/components/layout/page-header";
 import ErrorState from "@/components/shared/error-state";
-import LoadingScreen from "@/components/shared/loading-screen";
+import ContentLoader from "@/components/shared/content-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDetailData } from "@/hooks/use-list-data";
 
@@ -14,7 +14,7 @@ export default function RolesPermissionsPage() {
   );
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <ContentLoader />;
   }
 
   if (error) {

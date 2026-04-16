@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +19,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/components/providers/auth-provider";
 import { captureError } from "@/lib/logging";
 import { hasOtpRequirement } from "@/lib/auth/session";
+import { authApi } from "@/lib/api/auth";
 
 const schema = z.object({
   username: z.string().min(3, "Email or username is required"),
@@ -32,8 +34,6 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") ?? "/dashboard";
-  const { login } = useAuth();
-  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -42,9 +42,8 @@ export default function LoginPage() {
   } = useForm<LoginValues>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (values: LoginValues) => {
-    setError(null);
     try {
-      const response = await login(values);
+      const response = await authApi.login(values);
       const responseData = response as Record<string, unknown>;
 
       if (hasOtpRequirement(responseData)) {
@@ -53,10 +52,21 @@ export default function LoginPage() {
         return;
       }
 
+      const signInResult = await signIn("credentials", {
+        username: values.username,
+        password: values.password,
+        redirect: false,
+      });
+
+      if (!signInResult || signInResult.error) {
+        toast.error("Login failed. Please try again.");
+        return;
+      }
+
       router.replace(nextPath);
     } catch (err) {
       captureError(err, { source: "login" });
-      setError("Login failed. Please check your credentials and try again.");
+      toast.error("Login failed. Please check your credentials and try again.");
     }
   };
 
@@ -91,7 +101,6 @@ export default function LoginPage() {
               <p className="text-xs text-red-600">{errors.password.message}</p>
             ) : null}
           </div>
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
         </CardContent>
         <CardFooter className="flex">
           <Button type="submit" disabled={isSubmitting} className="w-full">

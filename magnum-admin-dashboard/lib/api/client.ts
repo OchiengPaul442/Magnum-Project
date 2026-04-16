@@ -1,7 +1,6 @@
 import axios, { AxiosHeaders } from "axios";
+import { signOut } from "next-auth/react";
 
-import { clearAuthSession } from "@/lib/auth/storage";
-import { getAuthToken } from "@/lib/auth/storage";
 import { captureError } from "@/lib/logging";
 
 const SKIP_AUTH_HEADER = "x-skip-auth";
@@ -12,7 +11,7 @@ const isBrowser = () => typeof window !== "undefined";
 const handleUnauthorized = () => {
   if (!isBrowser()) return;
 
-  clearAuthSession();
+  void signOut({ redirect: false });
 
   if (window.sessionStorage.getItem(UNAUTHORIZED_REDIRECT_KEY) === "1") {
     return;
@@ -31,20 +30,6 @@ const handleUnauthorized = () => {
 
 export const apiClient = axios.create({
   baseURL: "",
-});
-
-apiClient.interceptors.request.use((config) => {
-  const headers = AxiosHeaders.from(config.headers);
-  const skipAuth = headers.get(SKIP_AUTH_HEADER) === "true";
-  if (!skipAuth) {
-    const token = getAuthToken();
-    if (token) {
-      headers.set("Authorization", `Token ${token}`);
-    }
-  }
-  headers.delete(SKIP_AUTH_HEADER);
-  config.headers = headers;
-  return config;
 });
 
 apiClient.interceptors.response.use(

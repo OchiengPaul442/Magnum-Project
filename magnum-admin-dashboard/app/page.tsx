@@ -1,10 +1,11 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth/next";
+
+import { authOptions } from "@/lib/auth/options";
 
 export default async function Home() {
-  const cookieStore = await cookies();
-  const hasAuth = cookieStore.get("magnum_admin_auth")?.value;
-  if (hasAuth) {
+  const session = await getServerSession(authOptions);
+  if (session) {
     redirect("/dashboard");
   }
   redirect("/login");

@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { RefreshCw } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 import OTPInput from "@/components/shared/otp-input";
 
 import { Button } from "@/components/ui/button";
@@ -15,7 +17,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/components/providers/auth-provider";
 import { authApi } from "@/lib/api/auth";
 import { captureError } from "@/lib/logging";
 import { cn } from "@/lib/utils";
@@ -29,11 +30,8 @@ export default function VerifyOtpPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") ?? "/dashboard";
-  const { verifyOtp } = useAuth();
   const [username, setUsername] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -58,21 +56,29 @@ export default function VerifyOtpPage() {
     }
 
     if (!new RegExp(`^\\d{${OTP_LENGTH}}$`).test(otp)) {
-      setError("Enter the 6-digit verification code.");
+      toast.error("Enter the 6-digit verification code.");
       return;
     }
 
     setIsSubmitting(true);
-    setError(null);
-    setStatusMessage(null);
 
     try {
-      await verifyOtp({ username, otp });
+      const result = await signIn("credentials", {
+        username,
+        otp,
+        redirect: false,
+      });
+
+      if (!result || result.error) {
+        toast.error("OTP verification failed. Please try again.");
+        return;
+      }
+
       sessionStorage.removeItem(PENDING_USER_KEY);
       router.replace(nextPath);
     } catch (err) {
       captureError(err, { source: "verify-otp" });
-      setError("OTP verification failed. Please try again.");
+      toast.error("OTP verification failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -84,17 +90,15 @@ export default function VerifyOtpPage() {
     }
 
     setIsResending(true);
-    setError(null);
-    setStatusMessage(null);
     setResendCooldown(30);
 
     try {
       await authApi.resendOtp({ email: username, purpose: "login" });
       setOtp("");
-      setStatusMessage("A new 6-digit code has been sent.");
+      toast.success("A new 6-digit code has been sent.");
     } catch (err) {
       captureError(err, { source: "resend-otp" });
-      setError("We could not resend the code. Please try again.");
+      toast.error("We could not resend the code. Please try again.");
       setResendCooldown(0);
     } finally {
       setIsResending(false);
@@ -174,23 +178,9 @@ export default function VerifyOtpPage() {
               autoFocus
               onChange={(value) => {
                 setOtp(value);
-                setError(null);
-                setStatusMessage(null);
               }}
             />
           </div>
-
-          {error ? (
-            <p className="text-center text-sm font-medium text-red-600">
-              {error}
-            </p>
-          ) : null}
-
-          {statusMessage ? (
-            <p className="text-center text-sm font-medium text-emerald-600">
-              {statusMessage}
-            </p>
-          ) : null}
         </CardContent>
 
         <CardFooter className="flex flex-col items-center gap-3">

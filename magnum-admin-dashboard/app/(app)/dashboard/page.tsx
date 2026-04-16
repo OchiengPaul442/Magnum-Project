@@ -6,7 +6,7 @@ import useSWR from "swr";
 import PageHeader from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ErrorState from "@/components/shared/error-state";
-import LoadingScreen from "@/components/shared/loading-screen";
+import ContentLoader from "@/components/shared/content-loader";
 import DataTable, { DataColumn } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
 
@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const { data, error, isLoading } = useSWR("/api/admin/dashboard/overview/");
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <ContentLoader />;
   }
 
   if (error) {

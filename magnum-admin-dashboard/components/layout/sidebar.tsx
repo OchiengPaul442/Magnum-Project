@@ -4,18 +4,29 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Settings } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 
 import Brand from "@/components/layout/brand";
 import { NAV_SECTIONS } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useAuth } from "@/components/providers/auth-provider";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface SidebarProps {
   mobile?: boolean;
@@ -27,14 +38,14 @@ export default function Sidebar({
   collapsed = false,
 }: SidebarProps) {
   const pathname = usePathname();
-  const { logout, profile } = useAuth();
+  const { data: session } = useSession();
+  const profile = session?.user;
   const isCollapsed = !mobile && collapsed;
-  const displayName =
-    (profile?.first_name as string) ||
-    (profile?.firstname as string) ||
-    (profile?.email as string) ||
-    "Admin";
-  const email = (profile?.email as string) || "admin@magnum.app";
+  const resolvedName =
+    profile?.name ||
+    [profile?.firstName, profile?.lastName].filter(Boolean).join(" ");
+  const displayName = resolvedName?.trim() || profile?.email || "Admin";
+  const email = profile?.email ?? "admin@magnum.app";
   const initials = displayName
     .split(" ")
     .filter(Boolean)
@@ -185,6 +196,9 @@ export default function Sidebar({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Avatar className="h-10 w-10">
+                    {profile?.image ? (
+                      <AvatarImage src={profile.image} alt={displayName} />
+                    ) : null}
                     <AvatarFallback className="bg-white text-sm font-semibold text-foreground">
                       {initials || "A"}
                     </AvatarFallback>
@@ -210,20 +224,40 @@ export default function Sidebar({
               ) : null}
             </div>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0"
-                  onClick={() => void logout()}
-                  aria-label="Log out"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Log out</TooltipContent>
-            </Tooltip>
+            <AlertDialog>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      aria-label="Log out"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="right">Log out</TooltipContent>
+              </Tooltip>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Log out?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You will be signed out of your admin session on this device.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className={buttonVariants({ variant: "destructive" })}
+                    onClick={() => void signOut({ callbackUrl: "/login" })}
+                  >
+                    Log out
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </div>

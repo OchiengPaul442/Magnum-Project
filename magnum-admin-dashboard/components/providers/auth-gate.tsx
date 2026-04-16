@@ -2,8 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-
-import { useAuth } from "@/components/providers/auth-provider";
+import { useSession } from "next-auth/react";
 import LoadingScreen from "@/components/shared/loading-screen";
 
 interface AuthGateProps {
@@ -11,17 +10,17 @@ interface AuthGateProps {
 }
 
 export default function AuthGate({ children }: AuthGateProps) {
-  const { token, isLoading } = useAuth();
+  const { status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isLoading && !token) {
+    if (status === "unauthenticated") {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     }
-  }, [isLoading, token, pathname, router]);
+  }, [status, pathname, router]);
 
-  if (isLoading || !token) {
+  if (status !== "authenticated") {
     return <LoadingScreen />;
   }
 

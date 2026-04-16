@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 const API_BASE_URL = process.env.MAGNUM_API_BASE_URL;
+const SKIP_AUTH_HEADER = "x-skip-auth";
 
 const buildTargetUrl = (request: NextRequest) => {
   const { pathname, search } = request.nextUrl;
@@ -9,12 +11,34 @@ const buildTargetUrl = (request: NextRequest) => {
   return `${baseUrl}${targetPath}${search}`;
 };
 
-const forwardHeaders = (request: NextRequest) => {
+const forwardHeaders = (
+  request: NextRequest,
+  options: { accessToken?: string | null; skipAuth: boolean },
+) => {
   const headers = new Headers(request.headers);
   headers.delete("host");
   headers.delete("content-length");
   headers.delete("connection");
+  headers.delete("cookie");
+  headers.delete(SKIP_AUTH_HEADER);
+
+  if (!options.skipAuth && options.accessToken) {
+    headers.set("Authorization", `Token ${options.accessToken}`);
+  }
+
   return headers;
+};
+
+const resolveAccessToken = async (request: NextRequest) => {
+  try {
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+    return typeof token?.accessToken === "string" ? token.accessToken : null;
+  } catch {
+    return null;
+  }
 };
 
 const proxy = async (request: NextRequest) => {
@@ -25,8 +49,10 @@ const proxy = async (request: NextRequest) => {
     );
   }
 
+  const skipAuth = request.headers.get(SKIP_AUTH_HEADER) === "true";
+  const accessToken = skipAuth ? null : await resolveAccessToken(request);
   const targetUrl = buildTargetUrl(request);
-  const headers = forwardHeaders(request);
+  const headers = forwardHeaders(request, { accessToken, skipAuth });
   const method = request.method.toUpperCase();
   const body =
     method === "GET" || method === "HEAD"

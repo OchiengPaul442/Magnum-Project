@@ -1,30 +1,40 @@
 "use client";
 
-"use client";
-
 import React, { useState } from "react";
 import { toast } from "sonner";
+import { signOut, useSession } from "next-auth/react";
 
 import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/providers/auth-provider";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { captureError } from "@/lib/logging";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { authApi } from "@/lib/api/auth";
 
 export default function AccountPage() {
-  const { profile, logout, logoutAll, refreshSession, refreshToken } =
-    useAuth();
+  const { data: session, update } = useSession();
+  const profile = session?.user;
+  const fullName = [profile?.firstName, profile?.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
   const [refreshing, setRefreshing] = useState(false);
   const [loggingOutAll, setLoggingOutAll] = useState(false);
 
   const handleRefresh = async () => {
-    if (!refreshToken) {
-      toast.error("No refresh token available");
-      return;
-    }
     setRefreshing(true);
     try {
-      await refreshSession();
+      await update();
       toast.success("Session refreshed");
     } catch (error) {
       captureError(error, { source: "refresh-session" });
@@ -37,7 +47,7 @@ export default function AccountPage() {
   const handleLogoutAll = async () => {
     setLoggingOutAll(true);
     try {
-      await logoutAll();
+      await authApi.logoutAll();
       toast.success("Logged out of all sessions");
     } catch (error) {
       captureError(error, { source: "logout-all" });
@@ -53,9 +63,28 @@ export default function AccountPage() {
         title="Account & Security"
         subtitle="Review your profile and manage session security."
         actions={
-          <Button variant="outline" onClick={() => void logout()}>
-            Log out
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline">Log out</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Log out?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You will be signed out of your admin session on this device.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className={buttonVariants({ variant: "destructive" })}
+                  onClick={() => void signOut({ callbackUrl: "/login" })}
+                >
+                  Log out
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         }
       />
       <DetailGrid
@@ -63,21 +92,15 @@ export default function AccountPage() {
         fields={[
           {
             label: "Name",
-            value: String(
-              (profile?.first_name as string | undefined) ??
-                (profile?.firstname as string | undefined) ??
-                "-",
-            ),
+            value: String(profile?.name || fullName || "-"),
           },
           {
             label: "Email",
-            value: String((profile?.email as string | undefined) ?? "-"),
+            value: String(profile?.email ?? "-"),
           },
           {
             label: "Category",
-            value: String(
-              (profile?.user_category as string | undefined) ?? "Admin",
-            ),
+            value: String(profile?.category ?? "Admin"),
           },
         ]}
       />
@@ -95,7 +118,7 @@ export default function AccountPage() {
             onClick={handleRefresh}
             disabled={refreshing}
           >
-            {refreshing ? "Refreshing..." : "Refresh Token"}
+            {refreshing ? "Refreshing..." : "Refresh Session"}
           </Button>
           <Button
             variant="destructive"
