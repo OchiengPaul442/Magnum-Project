@@ -1,9 +1,33 @@
 import axios, { AxiosHeaders } from "axios";
 
+import { clearAuthSession } from "@/lib/auth/storage";
 import { getAuthToken } from "@/lib/auth/storage";
 import { captureError } from "@/lib/logging";
 
 const SKIP_AUTH_HEADER = "x-skip-auth";
+const UNAUTHORIZED_REDIRECT_KEY = "magnum_unauthorized_redirect";
+
+const isBrowser = () => typeof window !== "undefined";
+
+const handleUnauthorized = () => {
+  if (!isBrowser()) return;
+
+  clearAuthSession();
+
+  if (window.sessionStorage.getItem(UNAUTHORIZED_REDIRECT_KEY) === "1") {
+    return;
+  }
+
+  window.sessionStorage.setItem(UNAUTHORIZED_REDIRECT_KEY, "1");
+  window.setTimeout(() => {
+    window.sessionStorage.removeItem(UNAUTHORIZED_REDIRECT_KEY);
+  }, 1500);
+
+  const currentPath = `${window.location.pathname}${window.location.search}`;
+  if (!window.location.pathname.startsWith("/login")) {
+    window.location.replace(`/login?next=${encodeURIComponent(currentPath)}`);
+  }
+};
 
 export const apiClient = axios.create({
   baseURL: "",
@@ -26,6 +50,17 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    const status = error?.response?.status;
+    const headers = AxiosHeaders.from(error?.config?.headers);
+    const skipAuth = headers.get(SKIP_AUTH_HEADER) === "true";
+
+    if (status === 401) {
+      if (!skipAuth) {
+        handleUnauthorized();
+      }
+      return Promise.reject(error);
+    }
+
     captureError(error, { source: "api" });
     return Promise.reject(error);
   },

@@ -8,6 +8,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { isAxiosError } from "axios";
 
 import { authApi } from "@/lib/api/auth";
 import { captureError } from "@/lib/logging";
@@ -72,6 +73,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setRefreshToken(nextRefresh);
           }
         } catch (error) {
+          if (isAxiosError(error) && error.response?.status === 401) {
+            clearAuthSession();
+            if (isActive) {
+              setToken(null);
+              setRefreshToken(null);
+              setIsLoading(false);
+            }
+            return;
+          }
+
           captureError(error, { source: "auth-bootstrap-refresh" });
           clearAuthSession();
           if (isActive) {
@@ -98,6 +109,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await authApi.getProfile();
       setProfile(extractProfile(response));
     } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 401) {
+        return;
+      }
+
       captureError(error, { source: "auth-profile" });
     }
   }, []);
@@ -148,6 +163,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRefreshToken(nextRefresh);
       }
     } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 401) {
+        clearAuthSession();
+        setToken(null);
+        setRefreshToken(null);
+        setProfile(null);
+        return;
+      }
+
       captureError(error, { source: "auth-refresh" });
       clearAuthSession();
       setToken(null);
