@@ -47,7 +47,7 @@ export default function DataTable<T>({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-border/60 bg-white",
+        "overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm",
         className,
       )}
     >

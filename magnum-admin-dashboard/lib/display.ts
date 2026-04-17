@@ -26,6 +26,39 @@ const firstString = (record: Record<string, unknown>, keys: string[]) => {
   return null;
 };
 
+const toNumericValue = (value: unknown): number | null => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === "bigint") {
+    return Number(value);
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.replace(/,/g, "").trim();
+    if (!normalized) {
+      return null;
+    }
+
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  if (!isPlainObject(value)) {
+    return null;
+  }
+
+  const candidate =
+    value.parsedValue ??
+    value.value ??
+    value.amount ??
+    value.total ??
+    value.source;
+
+  return toNumericValue(candidate);
+};
+
 const noWrap = (value: string) =>
   createElement("span", { className: "whitespace-nowrap" }, value);
 
@@ -64,6 +97,11 @@ const toDisplayText = (value: unknown): string | null => {
 
   if (!isPlainObject(value)) {
     return null;
+  }
+
+  const numericValue = toNumericValue(value);
+  if (numericValue !== null) {
+    return String(numericValue);
   }
 
   const directLabel = firstString(value, [
@@ -123,6 +161,26 @@ export const formatDisplayValue = (value: unknown): ReactNode => {
 
   const text = toDisplayText(value);
   return text ?? "--";
+};
+
+export const formatNumberValue = (value: unknown): string => {
+  const numericValue = toNumericValue(value);
+  if (numericValue === null) {
+    return "--";
+  }
+
+  return new Intl.NumberFormat("en-UG").format(numericValue);
+};
+
+export const formatCurrencyValue = (value: unknown): string => {
+  const numericValue = toNumericValue(value);
+  if (numericValue === null) {
+    return "--";
+  }
+
+  return `UGX ${new Intl.NumberFormat("en-UG", {
+    maximumFractionDigits: 0,
+  }).format(numericValue)}`;
 };
 
 export const normalizeStringList = (value: unknown): string[] => {

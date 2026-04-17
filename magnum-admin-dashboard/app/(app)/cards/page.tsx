@@ -10,6 +10,7 @@ import PaginationControls from "@/components/shared/pagination-controls";
 import ErrorState from "@/components/shared/error-state";
 import NoData from "@/components/shared/no-data";
 import StatusBadge from "@/components/shared/status-badge";
+import EntityCell from "@/components/shared/entity-cell";
 import { useListData } from "@/hooks/use-list-data";
 import type { ListParams } from "@/lib/api/admin";
 import CreateCardDialog from "@/components/cards/create-card-dialog";
@@ -20,11 +21,58 @@ interface CardRow {
   card_id?: string;
   card_number?: string;
   card_serial_number?: string;
-  student_name?: string;
-  school_name?: string;
+  activation_date?: string;
+  student?: {
+    id: string;
+    student_id?: string;
+    ssid?: string;
+    full_name?: string;
+    school?: {
+      id: string;
+      school_name?: string;
+      school_address?: string;
+    } | null;
+  } | null;
   status?: string;
   expiration_date?: string;
 }
+
+const renderStudentCell = (student: CardRow["student"]) => {
+  if (!student) {
+    return (
+      <EntityCell
+        title="Unassigned"
+        subtitle="Awaiting student allocation"
+        titleClassName="text-muted-foreground"
+      />
+    );
+  }
+
+  return (
+    <EntityCell
+      title={student.full_name ?? "Unnamed student"}
+      subtitle={
+        [student.student_id, student.ssid].filter(Boolean).join(" / ") ||
+        undefined
+      }
+    />
+  );
+};
+
+const renderSchoolCell = (student: CardRow["student"]) => {
+  const school = student?.school;
+
+  if (!school) {
+    return <span className="text-sm text-muted-foreground">-</span>;
+  }
+
+  return (
+    <EntityCell
+      title={school.school_name ?? "Unnamed school"}
+      subtitle={school.school_address}
+    />
+  );
+};
 
 export default function CardsPage() {
   const router = useRouter();
@@ -53,16 +101,37 @@ export default function CardsPage() {
   const totalPages = pagination?.total_pages ?? 1;
 
   const columns: DataColumn<CardRow>[] = [
-    { key: "card_id", header: "Card ID" },
-    { key: "card_number", header: "Card Number" },
-    { key: "card_serial_number", header: "Serial" },
-    { key: "student_name", header: "Student" },
-    { key: "school_name", header: "School" },
+    {
+      key: "card_id",
+      header: "Card ID",
+      className: "whitespace-nowrap font-medium text-foreground",
+    },
+    {
+      key: "card_number",
+      header: "Card Number",
+      className: "whitespace-nowrap",
+    },
+    {
+      key: "card_serial_number",
+      header: "Serial Number",
+      className: "whitespace-nowrap",
+    },
+    {
+      key: "student",
+      header: "Student",
+      render: (row) => renderStudentCell(row.student),
+    },
+    {
+      key: "school",
+      header: "School",
+      render: (row) => renderSchoolCell(row.student),
+    },
     {
       key: "status",
       header: "Status",
       render: (row) => <StatusBadge status={row.status} />,
     },
+    { key: "activation_date", header: "Activated" },
     { key: "expiration_date", header: "Expires" },
   ];
 
@@ -99,7 +168,10 @@ export default function CardsPage() {
       ) : error ? (
         <ErrorState />
       ) : cards.length === 0 ? (
-        <NoData title="No cards" description="No cards match your filters." />
+        <NoData
+          title="No cards"
+          description="No cards match the current filters."
+        />
       ) : (
         <div className="space-y-4">
           <DataTable

@@ -25,28 +25,30 @@ export default function ListToolbar({
   children,
 }: ListToolbarProps) {
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex-1">
-        <SearchInput
-          placeholder="Search"
-          value={search}
-          onChange={onSearchChange}
-          className="max-w-md bg-white"
-        />
-      </div>
-      <div className="flex items-center gap-3">
-        <Select value={status} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="active">Activated</SelectItem>
-            <SelectItem value="inactive">Deactivated</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-          </SelectContent>
-        </Select>
-        {children}
+    <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex-1">
+          <SearchInput
+            placeholder="Search"
+            value={search}
+            onChange={onSearchChange}
+            className="max-w-md"
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <Select value={status} onValueChange={onStatusChange}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="active">Activated</SelectItem>
+              <SelectItem value="inactive">Deactivated</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+            </SelectContent>
+          </Select>
+          {children}
+        </div>
       </div>
     </div>
   );
