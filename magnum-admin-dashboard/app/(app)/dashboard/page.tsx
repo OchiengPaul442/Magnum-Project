@@ -477,15 +477,9 @@ export default function DashboardPage() {
   ];
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Dashboard Overview"
-        subtitle="Live totals, charts, and recent activity from the current overview payload."
-      />
+      <PageHeader title="Dashboard Overview" />
 
-      <DashboardSection
-        title="System footprint"
-        description="Core entity totals from the latest overview payload."
-      >
+      <section className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {footprintMetrics.map((metric) => (
             <StatTile
@@ -509,7 +503,7 @@ export default function DashboardPage() {
             />
           ))}
         </div>
-      </DashboardSection>
+      </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]">
         <Card className="border-border/60 shadow-sm">
