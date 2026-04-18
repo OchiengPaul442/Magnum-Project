@@ -85,6 +85,7 @@ export default function LoginPage() {
             <Input
               id="username"
               placeholder="admin@magnum.app"
+              className="!rounded-full"
               {...register("username")}
             />
             {errors.username ? (
@@ -93,7 +94,12 @@ export default function LoginPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" {...register("password")} />
+            <Input
+              id="password"
+              type="password"
+              className="!rounded-full"
+              {...register("password")}
+            />
             {errors.password ? (
               <p className="text-xs text-red-600">{errors.password.message}</p>
             ) : null}
