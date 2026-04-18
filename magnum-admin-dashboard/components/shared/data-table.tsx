@@ -44,6 +44,11 @@ export default function DataTable<T>({
       key.toLowerCase(),
     );
 
+  const resolveRowKey = (row: T, index: number) => {
+    const rawKey = rowKey(row);
+    return rawKey ? `${rawKey}-${index}` : `row-${index}`;
+  };
+
   return (
     <div
       className={cn(
@@ -88,43 +93,47 @@ export default function DataTable<T>({
                   ))}
                 </TableRow>
               ))
-            : data.map((row, index) => (
-                <TableRow
-                  key={rowKey(row)}
-                  className={cn(
-                    "transition-colors",
-                    index % 2 === 1 && "bg-muted/25",
-                    onRowClick && "cursor-pointer hover:bg-muted/35",
-                  )}
-                  onClick={(event) => {
-                    const target = event.target;
-                    if (
-                      target instanceof Element &&
-                      target.closest('[data-no-row-click="true"]')
-                    ) {
-                      return;
-                    }
+            : data.map((row, index) => {
+                const resolvedRowKey = resolveRowKey(row, index);
 
-                    onRowClick?.(row);
-                  }}
-                >
-                  {columns.map((column) => (
-                    <TableCell
-                      key={`${rowKey(row)}-${column.key}`}
-                      className={cn(
-                        column.className,
-                        isDateLikeColumn(column.key) && "whitespace-nowrap",
-                      )}
-                    >
-                      {column.render
-                        ? column.render(row)
-                        : formatDisplayValue(
-                            (row as Record<string, unknown>)[column.key],
-                          )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
+                return (
+                  <TableRow
+                    key={resolvedRowKey}
+                    className={cn(
+                      "transition-colors",
+                      index % 2 === 1 && "bg-muted/25",
+                      onRowClick && "cursor-pointer hover:bg-muted/35",
+                    )}
+                    onClick={(event) => {
+                      const target = event.target;
+                      if (
+                        target instanceof Element &&
+                        target.closest('[data-no-row-click="true"]')
+                      ) {
+                        return;
+                      }
+
+                      onRowClick?.(row);
+                    }}
+                  >
+                    {columns.map((column) => (
+                      <TableCell
+                        key={`${resolvedRowKey}-${column.key}`}
+                        className={cn(
+                          column.className,
+                          isDateLikeColumn(column.key) && "whitespace-nowrap",
+                        )}
+                      >
+                        {column.render
+                          ? column.render(row)
+                          : formatDisplayValue(
+                              (row as Record<string, unknown>)[column.key],
+                            )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
         </TableBody>
       </Table>
     </div>

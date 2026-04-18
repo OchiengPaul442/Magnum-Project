@@ -1,5 +1,8 @@
 import { apiClient } from "@/lib/api/client";
 
+const withTrailingSlash = (path: string) =>
+  path.endsWith("/") ? path : `${path}/`;
+
 export interface ListParams {
   search?: string;
   status?: string;
@@ -28,13 +31,16 @@ export const adminApi = {
     return response.data;
   },
   getSchool: async (id: string) => {
-    const response = await apiClient.get(`/api/admin/schools/${id}`);
+    const response = await apiClient.get(
+      withTrailingSlash(`/api/admin/schools/${id}`),
+    );
     return response.data;
   },
   updateSchoolStatus: async (id: string, status: string) => {
-    const response = await apiClient.patch(`/api/admin/schools/${id}/status`, {
-      status,
-    });
+    const response = await apiClient.patch(
+      withTrailingSlash(`/api/admin/schools/${id}/status`),
+      { status },
+    );
     return response.data;
   },
   onboardSchool: async (payload: Record<string, unknown>) => {
@@ -50,13 +56,16 @@ export const adminApi = {
     return response.data;
   },
   getStudent: async (id: string) => {
-    const response = await apiClient.get(`/api/admin/students/${id}`);
+    const response = await apiClient.get(
+      withTrailingSlash(`/api/admin/students/${id}`),
+    );
     return response.data;
   },
   updateStudentStatus: async (id: string, status: string) => {
-    const response = await apiClient.patch(`/api/admin/students/${id}/status`, {
-      status,
-    });
+    const response = await apiClient.patch(
+      withTrailingSlash(`/api/admin/students/${id}/status`),
+      { status },
+    );
     return response.data;
   },
 
@@ -65,7 +74,9 @@ export const adminApi = {
     return response.data;
   },
   getParent: async (id: string) => {
-    const response = await apiClient.get(`/api/admin/parents/${id}`);
+    const response = await apiClient.get(
+      withTrailingSlash(`/api/admin/parents/${id}`),
+    );
     return response.data;
   },
 
@@ -74,13 +85,16 @@ export const adminApi = {
     return response.data;
   },
   getVendor: async (id: string) => {
-    const response = await apiClient.get(`/api/admin/vendors/${id}`);
+    const response = await apiClient.get(
+      withTrailingSlash(`/api/admin/vendors/${id}`),
+    );
     return response.data;
   },
   updateVendorStatus: async (id: string, status: string) => {
-    const response = await apiClient.patch(`/api/admin/vendors/${id}/status`, {
-      status,
-    });
+    const response = await apiClient.patch(
+      withTrailingSlash(`/api/admin/vendors/${id}/status`),
+      { status },
+    );
     return response.data;
   },
 

@@ -15,6 +15,23 @@ export interface ResendOtpPayload {
   purpose: "login";
 }
 
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  email: string;
+  otp: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordPayload {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export const authApi = {
   login: async (payload: LoginPayload) => {
     const response = await apiClient.post("/api/login/", payload, noAuthConfig);
@@ -40,8 +57,41 @@ export const authApi = {
     return response.data;
   },
   refreshToken: async (refreshToken: string) => {
-    const response = await apiClient.post("/api/refreshtoken/", {
-      refresh_token: refreshToken,
+    const response = await apiClient.post(
+      "/api/refreshtoken/",
+      {
+        refresh_token: refreshToken,
+      },
+      noAuthConfig,
+    );
+    return response.data;
+  },
+  forgotPassword: async (payload: ForgotPasswordPayload) => {
+    const response = await apiClient.post(
+      "/api/forgotpassword/",
+      payload,
+      noAuthConfig,
+    );
+    return response.data;
+  },
+  resetPassword: async (payload: ResetPasswordPayload) => {
+    const response = await apiClient.post(
+      "/api/resetpassword/",
+      {
+        email: payload.email,
+        otp: payload.otp,
+        new_password: payload.newPassword,
+        confirm_password: payload.confirmPassword,
+      },
+      noAuthConfig,
+    );
+    return response.data;
+  },
+  changePassword: async (payload: ChangePasswordPayload) => {
+    const response = await apiClient.post("/api/changepassword/", {
+      old_password: payload.oldPassword,
+      new_password: payload.newPassword,
+      confirm_password: payload.confirmPassword,
     });
     return response.data;
   },

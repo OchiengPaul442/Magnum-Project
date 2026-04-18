@@ -12,6 +12,8 @@ declare module "next-auth" {
       category?: string | null;
       image?: string | null;
     };
+    accessTokenExpiresAt?: number;
+    refreshTokenExpiresAt?: number;
     error?: string;
   }
 

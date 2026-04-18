@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 
 import ErrorBoundary from "@/components/shared/error-boundary";
 import AppToaster from "@/components/shared/app-toaster";
+import SessionRefreshManager from "@/components/providers/session-refresh";
 import { apiFetcher } from "@/lib/api/client";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -17,6 +18,7 @@ export default function Providers({ children }: ProvidersProps) {
   return (
     <TooltipProvider delayDuration={0}>
       <SessionProvider>
+        <SessionRefreshManager />
         <NextTopLoader
           color="hsl(var(--primary))"
           crawlSpeed={200}

@@ -19,7 +19,7 @@ export default function RolesPermissionsPage() {
   }
 
   if (error) {
-    return <ErrorState />;
+    return <ErrorState error={error} />;
   }
 
   const payload = (data?.data as Record<string, unknown>) ?? {};

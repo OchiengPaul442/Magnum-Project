@@ -1,12 +1,25 @@
-import axios, { AxiosHeaders } from "axios";
-import { signOut } from "next-auth/react";
+import axios, { AxiosHeaders, type AxiosRequestConfig } from "axios";
+import { getSession, signOut } from "next-auth/react";
 
 import { captureError } from "@/lib/logging";
 
 const SKIP_AUTH_HEADER = "x-skip-auth";
 const UNAUTHORIZED_REDIRECT_KEY = "magnum_unauthorized_redirect";
+const FORBIDDEN_ROUTE_KEY = "magnum_forbidden_route";
+const FORBIDDEN_ROUTE_AT_KEY = "magnum_forbidden_route_at";
+
+type RetriableRequestConfig = AxiosRequestConfig & {
+  __magnumRetryAfterRefresh?: boolean;
+};
 
 const isBrowser = () => typeof window !== "undefined";
+
+const markForbiddenRoute = () => {
+  if (!isBrowser()) return;
+
+  window.sessionStorage.setItem(FORBIDDEN_ROUTE_KEY, window.location.pathname);
+  window.sessionStorage.setItem(FORBIDDEN_ROUTE_AT_KEY, String(Date.now()));
+};
 
 const handleUnauthorized = () => {
   if (!isBrowser()) return;
@@ -29,15 +42,44 @@ const handleUnauthorized = () => {
 };
 
 export const apiClient = axios.create({
-  baseURL: "",
+  baseURL: "/api/proxy",
 });
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     const status = error?.response?.status;
     const headers = AxiosHeaders.from(error?.config?.headers);
     const skipAuth = headers.get(SKIP_AUTH_HEADER) === "true";
+    const originalRequest = error?.config as RetriableRequestConfig | undefined;
+
+    if (
+      status === 403 &&
+      !skipAuth &&
+      originalRequest &&
+      !originalRequest.__magnumRetryAfterRefresh
+    ) {
+      const session = await getSession();
+
+      if (!session || session.error === "RefreshAccessTokenError") {
+        markForbiddenRoute();
+        handleUnauthorized();
+        return Promise.reject(error);
+      }
+
+      originalRequest.__magnumRetryAfterRefresh = true;
+      try {
+        return await apiClient.request(originalRequest);
+      } catch (retryError) {
+        const retryStatus = (
+          retryError as { response?: { status?: number } } | undefined
+        )?.response?.status;
+        if (retryStatus === 403) {
+          markForbiddenRoute();
+        }
+        throw retryError;
+      }
+    }
 
     if (status === 401) {
       if (!skipAuth) {

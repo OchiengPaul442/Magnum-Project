@@ -131,12 +131,16 @@ export default function AdminUsersPage() {
       header: "Actions",
       render: (row) => (
         <div data-no-row-click="true">
-          <AssignRolesDialog
-            userId={row.id}
-            currentGroups={row.groups ?? []}
-            availableGroups={availableGroups}
-            onSuccess={() => mutate()}
-          />
+          {row.user?.id ? (
+            <AssignRolesDialog
+              userId={row.user.id}
+              currentGroups={row.groups ?? []}
+              availableGroups={availableGroups}
+              onSuccess={() => mutate()}
+            />
+          ) : (
+            <span className="text-sm text-muted-foreground">-</span>
+          )}
         </div>
       ),
     },
@@ -167,7 +171,7 @@ export default function AdminUsersPage() {
           loadingRows={6}
         />
       ) : error ? (
-        <ErrorState />
+        <ErrorState error={error} />
       ) : admins.length === 0 ? (
         <NoData
           title="No admin users"

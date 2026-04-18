@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -103,6 +104,14 @@ export default function LoginPage() {
             {errors.password ? (
               <p className="text-xs text-red-600">{errors.password.message}</p>
             ) : null}
+          </div>
+          <div className="flex justify-end">
+            <Link
+              href="/forgot-password"
+              className="text-sm font-medium text-[#6f54c5] transition-colors hover:text-[#5b45a3]"
+            >
+              Forgot your password?
+            </Link>
           </div>
         </CardContent>
         <CardFooter className="flex">

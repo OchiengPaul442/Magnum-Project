@@ -6,7 +6,7 @@ Modern admin dashboard for Magnum built with Next.js, Tailwind CSS, and shadcn U
 
 - Admin-only screens mapped to Admin Dashboard APIs (schools, students, parents, vendors, cards, sales, accounts, transactions, activity logs, roles).
 - Secure API proxy to avoid exposing the backend base URL in client requests.
-- Auth flow with OTP verification and protected routes.
+- Auth flow with OTP verification, password recovery, automatic token refresh, and protected routes.
 - Reusable, responsive components with loading, empty, and error states.
 - Sentry error tracking and loglevel logging.
 
@@ -32,7 +32,7 @@ SENTRY_DSN=
 
 ### API Proxy
 
-All browser API calls go to `/api/**` (same-origin). The Next.js route handler forwards requests to `MAGNUM_API_BASE_URL`, keeping the backend URL out of client bundles and network tabs.
+All browser API calls go to `/api/proxy/**` (same-origin). The Next.js route handler forwards requests to `MAGNUM_API_BASE_URL`, keeps the backend URL out of client bundles and network tabs, refreshes expired access tokens through `/api/refreshtoken/`, and logs out cleanly when the refresh token can no longer be rotated.
 
 ## Scripts
 

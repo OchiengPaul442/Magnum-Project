@@ -10,6 +10,7 @@ import {
   extractTokenExpiry,
   hasOtpRequirement,
 } from "@/lib/auth/session";
+import { TOKEN_REFRESH_BUFFER_MS } from "@/lib/auth/refresh-window";
 
 const API_BASE_URL = process.env.MAGNUM_API_BASE_URL;
 
@@ -96,9 +97,35 @@ const toUser = (data: unknown, username: string) => {
   };
 };
 
+const clearExpiredToken = (token: JWT) => ({
+  ...token,
+  accessToken: undefined,
+  refreshToken: undefined,
+  accessTokenExpiresAt: undefined,
+  refreshTokenExpiresAt: undefined,
+  error: "RefreshAccessTokenError",
+});
+
+const shouldRefreshToken = (token: JWT) => {
+  const expiries = [
+    token.accessTokenExpiresAt,
+    token.refreshTokenExpiresAt,
+  ].filter(
+    (expiry): expiry is number =>
+      typeof expiry === "number" && Number.isFinite(expiry),
+  );
+
+  if (expiries.length === 0) {
+    return Boolean(token.refreshToken);
+  }
+
+  const nextExpiry = Math.min(...expiries);
+  return Date.now() >= nextExpiry - TOKEN_REFRESH_BUFFER_MS;
+};
+
 const refreshAccessToken = async (token: JWT) => {
   if (!API_BASE_URL || !token.refreshToken) {
-    return { ...token, error: "RefreshAccessTokenError" };
+    return clearExpiredToken(token);
   }
 
   try {
@@ -110,7 +137,7 @@ const refreshAccessToken = async (token: JWT) => {
 
     const payload = await response.json().catch(() => null);
     if (!response.ok || !payload) {
-      return { ...token, error: "RefreshAccessTokenError" };
+      return clearExpiredToken(token);
     }
 
     const nextAccessToken = extractToken(payload);
@@ -119,7 +146,7 @@ const refreshAccessToken = async (token: JWT) => {
       extractTokenExpiry(payload);
 
     if (!nextAccessToken) {
-      return { ...token, error: "RefreshAccessTokenError" };
+      return clearExpiredToken(token);
     }
 
     return {
@@ -136,7 +163,7 @@ const refreshAccessToken = async (token: JWT) => {
     };
   } catch (error) {
     captureError(error, { source: "nextauth-refresh" });
-    return { ...token, error: "RefreshAccessTokenError" };
+    return clearExpiredToken(token);
   }
 };
 
@@ -229,14 +256,18 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (
-        token.accessTokenExpiresAt &&
-        Date.now() < token.accessTokenExpiresAt - 60_000
+        token.refreshTokenExpiresAt &&
+        Date.now() >= token.refreshTokenExpiresAt
       ) {
+        return clearExpiredToken(token);
+      }
+
+      if (!shouldRefreshToken(token)) {
         return token;
       }
 
       if (!token.refreshToken) {
-        return token;
+        return clearExpiredToken(token);
       }
 
       return refreshAccessToken(token);
@@ -253,6 +284,9 @@ export const authOptions: NextAuthOptions = {
       if (token.error) {
         session.error = token.error as string;
       }
+
+      session.accessTokenExpiresAt = token.accessTokenExpiresAt;
+      session.refreshTokenExpiresAt = token.refreshTokenExpiresAt;
 
       return session;
     },

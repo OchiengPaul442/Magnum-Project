@@ -353,7 +353,7 @@ export default function DashboardPage() {
   }
 
   if (error) {
-    return <ErrorState />;
+    return <ErrorState error={error} />;
   }
 
   const overview = (data?.data as DashboardOverview | undefined) ?? {};

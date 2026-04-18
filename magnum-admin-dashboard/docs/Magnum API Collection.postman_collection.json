@@ -343,6 +343,7 @@
             },
             {
               "name": "Refresh Token",
+              "description": "Refresh Knox access after a 401 or before expiry. Refresh tokens are one-time and sliding: a successful response returns a new access token plus a new refresh_token valid for another 7 days. Save both returned values and do not run parallel refresh calls with the same refresh_token.",
               "request": {
                 "method": "POST",
                 "header": [],
@@ -378,6 +379,7 @@
                       "const responseData = jsonData.user_data || jsonData;",
                       "const token = responseData.token || jsonData.token;",
                       "const refreshToken = responseData.refresh_token || jsonData.refresh_token;",
+                      "const previousRefreshToken = pm.environment.get(\"refresh_token\");",
                       "if (token) {",
                       "  pm.environment.set(\"token\", token);",
                       "  pm.collectionVariables.set(\"token\", token);",
@@ -392,6 +394,11 @@
                       "  } else {",
                       "    pm.expect(token, \"token\").to.be.a(\"string\").and.not.empty;",
                       "    pm.expect(refreshToken, \"refresh_token\").to.be.a(\"string\").and.not.empty;",
+                      "  }",
+                      "});",
+                      "pm.test(\"Refresh token rotates on success\", function () {",
+                      "  if (pm.response.code === 200 && previousRefreshToken) {",
+                      "    pm.expect(refreshToken, \"rotated refresh_token\").to.not.eql(previousRefreshToken);",
                       "  }",
                       "});"
                     ]
@@ -1403,6 +1410,140 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "Refresh Token",
+              "description": "Dashboard/web refresh flow. Refresh tokens are one-time and sliding: a successful response returns a new Knox access token plus a new refresh_token valid for another 7 days. Save both returned values and do not run parallel refresh calls with the same refresh_token.",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/refreshtoken/",
+                  "host": [
+                    "{{stg_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "refreshtoken",
+                    ""
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "let jsonData = {};",
+                      "try { jsonData = pm.response.json(); } catch (error) { jsonData = {}; }",
+                      "const responseData = jsonData.user_data || jsonData;",
+                      "const token = responseData.token || jsonData.token;",
+                      "const refreshToken = responseData.refresh_token || jsonData.refresh_token;",
+                      "const previousRefreshToken = pm.environment.get(\"refresh_token\");",
+                      "if (token) {",
+                      "  pm.environment.set(\"token\", token);",
+                      "  pm.collectionVariables.set(\"token\", token);",
+                      "}",
+                      "if (refreshToken) {",
+                      "  pm.environment.set(\"refresh_token\", refreshToken);",
+                      "  pm.collectionVariables.set(\"refresh_token\", refreshToken);",
+                      "}",
+                      "pm.test(\"Auth response is usable\", function () {",
+                      "  if (jsonData.requires_otp) {",
+                      "    pm.expect(jsonData.requires_otp).to.eql(true);",
+                      "  } else {",
+                      "    pm.expect(token, \"token\").to.be.a(\"string\").and.not.empty;",
+                      "    pm.expect(refreshToken, \"refresh_token\").to.be.a(\"string\").and.not.empty;",
+                      "  }",
+                      "});",
+                      "pm.test(\"Refresh token rotates on success\", function () {",
+                      "  if (pm.response.code === 200 && previousRefreshToken) {",
+                      "    pm.expect(refreshToken, \"rotated refresh_token\").to.not.eql(previousRefreshToken);",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "response": []
+            },
+            {
+              "name": "Logout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/logout/",
+                  "host": [
+                    "{{stg_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logout",
+                    ""
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Logout All",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/logoutall/",
+                  "host": [
+                    "{{stg_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "logoutall",
+                    ""
+                  ]
+                }
+              },
+              "response": []
             },
             {
               "name": "Change Password",

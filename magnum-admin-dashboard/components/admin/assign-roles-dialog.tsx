@@ -17,7 +17,7 @@ import { captureError } from "@/lib/logging";
 import { normalizeStringList } from "@/lib/display";
 
 interface AssignRolesDialogProps {
-  userId: string;
+  userId: string | number;
   currentGroups: unknown[];
   availableGroups: unknown[];
   onSuccess: () => void;
@@ -61,7 +61,7 @@ export default function AssignRolesDialog({
   const onSubmit = async () => {
     setSubmitting(true);
     try {
-      await adminApi.updateAdminUserRoles(userId, selected);
+      await adminApi.updateAdminUserRoles(String(userId), selected);
       toast.success("Roles updated");
       onSuccess();
       setOpen(false);

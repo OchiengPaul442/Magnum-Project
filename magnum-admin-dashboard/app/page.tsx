@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth/next";
 
-import { authOptions } from "@/lib/auth/options";
+import { getServerAuthToken } from "@/lib/auth/server-token";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
-  if (session) {
+  const token = await getServerAuthToken();
+  if (token) {
     redirect("/dashboard");
   }
   redirect("/login");

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useEffect, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import LoadingScreen from "@/components/shared/loading-screen";
 
 interface AuthGateProps {
@@ -10,17 +10,39 @@ interface AuthGateProps {
 }
 
 export default function AuthGate({ children }: AuthGateProps) {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const signOutStarted = useRef(false);
+
+  const currentPath = searchParams.toString()
+    ? `${pathname}?${searchParams.toString()}`
+    : pathname;
+  const loginUrl = `/login?next=${encodeURIComponent(currentPath)}`;
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+      router.replace(loginUrl);
     }
-  }, [status, pathname, router]);
+  }, [loginUrl, pathname, router, status]);
 
-  if (status !== "authenticated") {
+  useEffect(() => {
+    if (
+      session?.error !== "RefreshAccessTokenError" ||
+      signOutStarted.current
+    ) {
+      return;
+    }
+
+    signOutStarted.current = true;
+    void signOut({ callbackUrl: loginUrl });
+  }, [loginUrl, session?.error]);
+
+  if (
+    status !== "authenticated" ||
+    session?.error === "RefreshAccessTokenError"
+  ) {
     return <LoadingScreen />;
   }
 
