@@ -9,7 +9,6 @@ import {
   Clock3,
   CreditCard,
   DollarSign,
-  PieChart as PieChartIcon,
   School,
   Store,
   UsersRound,
@@ -21,8 +20,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -149,11 +146,10 @@ interface StatTileProps {
   size?: "sm" | "md";
 }
 
-interface HeroStatTileProps {
-  icon: IconType;
-  label: string;
-  value: string;
-  note: string;
+interface DashboardSectionProps {
+  title: string;
+  description: string;
+  children: React.ReactNode;
 }
 
 interface RecentCardProps<T> {
@@ -164,6 +160,7 @@ interface RecentCardProps<T> {
   emptyText: string;
   getKey: (item: T) => string;
   renderItem: (item: T) => React.ReactNode;
+  contentClassName?: string;
 }
 
 interface ChartTooltipProps {
@@ -185,12 +182,6 @@ const PORTFOLIO_COLORS = [
   "hsl(var(--accent) / 0.7)",
   "hsl(var(--chart-1) / 0.7)",
 ];
-
-const STATUS_COLORS: Record<string, string> = {
-  active: "hsl(var(--primary))",
-  pending: "hsl(var(--chart-4))",
-  inactive: "hsl(var(--destructive))",
-};
 
 const getNumericValue = (value: unknown): number => {
   if (typeof value === "number") {
@@ -218,30 +209,6 @@ const getNumericValue = (value: unknown): number => {
       record.total ??
       record.source,
   );
-};
-
-const titleCase = (value: string) => {
-  const normalized = value.trim();
-  if (!normalized) {
-    return "Unknown";
-  }
-
-  return `${normalized.charAt(0).toUpperCase()}${normalized.slice(1).toLowerCase()}`;
-};
-
-const getStatusTotal = (
-  entries: DashboardStatusEntry[] | undefined,
-  status: string,
-) => {
-  return (
-    entries?.find(
-      (entry) => entry.status?.toLowerCase() === status.toLowerCase(),
-    )?.total ?? 0
-  );
-};
-
-const getStatusColor = (status: string) => {
-  return STATUS_COLORS[status.toLowerCase()] ?? "hsl(var(--chart-2))";
 };
 
 function StatTile({
@@ -293,21 +260,26 @@ function StatTile({
   );
 }
 
-function HeroStatTile({ icon: Icon, label, value, note }: HeroStatTileProps) {
+function DashboardSection({
+  title,
+  description,
+  children,
+}: DashboardSectionProps) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-slate-300">
-            {label}
-          </p>
-          <p className="mt-2 text-xl font-semibold text-white">{value}</p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-white/10 p-2 text-white">
-          <Icon className="h-4 w-4" />
-        </div>
+    <section className="space-y-4">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
-      <p className="mt-3 text-xs text-slate-300">{note}</p>
+      {children}
+    </section>
+  );
+}
+
+function RecentItemFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-background/70 p-4 shadow-sm">
+      {children}
     </div>
   );
 }
@@ -320,6 +292,7 @@ function RecentCard<T>({
   emptyText,
   getKey,
   renderItem,
+  contentClassName,
 }: RecentCardProps<T>) {
   return (
     <Card className="border-border/60 shadow-sm">
@@ -332,7 +305,12 @@ function RecentCard<T>({
           <Icon className="h-4 w-4" />
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent
+        className={cn(
+          "space-y-3",
+          contentClassName ?? "max-h-[22rem] overflow-y-auto pr-1",
+        )}
+      >
         {items.length ? (
           items.map((item) => <div key={getKey(item)}>{renderItem(item)}</div>)
         ) : (
@@ -380,41 +358,8 @@ export default function DashboardPage() {
 
   const overview = (data?.data as DashboardOverview | undefined) ?? {};
   const totals = overview.totals ?? {};
-  const statuses = overview.statuses ?? {};
   const money = overview.money ?? {};
   const recent = overview.recent ?? {};
-
-  const activeSchools = getStatusTotal(statuses.schools, "active");
-  const activeStudents = getStatusTotal(statuses.students, "active");
-  const activeCards = getStatusTotal(statuses.cards, "active");
-  const pendingCards = getStatusTotal(statuses.cards, "pending");
-
-  const heroStats = [
-    {
-      icon: School,
-      label: "Active schools",
-      value: formatNumberValue(activeSchools),
-      note: "Schools currently active.",
-    },
-    {
-      icon: UsersRound,
-      label: "Active students",
-      value: formatNumberValue(activeStudents),
-      note: "Students with an active status.",
-    },
-    {
-      icon: CreditCard,
-      label: "Active cards",
-      value: formatNumberValue(activeCards),
-      note: "Cards ready for use.",
-    },
-    {
-      icon: Clock3,
-      label: "Pending cards",
-      value: formatNumberValue(pendingCards),
-      note: "Cards awaiting activation.",
-    },
-  ];
 
   const footprintMetrics = [
     {
@@ -530,38 +475,6 @@ export default function DashboardPage() {
       value: getNumericValue(totals.admin_personnel),
     },
   ];
-
-  const cardStatusEntries = statuses.cards ?? [];
-  const preferredStatusOrder = ["active", "pending", "inactive"];
-  const cardStatusData = cardStatusEntries
-    .map((entry) => {
-      const normalizedStatus = entry.status?.toLowerCase() ?? "unknown";
-      return {
-        name: titleCase(normalizedStatus),
-        value: getNumericValue(entry.total),
-        color: getStatusColor(normalizedStatus),
-      };
-    })
-    .filter((entry) => entry.value > 0 || cardStatusEntries.length === 0)
-    .sort((left, right) => {
-      const leftIndex = preferredStatusOrder.indexOf(left.name.toLowerCase());
-      const rightIndex = preferredStatusOrder.indexOf(right.name.toLowerCase());
-
-      if (leftIndex === -1 && rightIndex === -1) {
-        return right.value - left.value;
-      }
-
-      if (leftIndex === -1) {
-        return 1;
-      }
-
-      if (rightIndex === -1) {
-        return -1;
-      }
-
-      return leftIndex - rightIndex;
-    });
-
   return (
     <div className="space-y-8">
       <PageHeader
@@ -569,67 +482,10 @@ export default function DashboardPage() {
         subtitle="Live totals, charts, and recent activity from the current overview payload."
       />
 
-      <section className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white shadow-xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(45,212,191,0.18),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.18),transparent_28%)]" />
-        <div className="relative grid gap-6 p-6 md:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.75fr)] md:p-8">
-          <div className="space-y-5">
-            <Badge
-              variant="secondary"
-              className="w-fit border-white/10 bg-white/10 text-white hover:bg-white/15"
-            >
-              Live overview
-            </Badge>
-            <div className="space-y-3">
-              <h2 className="max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
-                An operational pulse across schools, cards, accounts, and cash
-                flow.
-              </h2>
-              <p className="max-w-2xl text-sm leading-6 text-slate-300">
-                The dashboard reads the overview payload directly, so the
-                numbers, statuses, and recent records now stay in sync with the
-                API response.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3 text-sm text-slate-200">
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                Schools: {formatNumberValue(totals.schools)}
-              </span>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                Students: {formatNumberValue(totals.students)}
-              </span>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                Cards: {formatNumberValue(totals.cards)}
-              </span>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                Monthly sales: {formatCurrencyValue(money.monthly_vendor_sales)}
-              </span>
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
-            {heroStats.map((stat) => (
-              <HeroStatTile
-                key={stat.label}
-                icon={stat.icon}
-                label={stat.label}
-                value={stat.value}
-                note={stat.note}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-5">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold text-foreground">
-            System footprint
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Core entity totals from the latest overview payload.
-          </p>
-        </div>
-
+      <DashboardSection
+        title="System footprint"
+        description="Core entity totals from the latest overview payload."
+      >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {footprintMetrics.map((metric) => (
             <StatTile
@@ -653,7 +509,7 @@ export default function DashboardPage() {
             />
           ))}
         </div>
-      </section>
+      </DashboardSection>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]">
         <Card className="border-border/60 shadow-sm">
@@ -718,83 +574,12 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-            <div className="space-y-1">
-              <CardTitle>Card lifecycle</CardTitle>
-              <CardDescription>
-                Active versus pending card inventory.
-              </CardDescription>
-            </div>
-            <div className="rounded-xl border border-border/60 bg-primary/10 p-2 text-primary">
-              <PieChartIcon className="h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            {cardStatusData.length ? (
-              <>
-                <div className="h-[320px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Tooltip
-                        content={
-                          <ChartTooltip formatValue={formatNumberValue} />
-                        }
-                      />
-                      <Pie
-                        data={cardStatusData}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={72}
-                        outerRadius={102}
-                        paddingAngle={4}
-                        stroke="hsl(var(--background))"
-                      >
-                        {cardStatusData.map((entry) => (
-                          <Cell key={entry.name} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {cardStatusData.map((entry) => (
-                    <div
-                      key={entry.name}
-                      className="flex items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs text-muted-foreground"
-                    >
-                      <span
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: entry.color }}
-                      />
-                      <span>{entry.name}</span>
-                      <span className="font-medium text-foreground">
-                        {formatNumberValue(entry.value)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No card status data available.
-              </p>
-            )}
-          </CardContent>
-        </Card>
       </section>
 
-      <section className="space-y-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold text-foreground">
-            Money snapshot
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Today and month-to-date transaction and vendor sales totals.
-          </p>
-        </div>
-
+      <DashboardSection
+        title="Money snapshot"
+        description="Today and month-to-date transaction and vendor sales totals."
+      >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {moneyMetrics.map((metric) => (
             <StatTile
@@ -807,9 +592,9 @@ export default function DashboardPage() {
             />
           ))}
         </div>
-      </section>
+      </DashboardSection>
 
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section className="grid gap-6 lg:grid-cols-2">
         <RecentCard<DashboardSchool>
           icon={School}
           title="Recent schools"
@@ -818,9 +603,10 @@ export default function DashboardPage() {
           emptyText="No recent schools."
           getKey={(school) => school.id}
           renderItem={(school) => (
-            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+            <RecentItemFrame>
               <div className="flex items-start justify-between gap-3">
                 <EntityCell
+                  className="min-w-0 flex-1"
                   title={school.school_name ?? "Unnamed school"}
                   subtitle={
                     [school.school_id, school.school_address]
@@ -834,7 +620,7 @@ export default function DashboardPage() {
                 <Clock3 className="h-3.5 w-3.5" />
                 <span>{formatDateTime(school.created_at)}</span>
               </div>
-            </div>
+            </RecentItemFrame>
           )}
         />
 
@@ -846,9 +632,10 @@ export default function DashboardPage() {
           emptyText="No recent students."
           getKey={(student) => student.id}
           renderItem={(student) => (
-            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+            <RecentItemFrame>
               <div className="flex items-start justify-between gap-3">
                 <EntityCell
+                  className="min-w-0 flex-1"
                   title={student.full_name ?? "Unnamed student"}
                   subtitle={
                     [
@@ -872,7 +659,7 @@ export default function DashboardPage() {
                   <StatusBadge status={student.card.status} />
                 ) : null}
               </div>
-            </div>
+            </RecentItemFrame>
           )}
         />
 
@@ -884,9 +671,10 @@ export default function DashboardPage() {
           emptyText="No recent vendors."
           getKey={(vendor) => vendor.id}
           renderItem={(vendor) => (
-            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+            <RecentItemFrame>
               <div className="flex items-start justify-between gap-3">
                 <EntityCell
+                  className="min-w-0 flex-1"
                   title={vendor.vendor_name ?? "Unnamed vendor"}
                   subtitle={
                     [
@@ -909,7 +697,7 @@ export default function DashboardPage() {
                   <span>Owner {vendor.owner.contact}</span>
                 ) : null}
               </div>
-            </div>
+            </RecentItemFrame>
           )}
         />
 
@@ -921,9 +709,10 @@ export default function DashboardPage() {
           emptyText="No recent activity."
           getKey={(activity) => activity.id}
           renderItem={(activity) => (
-            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+            <RecentItemFrame>
               <div className="flex items-start justify-between gap-3">
                 <EntityCell
+                  className="min-w-0 flex-1"
                   title={activity.action ?? "Activity"}
                   subtitle={
                     [
@@ -940,8 +729,9 @@ export default function DashboardPage() {
                 <Clock3 className="h-3.5 w-3.5" />
                 <span>{formatDateTime(activity.created_at)}</span>
               </div>
-            </div>
+            </RecentItemFrame>
           )}
+          contentClassName="max-h-[24rem] overflow-y-auto pr-1"
         />
       </section>
     </div>

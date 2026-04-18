@@ -72,14 +72,11 @@ export default function LoginPage() {
 
   return (
     <Card className="w-full max-w-md shadow-xl">
-      <CardHeader>
+      <CardHeader className="text-center">
         <div className="flex items-center justify-center">
           <Image src="/logos/logo.png" alt="Magnum" width={48} height={48} />
         </div>
         <CardTitle className="text-2xl">Sign in to Magnum</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Use your admin email and password. You will verify an OTP next.
-        </p>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
