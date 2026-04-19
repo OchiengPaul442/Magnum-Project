@@ -78,18 +78,12 @@ const buildTargetUrl = (request: NextRequest, path: string) => {
   const base = toApiBase();
   const basePath = new URL(base).pathname.replace(/\/+$/, '');
   const normalizedPath = normalizePath(path);
-  const isAuthServiceEndpoint = AUTH_SERVICE_ENDPOINTS.some(
-    (endpoint) =>
-      normalizedPath === endpoint || normalizedPath.startsWith(`${endpoint}/`),
-  );
 
   let targetPath = normalizedPath;
-  if (isAuthServiceEndpoint) {
-    if (basePath.endsWith('/api')) {
-      targetPath = normalizedPath.replace(/^api\//, '');
-    } else if (!normalizedPath.startsWith('api/')) {
-      targetPath = `api/${normalizedPath}`;
-    }
+  if (basePath.endsWith('/api')) {
+    targetPath = normalizedPath.replace(/^api\//, '');
+  } else if (!normalizedPath.startsWith('api/')) {
+    targetPath = `api/${normalizedPath}`;
   }
 
   const target = new URL(

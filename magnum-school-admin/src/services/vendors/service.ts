@@ -30,7 +30,7 @@ export const getVendorData = async (): Promise<VendorDataItem[]> => {
 };
 
 export const getVendorEntityDetailsBySchool = async (param: {
-  vendor_entity_id: number;
+  vendor_entity_id: string;
 }) => {
   const response = await vendorService.get(
     `${VENDOR_URLS.GET_VENDOR_ENTITY_DETAILS}?vendor_entity_id=${param.vendor_entity_id}`,
@@ -40,7 +40,7 @@ export const getVendorEntityDetailsBySchool = async (param: {
 };
 
 export const updateVendorEntityStatusBySchool = async (body: {
-  vendor_entity_id: number;
+  vendor_entity_id: string;
   new_status: string;
 }): Promise<any> => {
   const response = await vendorService.patch(

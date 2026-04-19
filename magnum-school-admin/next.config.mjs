@@ -17,6 +17,7 @@ const nextConfig = {
     return {
       beforeFiles: [
         {
+          // Proxy all browser API requests except auth and the proxy route itself.
           source: '/api/:path((?!auth/|proxy/).*)',
           destination: '/api/proxy/:path*',
         },

@@ -44,7 +44,7 @@ export default function VendorDetailsPage({
           return;
         }
         const details: any = await getVendorEntityDetailsBySchool({
-          vendor_entity_id: Number(vendorId),
+          vendor_entity_id: String(vendorId),
         });
         const payload = details?.data ?? details;
         if (!payload || !payload.vendor_entity) {
