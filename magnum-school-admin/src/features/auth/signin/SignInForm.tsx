@@ -54,7 +54,7 @@ const SignInForm = () => {
       const hasToken = Boolean(
         response &&
         (response.token ||
-          response.access_token ||
+          (response as any).access_token ||
           (response as any).accessToken),
       );
 

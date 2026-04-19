@@ -50,7 +50,7 @@ const CustomButton = React.forwardRef<HTMLButtonElement, CustomButtonProps>(
         )}
         onClick={handleClick}
         disabled={isDisabled || loading}
-        {...buttonProps}
+        {...(buttonProps as any)}
       >
         {icon && iconPosition === 'left' && (
           <span className={cn('mr-2', text || children ? '' : 'mx-0')}>

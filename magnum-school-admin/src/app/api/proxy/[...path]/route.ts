@@ -49,6 +49,16 @@ const getCookieName = () => {
     : 'next-auth.session-token';
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+};
+
+const toStringValue = (value: unknown) => {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+};
+
 const sanitizeResponseHeaders = (headers: Headers) => {
   headers.delete('set-cookie');
   headers.delete('content-encoding');
@@ -260,7 +270,7 @@ const attachSessionCookie = async (
 
   const cookieName = getCookieName();
   const updatedToken = {
-    ...token,
+    ...(token as Record<string, unknown>),
     error: undefined,
   };
 

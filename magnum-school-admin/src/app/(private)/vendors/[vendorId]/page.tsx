@@ -44,7 +44,7 @@ export default function VendorDetailsPage({
       entity.vendor_owner_details?.full_name || entity.vendor_owner || 'N/A';
     const salesAmount =
       entity.vendor_entity_total_today_operator_transactions?.toString() || '0';
-    const status =
+    const status: 'Activated' | 'Deactivated' =
       entity.vendor_entity_status === 'active' ? 'Activated' : 'Deactivated';
     const operators = Array.isArray(entity.vendor_entity_operators)
       ? entity.vendor_entity_operators.map((op: any) => ({
@@ -69,6 +69,7 @@ export default function VendorDetailsPage({
     data: vendor,
     error,
     isLoading,
+    mutate,
   } = useResourceData(vendorDetailsKey, fetchVendorDetails);
 
   const handleClose = () => router.push('/vendors');
