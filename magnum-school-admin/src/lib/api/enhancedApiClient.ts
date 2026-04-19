@@ -159,7 +159,11 @@ function createInstance(options: {
     baseURL: BASE_URL,
     ...TIMEOUT_CONFIG,
     validateStatus: (status) => status < 400,
-    withCredentials: false,
+    // Allow browser to receive and send cookies for same-origin API requests.
+    // This is required for authentication flows where the server sets session
+    // cookies (e.g., OTP verification) via API routes. Using `withCredentials: true`
+    // ensures the browser will accept `Set-Cookie` headers from our API.
+    withCredentials: true,
   });
 
   // If this instance is for multipart/form-data uploads, hint the header.

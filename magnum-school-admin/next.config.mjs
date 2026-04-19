@@ -28,20 +28,39 @@ const nextConfig = {
   reactStrictMode: true,
 };
 
+const isProduction = process.env.NODE_ENV === 'production';
+const hasSentryAuth = Boolean(process.env.SENTRY_AUTH_TOKEN);
+
+const sentryWebpackPluginOptions = {
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+};
+
+// Only enable uploading (and deleting local maps) when building in production
+// and a SENTRY_AUTH_TOKEN is available (e.g., in CI). For other environments
+// we disable sourcemap generation/upload to avoid accidental exposure.
+const sentryNextConfig =
+  isProduction && hasSentryAuth
+    ? {
+        widenClientFileUpload: true,
+        transpileClientSDK: true,
+        hideSourceMaps: true,
+        sourcemaps: {
+          deleteSourcemapsAfterUpload: true,
+        },
+        disableLogger: true,
+      }
+    : {
+        hideSourceMaps: true,
+        sourcemaps: {
+          disable: true,
+        },
+        disableLogger: true,
+      };
+
 export default withSentryConfig(
   nextConfig,
-  {
-    silent: true,
-    org: process.env.SENTRY_ORG,
-    project: process.env.SENTRY_PROJECT,
-  },
-  {
-    widenClientFileUpload: true,
-    transpileClientSDK: true,
-    hideSourceMaps: true,
-    sourcemaps: {
-      deleteSourcemapsAfterUpload: true,
-    },
-    disableLogger: true,
-  },
+  sentryWebpackPluginOptions,
+  sentryNextConfig,
 );
