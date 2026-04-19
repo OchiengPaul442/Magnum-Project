@@ -20,34 +20,49 @@ interface CustomToastProps {
 const Icon = ({ type }: { type: ToastType }) => {
   switch (type) {
     case 'success':
-      return <AiOutlineCheckCircle className="text-green-600" size={20} />;
+      return <AiOutlineCheckCircle className="text-emerald-600" size={20} />;
     case 'error':
-      return <AiOutlineCloseCircle className="text-red-600" size={20} />;
+      return <AiOutlineCloseCircle className="text-rose-600" size={20} />;
     case 'info':
     default:
-      return <AiOutlineInfoCircle className="text-indigo-600" size={20} />;
+      return <AiOutlineInfoCircle className="text-[#533E89]" size={20} />;
+  }
+};
+
+const getProgressBackground = (type: ToastType) => {
+  switch (type) {
+    case 'success':
+      return 'linear-gradient(90deg, #059669, #34d399)';
+    case 'error':
+      return 'linear-gradient(90deg, #e11d48, #fb7185)';
+    case 'info':
+    default:
+      return 'linear-gradient(90deg, #533E89, #7c5cff)';
   }
 };
 
 export default function CustomToast({
   t,
-  type = 'default',
+  type = 'info',
   message = '',
   duration = 4000,
 }: CustomToastProps) {
-  const [progress, setProgress] = useState(0);
+  const [remaining, setRemaining] = useState(100);
   const [paused, setPaused] = useState(false);
   const elapsedRef = useRef(0);
   const lastTickRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
+  const pausedRef = useRef(false);
+
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
 
   useEffect(() => {
     lastTickRef.current = performance.now();
 
     const tick = (now: number) => {
-      if (paused) {
-        lastTickRef.current = now;
-        rafRef.current = requestAnimationFrame(tick);
+      if (pausedRef.current) {
         return;
       }
 
@@ -57,7 +72,7 @@ export default function CustomToast({
       lastTickRef.current = now;
 
       const pct = Math.min((elapsedRef.current / duration) * 100, 100);
-      setProgress(pct);
+      setRemaining(100 - pct);
 
       if (elapsedRef.current >= duration) {
         sonnerToast.dismiss(t.id);
@@ -81,7 +96,7 @@ export default function CustomToast({
     <div
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      className="custom-toast relative flex items-start gap-3 p-4 rounded-md shadow-sm bg-white border border-gray-200 max-w-xs"
+      className="custom-toast relative flex max-w-xs items-start gap-3 rounded-md border border-gray-200 bg-white p-4 shadow-sm"
     >
       <div className="pt-1">
         <Icon type={type} />
@@ -100,7 +115,11 @@ export default function CustomToast({
       <div className="absolute left-0 right-0 bottom-0 h-1 rounded-b-md overflow-hidden">
         <div
           className="custom-toast-progress h-full"
-          style={{ width: `${progress}%`, transition: 'width 120ms linear' }}
+          style={{
+            width: `${remaining}%`,
+            transition: 'width 120ms linear',
+            background: getProgressBackground(type),
+          }}
         />
       </div>
     </div>

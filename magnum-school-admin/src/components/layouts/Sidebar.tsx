@@ -20,6 +20,12 @@ import { cn } from '@/lib/utils';
 import { showErrorToast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -111,215 +117,241 @@ const Sidebar: React.FC<SidebarProps> = ({
     const active = isActive(item.path);
     const Icon = item.icon;
 
-    return (
-      <div key={item.name} className="relative group">
-        <Link
-          href={item.path}
-          onClick={handleNavigate}
-          aria-label={item.name}
-          aria-current={active ? 'page' : undefined}
-          className={cn(
-            'group flex items-center text-sm font-medium transition-colors',
-            isCollapsed
-              ? 'mx-auto h-11 w-11 justify-center rounded-2xl px-0'
-              : 'gap-3 rounded-xl px-3 py-2.5',
-            active
-              ? 'bg-[#f0eef8] text-[#0f766e] shadow-sm'
-              : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-          )}
-        >
-          <Icon
-            className={cn(
-              'h-4 w-4 shrink-0 transition-colors',
-              active
-                ? 'text-[#0f766e]'
-                : 'text-muted-foreground group-hover:text-foreground',
-            )}
-          />
-          {!isCollapsed ? <span>{item.name}</span> : null}
-        </Link>
+    const linkClassName = cn(
+      'group flex items-center text-sm font-medium transition-colors',
+      isCollapsed
+        ? 'mx-auto h-11 w-11 justify-center rounded-2xl px-0'
+        : 'gap-3 rounded-xl px-3 py-2.5',
+      active
+        ? 'bg-[#f0eef8] text-[#533E89] shadow-sm'
+        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+    );
 
-        {/* Collapsed tooltip */}
-        {isCollapsed ? (
-          <div
-            role="tooltip"
-            aria-hidden={!isCollapsed}
-            className="sidebar-tooltip hidden group-hover:flex absolute left-full ml-3 top-1/2 -translate-y-1/2 whitespace-nowrap items-center px-3 py-2 bg-white border border-gray-200 rounded-md shadow-sm text-sm text-gray-800 z-50"
-          >
-            {item.name}
-          </div>
-        ) : null}
-      </div>
+    const iconClassName = cn(
+      'h-4 w-4 shrink-0 transition-colors',
+      active
+        ? 'text-[#533E89]'
+        : 'text-muted-foreground group-hover:text-foreground',
+    );
+
+    const link = (
+      <Link
+        key={item.name}
+        href={item.path}
+        onClick={handleNavigate}
+        aria-label={item.name}
+        aria-current={active ? 'page' : undefined}
+        className={linkClassName}
+      >
+        <Icon className={iconClassName} />
+        {!isCollapsed ? <span>{item.name}</span> : null}
+      </Link>
+    );
+
+    if (!isCollapsed) {
+      return link;
+    }
+
+    return (
+      <Tooltip key={item.name} delayDuration={120}>
+        <TooltipTrigger asChild>{link}</TooltipTrigger>
+        <TooltipContent side="right" align="center" sideOffset={12}>
+          {item.name}
+        </TooltipContent>
+      </Tooltip>
     );
   };
 
   return (
-    <aside
-      className={cn(
-        'flex h-full flex-col border-r border-gray-200 bg-white text-foreground transition-[width] duration-200 ease-out',
-        mobile
-          ? 'w-full'
-          : isCollapsed
-            ? 'hidden w-20 shrink-0 lg:flex'
-            : 'hidden w-72 shrink-0 lg:flex',
-      )}
-    >
-      <div
+    <TooltipProvider delayDuration={120} skipDelayDuration={0}>
+      <aside
         className={cn(
-          'flex-none border-b border-gray-200 px-4 py-5',
-          isCollapsed && 'px-3',
+          'flex h-full flex-col border-r border-gray-200 bg-white text-foreground transition-[width] duration-200 ease-out',
+          mobile
+            ? 'w-full'
+            : isCollapsed
+              ? 'hidden w-20 shrink-0 lg:flex'
+              : 'hidden w-72 shrink-0 lg:flex',
         )}
       >
-        <Link
-          href="/dashboard"
-          onClick={handleNavigate}
-          aria-label="Go to dashboard"
+        <div
           className={cn(
-            'flex items-center gap-3',
-            isCollapsed && 'justify-center gap-0',
+            'flex-none border-b border-gray-200 px-4 py-5',
+            isCollapsed && 'px-3',
           )}
         >
-          <Image
-            src={Logo}
-            alt="Magnum School Admin"
-            width={isCollapsed ? 36 : 64}
-            height={isCollapsed ? 28 : 48}
-            className="h-auto w-auto object-contain"
-            priority
-          />
-        </Link>
-      </div>
-
-      <div
-        className={cn(
-          'min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-2',
-          isCollapsed && 'px-2',
-        )}
-      >
-        {NAV_SECTIONS.map((section) => (
-          <div
-            key={section.label}
-            className={cn('space-y-2 py-3 first:pt-0', isCollapsed && 'py-2')}
-          >
-            {!isCollapsed ? (
-              <p className="px-3 text-xs uppercase tracking-[0.24em] text-muted-foreground">
-                {section.label}
-              </p>
-            ) : null}
-            <nav className="flex flex-col gap-1">
-              {section.items.map((item) => renderNavLink(item))}
-            </nav>
-          </div>
-        ))}
-      </div>
-
-      <div
-        className={cn(
-          'flex-none border-t border-gray-200 px-4 pb-4 pt-2',
-          isCollapsed && 'px-2',
-        )}
-      >
-        <div className="space-y-3">
           <Link
-            href="/settings"
+            href="/dashboard"
             onClick={handleNavigate}
-            aria-label="Settings"
-            title={isCollapsed ? 'Settings' : undefined}
+            aria-label="Go to dashboard"
             className={cn(
-              'group flex items-center text-sm font-medium transition-colors',
-              isCollapsed
-                ? 'mx-auto h-11 w-11 justify-center rounded-2xl px-0'
-                : 'gap-3 rounded-xl px-3 py-2.5',
-              'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+              'flex items-center gap-3',
+              isCollapsed && 'justify-center gap-0',
             )}
           >
-            <FaCog className={cn('h-4 w-4 shrink-0 transition-colors')} />
-            {!isCollapsed ? <span>Settings</span> : null}
+            <Image
+              src={Logo}
+              alt="Magnum School Admin"
+              width={isCollapsed ? 36 : 64}
+              height={isCollapsed ? 28 : 48}
+              className="h-auto w-auto object-contain"
+              priority
+            />
           </Link>
+        </div>
 
-          <div
-            className={cn(
-              'flex items-center rounded-2xl bg-muted/35 px-3 py-3',
-              isCollapsed ? 'justify-center px-2 py-2' : 'justify-between',
+        <div
+          className={cn(
+            'min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-2',
+            isCollapsed && 'px-2',
+          )}
+        >
+          {NAV_SECTIONS.map((section) => (
+            <div
+              key={section.label}
+              className={cn('space-y-2 py-3 first:pt-0', isCollapsed && 'py-2')}
+            >
+              {!isCollapsed ? (
+                <p className="px-3 text-xs uppercase tracking-[0.24em] text-muted-foreground">
+                  {section.label}
+                </p>
+              ) : null}
+              <nav className="flex flex-col gap-1">
+                {section.items.map((item) => renderNavLink(item))}
+              </nav>
+            </div>
+          ))}
+        </div>
+
+        <div
+          className={cn(
+            'flex-none border-t border-gray-200 px-4 pb-4 pt-2',
+            isCollapsed && 'px-2',
+          )}
+        >
+          <div className="space-y-3">
+            {isCollapsed ? (
+              <Tooltip delayDuration={120}>
+                <TooltipTrigger asChild>
+                  <Link
+                    href="/settings"
+                    onClick={handleNavigate}
+                    aria-label="Settings"
+                    className={cn(
+                      'group flex items-center text-sm font-medium transition-colors',
+                      'mx-auto h-11 w-11 justify-center rounded-2xl px-0',
+                      'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                    )}
+                  >
+                    <FaCog
+                      className={cn('h-4 w-4 shrink-0 transition-colors')}
+                    />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right" align="center" sideOffset={12}>
+                  Settings
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Link
+                href="/settings"
+                onClick={handleNavigate}
+                aria-label="Settings"
+                className={cn(
+                  'group flex items-center text-sm font-medium transition-colors',
+                  'gap-3 rounded-xl px-3 py-2.5',
+                  'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                )}
+              >
+                <FaCog className={cn('h-4 w-4 shrink-0 transition-colors')} />
+                <span>Settings</span>
+              </Link>
             )}
-          >
+
             <div
               className={cn(
-                'flex min-w-0 items-center gap-3',
-                isCollapsed && 'gap-2',
+                'flex items-center rounded-2xl bg-muted/35 px-3 py-3',
+                isCollapsed ? 'justify-center px-2 py-2' : 'justify-between',
               )}
             >
               <div
-                title={displayName}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#533E89]/10 text-sm font-semibold text-[#533E89]"
-              >
-                {status === 'loading' ? (
-                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#533E89]" />
-                ) : (
-                  initials || 'A'
+                className={cn(
+                  'flex min-w-0 items-center gap-3',
+                  isCollapsed && 'gap-2',
                 )}
+              >
+                <div
+                  title={displayName}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#533E89]/10 text-sm font-semibold text-[#533E89]"
+                >
+                  {status === 'loading' ? (
+                    <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#533E89]" />
+                  ) : (
+                    initials || 'A'
+                  )}
+                </div>
+
+                {!isCollapsed ? (
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {displayName}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {email}
+                    </p>
+                  </div>
+                ) : null}
               </div>
 
               {!isCollapsed ? (
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">
-                    {displayName}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {email}
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  aria-label="Log out"
+                  title="Log out"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setLogoutDialogOpen(true);
+                  }}
+                  className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted/60"
+                >
+                  <FiLogOut className="h-4 w-4" />
+                </button>
               ) : null}
             </div>
-
-            {!isCollapsed ? (
-              <button
-                type="button"
-                aria-label="Log out"
-                title="Log out"
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  setLogoutDialogOpen(true);
-                }}
-                className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted/60"
-              >
-                <FiLogOut className="h-4 w-4" />
-              </button>
-            ) : null}
           </div>
         </div>
-      </div>
 
-      <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Log out?</DialogTitle>
-            <DialogDescription>
-              You will be signed out of your admin session on this device.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setLogoutDialogOpen(false)}
-              disabled={isLoggingOut}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => void handleLogoutConfirm()}
-              disabled={isLoggingOut}
-            >
-              {isLoggingOut ? 'Logging out...' : 'Log out'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </aside>
+        <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Log out?</DialogTitle>
+              <DialogDescription>
+                You will be signed out of your admin session on this device.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLogoutDialogOpen(false)}
+                disabled={isLoggingOut}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => void handleLogoutConfirm()}
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? 'Logging out...' : 'Log out'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </aside>
+    </TooltipProvider>
   );
 };
 

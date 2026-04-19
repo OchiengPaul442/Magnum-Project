@@ -197,54 +197,53 @@ function createInstance(options: {
             retryConfig._magnumAuthRetryAttempted = true;
 
             const refreshed = await refreshClientSession();
-            if (refreshed) {
-              try {
-                return await instance.request(retryConfig);
-              } catch (retryError) {
-                const retryResponse = (
-                  retryError as AxiosError<ApiErrorResponse>
-                ).response;
+            if (!refreshed) {
+              await logoutClientSession();
+              return Promise.reject(error);
+            }
 
-                if (retryResponse?.status === 401) {
-                  const nextCount = incrementAuthFailureCount();
-                  if (nextCount >= AUTH_FAILURE_LOGOUT_THRESHOLD) {
-                    await logoutClientSession();
-                  }
-                } else {
-                  const retryConfigData = (
-                    retryError as AxiosError<ApiErrorResponse>
-                  ).config;
-                  const retryErrorLog = {
-                    method: retryConfigData?.method?.toUpperCase(),
-                    url: retryConfigData?.url,
-                    status: retryResponse?.status,
-                    statusText: retryResponse?.statusText,
-                    message:
-                      retryResponse?.data?.message ||
-                      (retryError as AxiosError<ApiErrorResponse>).message,
-                    timestamp: new Date().toISOString(),
-                  };
+            try {
+              return await instance.request(retryConfig);
+            } catch (retryError) {
+              const retryResponse = (retryError as AxiosError<ApiErrorResponse>)
+                .response;
 
-                  console.error('API Error:', retryErrorLog);
-                  Sentry.captureException(retryError, {
-                    tags: {
-                      request_url: retryConfigData?.url || 'unknown',
-                      request_method: retryConfigData?.method || 'unknown',
-                      status: retryResponse?.status?.toString() || 'unknown',
-                    },
-                    extra: retryErrorLog,
-                  });
+              if (retryResponse?.status === 401) {
+                const nextCount = incrementAuthFailureCount();
+                if (nextCount >= AUTH_FAILURE_LOGOUT_THRESHOLD) {
+                  await logoutClientSession();
                 }
+              } else {
+                const retryConfigData = (
+                  retryError as AxiosError<ApiErrorResponse>
+                ).config;
+                const retryErrorLog = {
+                  method: retryConfigData?.method?.toUpperCase(),
+                  url: retryConfigData?.url,
+                  status: retryResponse?.status,
+                  statusText: retryResponse?.statusText,
+                  message:
+                    retryResponse?.data?.message ||
+                    (retryError as AxiosError<ApiErrorResponse>).message,
+                  timestamp: new Date().toISOString(),
+                };
 
-                return Promise.reject(retryError);
+                console.error('API Error:', retryErrorLog);
+                Sentry.captureException(retryError, {
+                  tags: {
+                    request_url: retryConfigData?.url || 'unknown',
+                    request_method: retryConfigData?.method || 'unknown',
+                    status: retryResponse?.status?.toString() || 'unknown',
+                  },
+                  extra: retryErrorLog,
+                });
               }
+
+              return Promise.reject(retryError);
             }
           }
 
-          const nextCount = incrementAuthFailureCount();
-          if (nextCount >= AUTH_FAILURE_LOGOUT_THRESHOLD) {
-            await logoutClientSession();
-          }
+          await logoutClientSession();
 
           console.warn('Authentication failed - token may be expired');
           return Promise.reject(error);

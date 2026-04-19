@@ -7,5 +7,14 @@ export const NextAuthProvider = ({
   children,
   ...rest
 }: SessionProviderProps) => {
-  return <SessionProvider {...rest}>{children}</SessionProvider>;
+  return (
+    <SessionProvider
+      {...rest}
+      refetchInterval={0}
+      refetchOnWindowFocus={false}
+      refetchWhenOffline={false}
+    >
+      {children}
+    </SessionProvider>
+  );
 };

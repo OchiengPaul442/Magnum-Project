@@ -1,28 +1,59 @@
 'use client';
 
-import { useEffect } from 'react';
-import { getSession, useSession } from 'next-auth/react';
+import { useEffect, useRef } from 'react';
+import { getSession, signOut, useSession } from 'next-auth/react';
+import themeConfig from '@/config/theme';
 
-const SESSION_REFRESH_BUFFER_MS = 60 * 1000;
+const ACCESS_TOKEN_REFRESH_BUFFER_MS = 2 * 60 * 1000;
+const REFRESH_TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
 const MIN_REFRESH_DELAY_MS = 1000;
+
+const getNextRefreshDelay = (
+  accessTokenExpires?: number,
+  refreshTokenExpires?: number,
+) => {
+  const targets: number[] = [];
+
+  if (typeof accessTokenExpires === 'number') {
+    targets.push(accessTokenExpires - ACCESS_TOKEN_REFRESH_BUFFER_MS);
+  }
+
+  if (typeof refreshTokenExpires === 'number') {
+    targets.push(refreshTokenExpires - REFRESH_TOKEN_REFRESH_BUFFER_MS);
+  }
+
+  if (targets.length === 0) {
+    return null;
+  }
+
+  const nextTarget = Math.min(...targets);
+  return Math.max(nextTarget - Date.now(), MIN_REFRESH_DELAY_MS);
+};
 
 const SessionHeartbeat = () => {
   const { data: session, status } = useSession();
+  const logoutRequestedRef = useRef(false);
 
   useEffect(() => {
-    if (status !== 'authenticated' || session?.error) {
+    if (status !== 'authenticated') {
       return undefined;
     }
 
-    const initialExpiresAt = session?.user?.accessTokenExpires;
-    if (typeof initialExpiresAt !== 'number') {
+    if (session?.error) {
+      if (!logoutRequestedRef.current) {
+        logoutRequestedRef.current = true;
+        void signOut({ callbackUrl: themeConfig.signOutUrl });
+      }
       return undefined;
     }
 
     let cancelled = false;
     let timeoutId: ReturnType<typeof window.setTimeout> | null = null;
 
-    const scheduleRefresh = (expiresAt: number) => {
+    const scheduleRefresh = (
+      accessTokenExpires?: number,
+      refreshTokenExpires?: number,
+    ) => {
       if (cancelled) {
         return;
       }
@@ -31,10 +62,18 @@ const SessionHeartbeat = () => {
         window.clearTimeout(timeoutId);
       }
 
-      const delay = Math.max(
-        expiresAt - Date.now() - SESSION_REFRESH_BUFFER_MS,
-        MIN_REFRESH_DELAY_MS,
+      const delay = getNextRefreshDelay(
+        accessTokenExpires,
+        refreshTokenExpires,
       );
+
+      if (delay === null) {
+        if (!logoutRequestedRef.current) {
+          logoutRequestedRef.current = true;
+          void signOut({ callbackUrl: themeConfig.signOutUrl });
+        }
+        return;
+      }
 
       timeoutId = window.setTimeout(async () => {
         if (cancelled) {
@@ -43,24 +82,54 @@ const SessionHeartbeat = () => {
 
         try {
           const refreshedSession = await getSession();
-          const refreshedExpiresAt = refreshedSession?.user?.accessTokenExpires;
 
           if (cancelled) {
             return;
           }
 
-          if (typeof refreshedExpiresAt === 'number') {
-            scheduleRefresh(refreshedExpiresAt);
+          if (!refreshedSession) {
+            logoutRequestedRef.current = true;
+            void signOut({ callbackUrl: themeConfig.signOutUrl });
+            return;
           }
+
+          if (refreshedSession?.error) {
+            logoutRequestedRef.current = true;
+            void signOut({ callbackUrl: themeConfig.signOutUrl });
+            return;
+          }
+
+          const refreshedAccessTokenExpires =
+            refreshedSession?.user?.accessTokenExpires;
+          const refreshedRefreshTokenExpires =
+            refreshedSession?.user?.refreshTokenExpires;
+
+          if (
+            typeof refreshedAccessTokenExpires === 'number' ||
+            typeof refreshedRefreshTokenExpires === 'number'
+          ) {
+            scheduleRefresh(
+              refreshedAccessTokenExpires,
+              refreshedRefreshTokenExpires,
+            );
+            return;
+          }
+
+          logoutRequestedRef.current = true;
+          void signOut({ callbackUrl: themeConfig.signOutUrl });
         } catch {
           if (!cancelled) {
-            scheduleRefresh(expiresAt);
+            logoutRequestedRef.current = true;
+            void signOut({ callbackUrl: themeConfig.signOutUrl });
           }
         }
       }, delay);
     };
 
-    scheduleRefresh(initialExpiresAt);
+    scheduleRefresh(
+      session?.user?.accessTokenExpires,
+      session?.user?.refreshTokenExpires,
+    );
 
     return () => {
       cancelled = true;
@@ -68,7 +137,12 @@ const SessionHeartbeat = () => {
         window.clearTimeout(timeoutId);
       }
     };
-  }, [session?.error, session?.user?.accessTokenExpires, status]);
+  }, [
+    session?.error,
+    session?.user?.accessTokenExpires,
+    session?.user?.refreshTokenExpires,
+    status,
+  ]);
 
   return null;
 };
