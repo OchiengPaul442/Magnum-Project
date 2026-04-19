@@ -184,9 +184,6 @@ const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
                   ? 'Deactivate vendor'
                   : 'Activate vendor'}
             </Button>
-            <span className="text-sm text-gray-500">
-              Status updates are sent to the school vendor endpoint.
-            </span>
           </div>
         </div>
 
