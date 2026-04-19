@@ -5,6 +5,7 @@ export const runtime = 'nodejs';
 
 const API_BASE_URL = process.env.MAGNUM_API_BASE_URL || '';
 const AUTH_SECRET = process.env.NEXTAUTH_SECRET || '';
+const EXPIRY_BUFFER_MS = 60 * 1000;
 
 const AUTH_SERVICE_ENDPOINTS = [
   'login',
@@ -115,13 +116,38 @@ const refreshAccessToken = async (refreshToken: string) => {
   const accessToken = data.token || data.access_token || data.accessToken;
   const nextRefreshToken =
     data.refresh_token || data.refreshToken || refreshToken;
+  const refreshTokenExpiresIn =
+    data.refresh_token_expires_in || data.refreshTokenExpiresIn || null;
+  const accessTokenExpiresIn =
+    data.access_token_expires_in ||
+    data.accessTokenExpiresIn ||
+    data.token_expires_in ||
+    data.expires_in ||
+    null;
 
   if (!accessToken) return null;
+
+  const accessAsNumber = Number(accessTokenExpiresIn);
+  const refreshAsNumber = Number(refreshTokenExpiresIn);
 
   return {
     accessToken,
     refreshToken: nextRefreshToken,
+    accessTokenExpires: Number.isFinite(accessAsNumber)
+      ? Date.now() + accessAsNumber * 1000
+      : undefined,
+    refreshTokenExpires: Number.isFinite(refreshAsNumber)
+      ? Date.now() + refreshAsNumber * 1000
+      : undefined,
   };
+};
+
+const isExpiringSoon = (expiresAt?: number, bufferMs = EXPIRY_BUFFER_MS) => {
+  if (typeof expiresAt !== 'number') {
+    return false;
+  }
+
+  return Date.now() >= expiresAt - bufferMs;
 };
 
 const forwardResponse = async (
@@ -168,7 +194,15 @@ const handleRequest = async (
   const token = await getToken({ req: request, secret: AUTH_SECRET });
   const accessToken = token?.accessToken as string | undefined;
   const refreshToken = token?.refreshToken as string | undefined;
+  const accessTokenExpires = token?.accessTokenExpires as number | undefined;
+  const refreshTokenExpires = token?.refreshTokenExpires as number | undefined;
   const tokenError = token?.error as string | undefined;
+  let refreshedToken: {
+    accessToken?: string;
+    refreshToken?: string;
+    accessTokenExpires?: number;
+    refreshTokenExpires?: number;
+  } | null = null;
 
   if (!isPublic) {
     if (!accessToken || tokenError) {
@@ -177,7 +211,19 @@ const handleRequest = async (
         { status: 401 },
       );
     }
-    headers.set('Authorization', `Token ${accessToken}`);
+
+    if (
+      refreshToken &&
+      (isExpiringSoon(accessTokenExpires) ||
+        isExpiringSoon(refreshTokenExpires))
+    ) {
+      refreshedToken = await refreshAccessToken(refreshToken);
+    }
+
+    headers.set(
+      'Authorization',
+      `Token ${refreshedToken?.accessToken || accessToken}`,
+    );
   }
 
   const hasBody = !['GET', 'HEAD'].includes(request.method);
@@ -191,7 +237,8 @@ const handleRequest = async (
   });
 
   if (!isPublic && response.status === 401 && refreshToken) {
-    const refreshed = await refreshAccessToken(refreshToken);
+    const refreshed =
+      refreshedToken || (await refreshAccessToken(refreshToken));
     if (refreshed?.accessToken) {
       headers.set('Authorization', `Token ${refreshed.accessToken}`);
       response = await fetch(targetUrl.toString(), {
@@ -206,6 +253,10 @@ const handleRequest = async (
           ...token,
           accessToken: refreshed.accessToken,
           refreshToken: refreshed.refreshToken,
+          accessTokenExpires:
+            refreshed.accessTokenExpires || token?.accessTokenExpires,
+          refreshTokenExpires:
+            refreshed.refreshTokenExpires || token?.refreshTokenExpires,
         };
         const encoded = await encode({
           token: updatedToken,
@@ -221,6 +272,31 @@ const handleRequest = async (
         return nextResponse;
       }
     }
+  }
+
+  if (!isPublic && refreshedToken?.accessToken && AUTH_SECRET) {
+    const cookieName = getCookieName();
+    const updatedToken = {
+      ...token,
+      accessToken: refreshedToken.accessToken,
+      refreshToken: refreshedToken.refreshToken,
+      accessTokenExpires:
+        refreshedToken.accessTokenExpires || token?.accessTokenExpires,
+      refreshTokenExpires:
+        refreshedToken.refreshTokenExpires || token?.refreshTokenExpires,
+    };
+    const encoded = await encode({
+      token: updatedToken,
+      secret: AUTH_SECRET,
+    });
+    const nextResponse = await forwardResponse(response);
+    nextResponse.cookies.set(cookieName, encoded, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: cookieName.startsWith('__Secure-'),
+      path: '/',
+    });
+    return nextResponse;
   }
 
   return forwardResponse(response);

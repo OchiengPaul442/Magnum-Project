@@ -7,11 +7,18 @@ export interface AuthUserPayload {
     last_name: string;
     email: string;
     user_category: string;
+    school?: {
+      id: string;
+      name: string;
+      address?: string | null;
+    };
   };
   first_time_login?: boolean;
   token: string;
   refresh_token?: string;
   refreshToken?: string;
+  access_token_expires_in?: number;
+  refresh_token_expires_in?: number;
 }
 
 export interface SignInResponse {
@@ -21,6 +28,8 @@ export interface SignInResponse {
   token?: string;
   refresh_token?: string;
   refreshToken?: string;
+  access_token_expires_in?: number;
+  refresh_token_expires_in?: number;
   user_data?: AuthUserPayload | { user_data?: AuthUserPayload };
 }
 

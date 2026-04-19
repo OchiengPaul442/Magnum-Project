@@ -9,6 +9,12 @@ declare module 'next-auth' {
     refreshToken?: string;
     first_time_login?: boolean;
     accessTokenExpires?: number;
+    refreshTokenExpires?: number;
+    school?: {
+      id: string;
+      name: string;
+      address?: string | null;
+    } | null;
   }
 
   interface Session extends DefaultSession {
@@ -19,6 +25,13 @@ declare module 'next-auth' {
       image?: string | null;
       userCategory?: string;
       first_time_login?: boolean;
+      accessTokenExpires?: number;
+      refreshTokenExpires?: number;
+      school?: {
+        id: string;
+        name: string;
+        address?: string | null;
+      } | null;
     };
     error?: string;
   }
@@ -32,6 +45,12 @@ declare module 'next-auth/jwt' {
     refreshToken?: string;
     first_time_login?: boolean;
     accessTokenExpires?: number;
+    refreshTokenExpires?: number;
+    school?: {
+      id: string;
+      name: string;
+      address?: string | null;
+    } | null;
     error?: string;
   }
 }

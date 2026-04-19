@@ -5,6 +5,8 @@ export const runtime = 'nodejs';
 
 const API_BASE_URL = process.env.MAGNUM_API_BASE_URL || '';
 const AUTH_SECRET = process.env.NEXTAUTH_SECRET || '';
+const DEFAULT_ACCESS_TOKEN_TTL_MS = 55 * 60 * 1000;
+const DEFAULT_REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const toApiBase = () => {
   if (!API_BASE_URL) {
@@ -53,18 +55,38 @@ const extractTokensFromResponse = (data: any) => {
     root?.expires_in ||
     null;
 
+  const refreshExpiresIn =
+    container?.refresh_token_expires_in ||
+    container?.refresh_token_expiresIn ||
+    root?.refresh_token_expires_in ||
+    root?.refresh_token_expiresIn ||
+    null;
+
   const asNumber = Number(expiresIn);
   const accessTokenExpires = Number.isFinite(asNumber)
     ? Date.now() + asNumber * 1000
-    : Date.now() + 55 * 60 * 1000;
+    : Date.now() + DEFAULT_ACCESS_TOKEN_TTL_MS;
+
+  const refreshAsNumber = Number(refreshExpiresIn);
+  const refreshTokenExpires = Number.isFinite(refreshAsNumber)
+    ? Date.now() + refreshAsNumber * 1000
+    : Date.now() + DEFAULT_REFRESH_TOKEN_TTL_MS;
 
   const userData = container?.user_data || container?.user || container || {};
+  const firstTimeLogin =
+    container?.first_time_login ??
+    container?.firstTimeLogin ??
+    root?.first_time_login ??
+    root?.firstTimeLogin ??
+    false;
 
   return {
     accessToken: String(accessToken || ''),
     refreshToken: refreshToken || null,
     accessTokenExpires,
+    refreshTokenExpires,
     userData,
+    firstTimeLogin: Boolean(firstTimeLogin),
   };
 };
 
@@ -89,8 +111,14 @@ export const POST = async (request: NextRequest) => {
     const data = await resp.json().catch(() => null);
 
     if (resp.ok && data) {
-      const { accessToken, refreshToken, accessTokenExpires, userData } =
-        extractTokensFromResponse(data);
+      const {
+        accessToken,
+        refreshToken,
+        accessTokenExpires,
+        refreshTokenExpires,
+        userData,
+        firstTimeLogin,
+      } = extractTokensFromResponse(data);
 
       if (!accessToken) {
         return NextResponse.json(data, { status: resp.status });
@@ -100,6 +128,7 @@ export const POST = async (request: NextRequest) => {
         accessToken,
         refreshToken,
         accessTokenExpires,
+        refreshTokenExpires,
         id: String(userData?.id || body.username || body.email || '0'),
         name:
           userData?.first_name && userData?.last_name
@@ -107,6 +136,9 @@ export const POST = async (request: NextRequest) => {
             : userData?.first_name || userData?.last_name || 'User',
         email: userData?.email || body.username || body.email || '',
         picture: userData?.user_profile_picture || null,
+        userCategory: userData?.user_category || '',
+        first_time_login: firstTimeLogin,
+        school: userData?.school || null,
       } as any;
 
       const cookieName = getCookieName();

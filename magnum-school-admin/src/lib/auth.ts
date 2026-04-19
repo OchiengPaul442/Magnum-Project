@@ -13,6 +13,7 @@ import type {
 
 const API_BASE_URL = process.env.MAGNUM_API_BASE_URL || '';
 const DEFAULT_ACCESS_TOKEN_TTL_MS = 55 * 60 * 1000;
+const DEFAULT_REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const EXPIRY_BUFFER_MS = 60 * 1000;
 
 const toApiBase = () => {
@@ -69,6 +70,35 @@ const getAccessTokenExpiry = (payload: unknown) => {
   return Date.now() + DEFAULT_ACCESS_TOKEN_TTL_MS;
 };
 
+const getRefreshTokenExpiry = (payload: unknown) => {
+  const root = isRecord(payload) ? payload : {};
+  const candidateSources = [
+    root,
+    isRecord(root.user_data) ? root.user_data : null,
+    isRecord(root.userData) ? root.userData : null,
+    isRecord(root.data) ? root.data : null,
+  ].filter(Boolean) as Record<string, unknown>[];
+
+  for (const source of candidateSources) {
+    const expiresIn =
+      source.refresh_token_expires_in ||
+      source.refreshTokenExpiresIn ||
+      source.refresh_expires_in ||
+      source.refreshExpiresIn;
+
+    if (!expiresIn) {
+      continue;
+    }
+
+    const asNumber = Number(expiresIn);
+    if (Number.isFinite(asNumber)) {
+      return Date.now() + asNumber * 1000;
+    }
+  }
+
+  return Date.now() + DEFAULT_REFRESH_TOKEN_TTL_MS;
+};
+
 const extractAuthPayload = (
   response: SignInResponse | VerifyOTPResponse | Record<string, unknown>,
 ): {
@@ -122,6 +152,7 @@ const buildAuthUser = (
 ): User => {
   const { userData, accessToken, refreshToken, firstTimeLogin } =
     extractAuthPayload(response);
+  const refreshTokenExpires = getRefreshTokenExpiry(response);
 
   if (!accessToken) {
     throw new Error(getResponseMessage(response) || 'Authentication failed');
@@ -142,6 +173,8 @@ const buildAuthUser = (
     refreshToken: refreshToken || undefined,
     first_time_login: firstTimeLogin,
     accessTokenExpires: getAccessTokenExpiry(response),
+    refreshTokenExpires,
+    school: userData?.school || null,
   } as User;
 };
 
@@ -172,6 +205,7 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
     }
 
     const { accessToken, refreshToken } = extractAuthPayload(data);
+    const refreshTokenExpires = getRefreshTokenExpiry(data);
     if (!accessToken) {
       return { ...token, error: 'RefreshAccessTokenError' };
     }
@@ -181,6 +215,7 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
       accessToken,
       refreshToken: refreshToken || token.refreshToken,
       accessTokenExpires: getAccessTokenExpiry(data),
+      refreshTokenExpires,
       error: undefined,
     };
   } catch {
@@ -308,19 +343,41 @@ export const authOptions: NextAuthOptions = {
         token.accessTokenExpires =
           (user as any).accessTokenExpires ||
           Date.now() + DEFAULT_ACCESS_TOKEN_TTL_MS;
+        token.refreshTokenExpires =
+          (user as any).refreshTokenExpires ||
+          Date.now() + DEFAULT_REFRESH_TOKEN_TTL_MS;
+        token.school = (user as any).school || null;
         token.error = undefined;
       }
 
-      if (token.error === 'RefreshAccessTokenError') {
+      if (
+        token.error === 'RefreshAccessTokenError' ||
+        token.error === 'RefreshTokenMissing' ||
+        token.error === 'RefreshTokenExpired'
+      ) {
         return token;
       }
 
-      if (!token.accessTokenExpires) {
+      if (!token.accessTokenExpires && !token.refreshTokenExpires) {
         return token;
       }
 
-      if (Date.now() < token.accessTokenExpires - EXPIRY_BUFFER_MS) {
+      const accessTokenNeedsRefresh =
+        typeof token.accessTokenExpires === 'number' &&
+        Date.now() >= token.accessTokenExpires - EXPIRY_BUFFER_MS;
+      const refreshTokenNeedsRefresh =
+        typeof token.refreshTokenExpires === 'number' &&
+        Date.now() >= token.refreshTokenExpires - EXPIRY_BUFFER_MS;
+
+      if (!accessTokenNeedsRefresh && !refreshTokenNeedsRefresh) {
         return token;
+      }
+
+      if (
+        typeof token.refreshTokenExpires === 'number' &&
+        Date.now() >= token.refreshTokenExpires
+      ) {
+        return { ...token, error: 'RefreshTokenExpired' };
       }
 
       return refreshAccessToken(token as JWT);
@@ -333,6 +390,9 @@ export const authOptions: NextAuthOptions = {
         session.user.image = token.picture || null;
         session.user.userCategory = token.userCategory || '';
         session.user.first_time_login = token.first_time_login || false;
+        session.user.accessTokenExpires = token.accessTokenExpires;
+        session.user.refreshTokenExpires = token.refreshTokenExpires;
+        session.user.school = token.school || null;
       }
 
       if (token.error) {
