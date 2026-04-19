@@ -41,7 +41,8 @@ export default function PasswordField({
           type={visible ? "text" : "password"}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className="h-12 !rounded-full !border-gray-300 !bg-white pr-12 shadow-sm placeholder:text-gray-400 focus-visible:!ring-2 focus-visible:!ring-[#6f54c5]/20 focus-visible:!ring-offset-0"
+          className="h-12 !rounded-full !border-gray-300 !bg-white pr-12 shadow-sm placeholder:text-gray-400 focus-visible:!ring-2 focus-visible:!ring-primary focus-visible:!ring-offset-0"
+          clearable={false}
           {...registration}
         />
         <Button

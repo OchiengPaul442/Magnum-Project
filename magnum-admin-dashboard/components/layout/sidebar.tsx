@@ -153,7 +153,12 @@ export default function Sidebar({
         ))}
       </div>
 
-      <div className={cn("flex-none px-4 pb-4 pt-2", isCollapsed && "px-2")}>
+      <div
+        className={cn(
+          "flex-none px-4 pb-4 pt-2 border-t border-border/60",
+          isCollapsed && "px-2",
+        )}
+      >
         <div className="space-y-3">
           {isCollapsed ? (
             <Tooltip>

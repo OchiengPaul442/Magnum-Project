@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChevronsLeft, ChevronsRight, Menu } from "lucide-react";
+import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/shared/search-input";
@@ -18,7 +18,7 @@ export default function Topbar({
   onCollapseToggle,
 }: TopbarProps) {
   return (
-    <div className="flex h-16 items-center gap-3 border-0 bg-white px-4 sm:px-6">
+    <div className="flex h-16 items-center gap-3 border-b border-border/60 bg-white px-4 sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <Button
           variant="ghost"
@@ -33,14 +33,14 @@ export default function Topbar({
         <Button
           variant="ghost"
           size="icon"
-          className="hidden lg:inline-flex"
+          className="hidden lg:inline-flex hover:bg-[#18806B] hover:text-white transition-colors"
           onClick={onCollapseToggle}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
-            <ChevronsRight className="h-5 w-5" />
+            <ChevronRight className="h-5 w-5" />
           ) : (
-            <ChevronsLeft className="h-5 w-5" />
+            <ChevronLeft className="h-5 w-5" />
           )}
         </Button>
 
