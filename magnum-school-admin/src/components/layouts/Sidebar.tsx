@@ -123,14 +123,14 @@ const Sidebar: React.FC<SidebarProps> = ({
         ? 'mx-auto h-11 w-11 justify-center rounded-2xl px-0'
         : 'gap-3 rounded-xl px-3 py-2.5',
       active
-        ? 'bg-[#f0eef8] text-[#533E89] shadow-sm'
+        ? 'bg-[#f0eef8] text-[#18806B] shadow-sm'
         : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
     );
 
     const iconClassName = cn(
       'h-4 w-4 shrink-0 transition-colors',
       active
-        ? 'text-[#533E89]'
+        ? 'text-[#18806B]'
         : 'text-muted-foreground group-hover:text-foreground',
     );
 
