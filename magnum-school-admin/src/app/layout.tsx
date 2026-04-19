@@ -143,7 +143,7 @@ export default function RootLayout({
       <body className={`${lato.variable} antialiased overflow-hidden`}>
         <NextTopbar />
         <Suspense fallback={<Loading />}>{children}</Suspense>
-        <Toaster richColors position="bottom-right" />
+        <Toaster richColors={false} position="bottom-right" />
       </body>
     </html>
   );

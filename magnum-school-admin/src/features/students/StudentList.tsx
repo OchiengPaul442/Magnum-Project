@@ -20,7 +20,6 @@ import NoData from '@/components/shared/NoData';
 import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 
 import { getStudentData } from '@/services/students/service';
-import { StudentDataItem } from '@/types/student';
 import { useResourceData } from '@/lib/api/useResourceData';
 
 export default function StudentList() {

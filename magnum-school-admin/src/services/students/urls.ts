@@ -5,6 +5,7 @@ export const STUDENT_URLS = {
   ACTIVATE_STUDENT: '/activatestudent',
   DEACTIVATE_STUDENT: '/deactivatestudent',
   GET_STUDENT_DETAILS: '/getstudentdetails',
+  RESET_CARD_PIN: '/schoolresetcardpin',
 } as const;
 
 // Student service configuration

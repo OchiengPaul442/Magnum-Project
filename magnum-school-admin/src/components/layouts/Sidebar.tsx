@@ -112,33 +112,44 @@ const Sidebar: React.FC<SidebarProps> = ({
     const Icon = item.icon;
 
     return (
-      <Link
-        key={item.name}
-        href={item.path}
-        onClick={handleNavigate}
-        aria-label={item.name}
-        title={isCollapsed ? item.name : undefined}
-        aria-current={active ? 'page' : undefined}
-        className={cn(
-          'group flex items-center text-sm font-medium transition-colors',
-          isCollapsed
-            ? 'mx-auto h-11 w-11 justify-center rounded-2xl px-0'
-            : 'gap-3 rounded-xl px-3 py-2.5',
-          active
-            ? 'bg-[#f0eef8] text-[#0f766e] shadow-sm'
-            : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-        )}
-      >
-        <Icon
+      <div key={item.name} className="relative group">
+        <Link
+          href={item.path}
+          onClick={handleNavigate}
+          aria-label={item.name}
+          aria-current={active ? 'page' : undefined}
           className={cn(
-            'h-4 w-4 shrink-0 transition-colors',
+            'group flex items-center text-sm font-medium transition-colors',
+            isCollapsed
+              ? 'mx-auto h-11 w-11 justify-center rounded-2xl px-0'
+              : 'gap-3 rounded-xl px-3 py-2.5',
             active
-              ? 'text-[#0f766e]'
-              : 'text-muted-foreground group-hover:text-foreground',
+              ? 'bg-[#f0eef8] text-[#0f766e] shadow-sm'
+              : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
           )}
-        />
-        {!isCollapsed ? <span>{item.name}</span> : null}
-      </Link>
+        >
+          <Icon
+            className={cn(
+              'h-4 w-4 shrink-0 transition-colors',
+              active
+                ? 'text-[#0f766e]'
+                : 'text-muted-foreground group-hover:text-foreground',
+            )}
+          />
+          {!isCollapsed ? <span>{item.name}</span> : null}
+        </Link>
+
+        {/* Collapsed tooltip */}
+        {isCollapsed ? (
+          <div
+            role="tooltip"
+            aria-hidden={!isCollapsed}
+            className="sidebar-tooltip hidden group-hover:flex absolute left-full ml-3 top-1/2 -translate-y-1/2 whitespace-nowrap items-center px-3 py-2 bg-white border border-gray-200 rounded-md shadow-sm text-sm text-gray-800 z-50"
+          >
+            {item.name}
+          </div>
+        ) : null}
+      </div>
     );
   };
 

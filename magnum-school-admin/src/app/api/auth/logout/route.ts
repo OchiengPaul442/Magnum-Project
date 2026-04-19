@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { encode } from 'next-auth/jwt';
 
 export const runtime = 'nodejs';
 
 const API_BASE_URL = process.env.MAGNUM_API_BASE_URL || '';
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || '';
 
 const toApiBase = () => {
   if (!API_BASE_URL) {

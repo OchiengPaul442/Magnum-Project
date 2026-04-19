@@ -162,6 +162,14 @@ function createInstance(options: {
     withCredentials: false,
   });
 
+  // If this instance is for multipart/form-data uploads, hint the header.
+  if (multipart) {
+    // Let Axios set the proper multipart boundary; provide a hint to consumers.
+    // We add the header here to avoid the `multipart` variable being unused.
+    // Note: when sending FormData, browsers will set the Content-Type correctly.
+    instance.defaults.headers['Content-Type'] = 'multipart/form-data';
+  }
+
   // Requests are routed through same-origin API paths and rewritten server-side.
 
   instance.interceptors.response.use(

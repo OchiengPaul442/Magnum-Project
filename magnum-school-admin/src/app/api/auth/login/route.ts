@@ -96,7 +96,6 @@ const extractTokensFromResponse = (data: any) => {
 
 export const POST = async (request: NextRequest) => {
   try {
-    const base = toApiBase();
     const body = await request.json().catch(() => null);
 
     if (!body) {

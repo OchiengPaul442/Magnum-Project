@@ -79,3 +79,14 @@ export const getStudentDetails = async (body: { student_id: string }) => {
 
   return response.data;
 };
+
+export const resetCardPin = async (body: {
+  student_id: string;
+  card_serial_number: string;
+  new_card_pin: string;
+  reason: string;
+}) => {
+  const response = await studentService.post(STUDENT_URLS.RESET_CARD_PIN, body);
+
+  return response.data;
+};

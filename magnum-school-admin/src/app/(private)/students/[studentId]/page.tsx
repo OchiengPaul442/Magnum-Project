@@ -111,6 +111,8 @@ export default function StudentDetailsPage({
       card={studentData.card}
       transactions={studentData.transactions}
       parents={studentData.parents}
+      studentId={studentData.student.id || params.studentId}
+      onResetSuccess={() => mutate()}
       onClose={handleClose}
       onToggleStatus={handleToggleStatus}
       toggleLoading={toggleLoading}

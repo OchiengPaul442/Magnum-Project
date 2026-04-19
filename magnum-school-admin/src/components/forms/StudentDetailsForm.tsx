@@ -1,6 +1,7 @@
 import React from 'react';
 import { MdClose } from 'react-icons/md';
 import { CustomInputField, CustomButton } from '@/components/shared';
+import ResetCardPinDialog from '@/components/dialogs/reset-card-pin-dialog';
 import RecentTransactions, {
   Transaction,
 } from '@/features/students/RecentTransactions';
@@ -35,6 +36,8 @@ interface StudentDetailsFormProps {
   onClose?: () => void;
   onToggleStatus?: () => void;
   toggleLoading?: boolean;
+  studentId?: string;
+  onResetSuccess?: () => void;
 }
 
 const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
@@ -45,6 +48,8 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
   onClose,
   onToggleStatus,
   toggleLoading = false,
+  studentId,
+  onResetSuccess,
 }) => {
   const buttonText =
     student.status === 'active' ? 'Deactivate card' : 'Activate card';
@@ -66,6 +71,12 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Student Details</h2>
         <div className="flex items-center gap-4">
+          <ResetCardPinDialog
+            studentId={studentId || (student as any)?.id}
+            cardSerialNumber={card?.card_serial_number}
+            onSuccess={onResetSuccess}
+          />
+
           <CustomButton
             type="button"
             onClick={onToggleStatus}

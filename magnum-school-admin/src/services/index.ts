@@ -18,6 +18,7 @@ export {
   activateStudent,
   deactivateStudent,
   getStudentDetails,
+  resetCardPin,
 } from './students/service';
 
 // Re-export vendor functions
