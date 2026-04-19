@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { updateVendorEntityStatusBySchool } from '@/services/vendors/service';
+import ConfirmDialog from '@/components/dialogs/confirm-dialog';
 
 interface Operator {
   id: string;
@@ -49,7 +50,7 @@ const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
   const totalPages = Math.ceil(operators.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentOperators = operators.slice(startIdx, startIdx + ITEMS_PER_PAGE);
-  const canActivate = vendor?.status === 'Deactivated';
+  const isActivated = vendor?.status === 'Activated';
   const showPagination = totalPages > 1;
 
   const goToPage = (page: number) => {
@@ -58,7 +59,9 @@ const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
     setCurrentPage(page);
   };
 
-  const handleActivateVendor = async () => {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const performToggleVendorStatus = async () => {
     if (!vendor?.vendorEntityId) {
       showErrorToast(
         'Vendor entity id is missing.',
@@ -67,14 +70,17 @@ const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
       return;
     }
 
+    const currentlyActive = vendor.status === 'Activated';
+
     setIsUpdatingStatus(true);
     try {
       await updateVendorEntityStatusBySchool({
         vendor_entity_id: vendor.vendorEntityId,
-        new_status: 'active',
+        new_status: currentlyActive ? 'inactive' : 'active',
       });
 
-      showSuccessToast('Vendor activated successfully.');
+      const successMessage = `Vendor ${currentlyActive ? 'deactivated' : 'activated'} successfully.`;
+      showSuccessToast(successMessage);
       await onStatusUpdated?.();
     } catch (error) {
       showErrorToast(error, 'Unable to update vendor status right now.');
@@ -159,16 +165,25 @@ const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            {canActivate ? (
-              <Button
-                type="button"
-                onClick={() => void handleActivateVendor()}
-                disabled={isUpdatingStatus}
-                className="rounded-full !bg-[#18806B] px-5 !text-white hover:!bg-[#146b59]"
-              >
-                {isUpdatingStatus ? 'Activating...' : 'Activate vendor'}
-              </Button>
-            ) : null}
+            {(() => null)()}
+            <Button
+              type="button"
+              onClick={() => {
+                setConfirmOpen(true);
+              }}
+              disabled={isUpdatingStatus}
+              className={
+                isActivated
+                  ? 'rounded-full !bg-red-600 px-5 !text-white hover:!bg-red-700'
+                  : 'rounded-full !bg-[#18806B] px-5 !text-white hover:!bg-[#146b59]'
+              }
+            >
+              {isUpdatingStatus
+                ? 'Updating...'
+                : isActivated
+                  ? 'Deactivate vendor'
+                  : 'Activate vendor'}
+            </Button>
             <span className="text-sm text-gray-500">
               Status updates are sent to the school vendor endpoint.
             </span>
@@ -306,6 +321,15 @@ const VendorDetailsForm: React.FC<VendorDetailsFormProps> = ({
           </div>
         ) : null}
       </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Confirm ${isActivated ? 'deactivation' : 'activation'}`}
+        description={`Are you sure you want to ${isActivated ? 'deactivate' : 'activate'} this vendor?`}
+        confirmLabel={isActivated ? 'Deactivate' : 'Activate'}
+        confirmVariant={isActivated ? 'destructive' : 'secondary'}
+        onConfirm={performToggleVendorStatus}
+      />
     </div>
   );
 };

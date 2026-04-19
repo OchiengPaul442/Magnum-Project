@@ -14,13 +14,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
+import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
+import ConfirmDialog from '@/components/dialogs/confirm-dialog';
 import ErrorState from '@/components/shared/ErrorState';
 import NoData from '@/components/shared/NoData';
-import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 import { useResourceData } from '@/lib/api/useResourceData';
 
-import { getVendorData } from '@/services/vendors/service';
+import {
+  getVendorData,
+  updateVendorEntityStatusBySchool,
+} from '@/services/vendors/service';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { VendorDataItem } from '@/types/vendors';
 
 export default function VendorPage() {
@@ -34,6 +38,11 @@ export default function VendorPage() {
     isLoading,
     mutate,
   } = useResourceData('vendors:list', getVendorData);
+
+  const [updatingVendorId, setUpdatingVendorId] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmVendorId, setConfirmVendorId] = useState<string | null>(null);
+  const [confirmIsActive, setConfirmIsActive] = useState<boolean | null>(null);
 
   const handleRetry = () => {
     void mutate();
@@ -126,6 +135,16 @@ export default function VendorPage() {
             >
               View Details
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setConfirmVendorId(String(row.id));
+                setConfirmIsActive(row.status === 'Activated');
+                setConfirmOpen(true);
+              }}
+              disabled={updatingVendorId === String(row.id)}
+            >
+              {row.status === 'Activated' ? 'Deactivate' : 'Activate'}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -176,8 +195,40 @@ export default function VendorPage() {
     }
   };
 
+  const handleConfirmPerformToggle = async () => {
+    if (!confirmVendorId) return;
+    const isActive = !!confirmIsActive;
+
+    setUpdatingVendorId(String(confirmVendorId));
+    try {
+      await updateVendorEntityStatusBySchool({
+        vendor_entity_id: String(confirmVendorId),
+        new_status: isActive ? 'inactive' : 'active',
+      });
+      const successMessage = `Vendor ${isActive ? 'deactivated' : 'activated'} successfully.`;
+      showSuccessToast(successMessage);
+      await mutate();
+    } catch (err: any) {
+      console.error(err);
+      showErrorToast(err, 'Unable to update vendor status.');
+    } finally {
+      setUpdatingVendorId(null);
+      setConfirmVendorId(null);
+      setConfirmIsActive(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Confirm ${confirmIsActive ? 'deactivation' : 'activation'}`}
+        description={`Are you sure you want to ${confirmIsActive ? 'deactivate' : 'activate'} this vendor?`}
+        confirmLabel={confirmIsActive ? 'Deactivate' : 'Activate'}
+        confirmVariant={confirmIsActive ? 'destructive' : 'secondary'}
+        onConfirm={handleConfirmPerformToggle}
+      />
       <div className="flex justify-between items-center bg-white rounded-lg p-4 shadow-sm">
         <div className="flex items-center gap-4">
           <span className="text-sm font-bold text-gray-700">Filters:</span>
