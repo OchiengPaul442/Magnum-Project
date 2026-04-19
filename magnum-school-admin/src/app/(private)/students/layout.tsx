@@ -1,10 +1,9 @@
-import type { ChildrenType } from '@core/types';
-import { StudentsProvider } from '@/contexts/StudentsContext';
+import type { ChildrenType } from '@/types/shared';
 
 const Layout = async (props: ChildrenType) => {
   const { children } = props;
 
-  return <StudentsProvider>{children}</StudentsProvider>;
+  return <>{children}</>;
 };
 
 export default Layout;

@@ -1,0 +1,2784 @@
+{
+  "info": {
+    "_postman_id": "4ec538f9-0c6e-4394-a0ee-9004debf6188",
+    "name": "Magnum API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "21261724",
+    "_collection_link": "https://go.postman.co/collection/21261724-4ec538f9-0c6e-4394-a0ee-9004debf6188?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "App APIs",
+      "item": [
+        {
+          "name": "Auth",
+          "item": [
+            {
+              "name": "Register Parent Personnel",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstname\": \"Test\",\n  \"lastname\": \"User\",\n  \"email\": \"{{username}}\",\n  \"contact\": \"{{contact}}\",\n  \"password\": \"{{password}}\",\n  \"password2\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/register/parent/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "register", "parent", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activate Account",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{username}}\",\n  \"otp\": \"{{otp}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/activateaccount/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "activateaccount", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Login As Parent Or Vendor",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\",\n  \"login_pin\": \"{{login_pin}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/login/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "login", ""]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "let jsonData = {};",
+                      "try { jsonData = pm.response.json(); } catch (error) { jsonData = {}; }",
+                      "const responseData = jsonData.user_data || jsonData;",
+                      "const token = responseData.token || jsonData.token;",
+                      "const refreshToken = responseData.refresh_token || jsonData.refresh_token;",
+                      "if (token) {",
+                      "  pm.environment.set(\"token\", token);",
+                      "  pm.collectionVariables.set(\"token\", token);",
+                      "}",
+                      "if (refreshToken) {",
+                      "  pm.environment.set(\"refresh_token\", refreshToken);",
+                      "  pm.collectionVariables.set(\"refresh_token\", refreshToken);",
+                      "}",
+                      "pm.test(\"Auth response is usable\", function () {",
+                      "  if (jsonData.requires_otp) {",
+                      "    pm.expect(jsonData.requires_otp).to.eql(true);",
+                      "  } else {",
+                      "    pm.expect(token, \"token\").to.be.a(\"string\").and.not.empty;",
+                      "    pm.expect(refreshToken, \"refresh_token\").to.be.a(\"string\").and.not.empty;",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Forgot Password",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{username}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/forgotpassword/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "forgotpassword", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Reset Password",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{username}}\",\n  \"otp\": \"{{otp}}\",\n  \"new_password\": \"{{new_password}}\",\n  \"confirm_password\": \"{{new_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/resetpassword/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "resetpassword", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Change Password",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"old_password\": \"{{password}}\",\n  \"new_password\": \"{{new_password}}\",\n  \"confirm_password\": \"{{new_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/changepassword/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "changepassword", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Resend OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "",
+                    "type": "text",
+                    "disabled": true
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{username}}\",\n  \"purpose\": \"login\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/resendotp/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "resendotp", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Set Login Pin",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{username}}\",\n  \"new_login_pin\": \"{{login_pin}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/setloginpin/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "setloginpin", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Request Login Pin Reset",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{username}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/requestloginpinreset/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "requestloginpinreset", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Reset Login Pin",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{username}}\",\n  \"otp\": \"{{otp}}\",\n  \"new_login_pin\": \"{{login_pin}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/resetloginpin/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "resetloginpin", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Refresh Token",
+              "description": "Refresh Knox access after a 401 or before expiry. Refresh tokens are one-time and sliding: a successful response returns a new access token plus a new refresh_token valid for another 7 days. Save both returned values and do not run parallel refresh calls with the same refresh_token.",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/refreshtoken/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "refreshtoken", ""]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "let jsonData = {};",
+                      "try { jsonData = pm.response.json(); } catch (error) { jsonData = {}; }",
+                      "const responseData = jsonData.user_data || jsonData;",
+                      "const token = responseData.token || jsonData.token;",
+                      "const refreshToken = responseData.refresh_token || jsonData.refresh_token;",
+                      "const previousRefreshToken = pm.environment.get(\"refresh_token\");",
+                      "if (token) {",
+                      "  pm.environment.set(\"token\", token);",
+                      "  pm.collectionVariables.set(\"token\", token);",
+                      "}",
+                      "if (refreshToken) {",
+                      "  pm.environment.set(\"refresh_token\", refreshToken);",
+                      "  pm.collectionVariables.set(\"refresh_token\", refreshToken);",
+                      "}",
+                      "pm.test(\"Auth response is usable\", function () {",
+                      "  if (jsonData.requires_otp) {",
+                      "    pm.expect(jsonData.requires_otp).to.eql(true);",
+                      "  } else {",
+                      "    pm.expect(token, \"token\").to.be.a(\"string\").and.not.empty;",
+                      "    pm.expect(refreshToken, \"refresh_token\").to.be.a(\"string\").and.not.empty;",
+                      "  }",
+                      "});",
+                      "pm.test(\"Refresh token rotates on success\", function () {",
+                      "  if (pm.response.code === 200 && previousRefreshToken) {",
+                      "    pm.expect(refreshToken, \"rotated refresh_token\").to.not.eql(previousRefreshToken);",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "response": []
+            },
+            {
+              "name": "Logout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/logout/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "logout", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Logout All",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/logoutall/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "logoutall", ""]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Parent",
+          "item": [
+            {
+              "name": "Attach Student To Parent",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"card_number\": \"{{card_number}}\",\n  \"relation\": \"Guardian\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/attachstudenttoparent/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "attachstudenttoparent", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Students Under Parent",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getstudentsunderparent/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getstudentsunderparent", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get User Profile",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getuserprofile/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getuserprofile", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get All User Transactions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getallusertransactions/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getallusertransactions", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update User Profile",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstname\": \"Test\",\n  \"lastname\": \"User\",\n  \"email\": \"{{username}}\",\n  \"contact\": \"{{contact}}\",\n  \"user_national_id_or_passport\": \"{{national_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/updateuserprofile/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "updateuserprofile", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Student Details By Parent",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"student_id\": \"{{student_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getstudentdetails/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getstudentdetails", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Parent's Students",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getstudentsunderparent/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getstudentsunderparent", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Set Student Transaction Limit",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"student_id\": \"{{student_id}}\",\n  \"transaction_limit\": \"2500\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/setstudenttransactionlimit/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "setstudenttransactionlimit", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Set Student Limit",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"student_id\": \"{{student_id}}\",\n  \"transaction_limit\": \"25000\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/setstudenttransactionlimit/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "setstudenttransactionlimit", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Transfer From Parent To Student",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"student_id\": \"{{student_id}}\",\n  \"amount\": \"{{amount}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/transferfromparenttostudent/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "transferfromparenttostudent", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Deactivate Card",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"card_number\": \"{{card_number}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/deactivatecard/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "deactivatecard", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activate Card",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"card_number\": \"{{card_number}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/activatecard/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "activatecard", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Parent Account Top-Up",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"transaction_id\": \"{{payment_transaction_id}}\",\n  \"amount\": \"{{amount}}\",\n  \"currency\": \"UGX\",\n  \"transaction_reference\": \"{{payment_transaction_reference}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/parentaccounttopup/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "parentaccounttopup", ""]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Vendor",
+          "item": [
+            {
+              "name": "Transfer From Student To Vendor",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"card_serial_number\": \"{{card_serial_number}}\",\n  \"card_pin\": \"{{card_pin}}\",\n  \"amount\": \"{{amount}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/transferfromstudenttovendor/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "transferfromstudenttovendor", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Onboard Vendor With Operator",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{username}}\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"contact\": \"{{contact}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/onboardoperatorbyowner/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "onboardoperatorbyowner", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Add Vendor Item",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"item_name\": \"{{item_name}}\",\n  \"item_category\": \"food\",\n  \"unit_of_measurement\": \"piece\",\n  \"unit_price\": \"{{unit_price}}\",\n  \"_comment_item_category_choices\": [\n    \"food\",\n    \"drink\",\n    \"supply\",\n    \"stationery\",\n    \"other\"\n  ],\n  \"_comment_unit_of_measurement_choices\": [\n    \"piece\",\n    \"kg\",\n    \"litre\",\n    \"box\",\n    \"other\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/addvendoritem/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "addvendoritem", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Vendor Item",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"item_name\": \"{{item_name}}\",\n  \"item_category\": \"food\",\n  \"unit_of_measurement\": \"piece\",\n  \"unit_price\": \"{{unit_price}}\",\n  \"_comment_item_category_choices\": [\n    \"food\",\n    \"drink\",\n    \"supply\",\n    \"stationery\",\n    \"other\"\n  ],\n  \"_comment_unit_of_measurement_choices\": [\n    \"piece\",\n    \"kg\",\n    \"litre\",\n    \"box\",\n    \"other\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/updatevendoritem/{{item_id}}/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "updatevendoritem", "{{item_id}}", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Vendor Items",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getvendoritems/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getvendoritems", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Record Vendor Sale",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"card_serial_number\": \"{{card_serial_number}}\",\n  \"card_pin\": \"{{card_pin}}\",\n  \"items\": [\n    {\n      \"item_id\": \"{{item_id}}\",\n      \"quantity\": 1\n    },\n    {\n      \"item_id\": \"{{item_id}}\",\n      \"quantity\": 1\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/recordvendorsale/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "recordvendorsale", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Today Vendor Sales",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/gettodayvendorsales/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "gettodayvendorsales", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Vendor Sales Performance Analytics",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getvendorsalesperformanceanalytics/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getvendorsalesperformanceanalytics", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Login As Parent Or Vendor Copy",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\",\n  \"login_pin\": \"{{login_pin}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/login/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "login", ""]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "let jsonData = {};",
+                      "try { jsonData = pm.response.json(); } catch (error) { jsonData = {}; }",
+                      "const responseData = jsonData.user_data || jsonData;",
+                      "const token = responseData.token || jsonData.token;",
+                      "const refreshToken = responseData.refresh_token || jsonData.refresh_token;",
+                      "if (token) {",
+                      "  pm.environment.set(\"token\", token);",
+                      "  pm.collectionVariables.set(\"token\", token);",
+                      "}",
+                      "if (refreshToken) {",
+                      "  pm.environment.set(\"refresh_token\", refreshToken);",
+                      "  pm.collectionVariables.set(\"refresh_token\", refreshToken);",
+                      "}",
+                      "pm.test(\"Auth response is usable\", function () {",
+                      "  if (jsonData.requires_otp) {",
+                      "    pm.expect(jsonData.requires_otp).to.eql(true);",
+                      "  } else {",
+                      "    pm.expect(token, \"token\").to.be.a(\"string\").and.not.empty;",
+                      "    pm.expect(refreshToken, \"refresh_token\").to.be.a(\"string\").and.not.empty;",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Web APIs",
+      "item": [
+        {
+          "name": "Auth",
+          "item": [
+            {
+              "name": "Login Either As School Personnel Or As Admin Personnel",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/login/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "login", ""]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "let jsonData = {};",
+                      "try { jsonData = pm.response.json(); } catch (error) { jsonData = {}; }",
+                      "const responseData = jsonData.user_data || jsonData;",
+                      "const token = responseData.token || jsonData.token;",
+                      "const refreshToken = responseData.refresh_token || jsonData.refresh_token;",
+                      "if (token) {",
+                      "  pm.environment.set(\"token\", token);",
+                      "  pm.collectionVariables.set(\"token\", token);",
+                      "}",
+                      "if (refreshToken) {",
+                      "  pm.environment.set(\"refresh_token\", refreshToken);",
+                      "  pm.collectionVariables.set(\"refresh_token\", refreshToken);",
+                      "}",
+                      "pm.test(\"Auth response is usable\", function () {",
+                      "  if (jsonData.requires_otp) {",
+                      "    pm.expect(jsonData.requires_otp).to.eql(true);",
+                      "  } else {",
+                      "    pm.expect(token, \"token\").to.be.a(\"string\").and.not.empty;",
+                      "    pm.expect(refreshToken, \"refresh_token\").to.be.a(\"string\").and.not.empty;",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Get User Profile",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getuserprofile/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getuserprofile", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update User Profile",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "first_name",
+                      "value": "Test",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "last_name",
+                      "value": "User",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "email",
+                      "value": "{{username}}",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "contact",
+                      "value": "{{contact}}",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "user_profile_picture",
+                      "type": "file",
+                      "uuid": "1ed58491-07a8-40d8-bc15-e4df1c72cca4",
+                      "src": "postman-cloud:///1eebd073-08f1-4c10-a28e-391d4447d909"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/updateuserprofile/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "updateuserprofile", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Verify OTP",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{username}}\",\n  \"one_time_pin\": \"{{otp}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/verifyotp/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "verifyotp", ""]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "let jsonData = {};",
+                      "try { jsonData = pm.response.json(); } catch (error) { jsonData = {}; }",
+                      "const responseData = jsonData.user_data || jsonData;",
+                      "const token = responseData.token || jsonData.token;",
+                      "const refreshToken = responseData.refresh_token || jsonData.refresh_token;",
+                      "if (token) {",
+                      "  pm.environment.set(\"token\", token);",
+                      "  pm.collectionVariables.set(\"token\", token);",
+                      "}",
+                      "if (refreshToken) {",
+                      "  pm.environment.set(\"refresh_token\", refreshToken);",
+                      "  pm.collectionVariables.set(\"refresh_token\", refreshToken);",
+                      "}",
+                      "pm.test(\"OTP verification saves tokens\", function () {",
+                      "  pm.expect(token, \"token\").to.be.a(\"string\").and.not.empty;",
+                      "  pm.expect(refreshToken, \"refresh_token\").to.be.a(\"string\").and.not.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Refresh Token",
+              "description": "Dashboard/web refresh flow. Refresh tokens are one-time and sliding: a successful response returns a new Knox access token plus a new refresh_token valid for another 7 days. Save both returned values and do not run parallel refresh calls with the same refresh_token.",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/refreshtoken/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "refreshtoken", ""]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "let jsonData = {};",
+                      "try { jsonData = pm.response.json(); } catch (error) { jsonData = {}; }",
+                      "const responseData = jsonData.user_data || jsonData;",
+                      "const token = responseData.token || jsonData.token;",
+                      "const refreshToken = responseData.refresh_token || jsonData.refresh_token;",
+                      "const previousRefreshToken = pm.environment.get(\"refresh_token\");",
+                      "if (token) {",
+                      "  pm.environment.set(\"token\", token);",
+                      "  pm.collectionVariables.set(\"token\", token);",
+                      "}",
+                      "if (refreshToken) {",
+                      "  pm.environment.set(\"refresh_token\", refreshToken);",
+                      "  pm.collectionVariables.set(\"refresh_token\", refreshToken);",
+                      "}",
+                      "pm.test(\"Auth response is usable\", function () {",
+                      "  if (jsonData.requires_otp) {",
+                      "    pm.expect(jsonData.requires_otp).to.eql(true);",
+                      "  } else {",
+                      "    pm.expect(token, \"token\").to.be.a(\"string\").and.not.empty;",
+                      "    pm.expect(refreshToken, \"refresh_token\").to.be.a(\"string\").and.not.empty;",
+                      "  }",
+                      "});",
+                      "pm.test(\"Refresh token rotates on success\", function () {",
+                      "  if (pm.response.code === 200 && previousRefreshToken) {",
+                      "    pm.expect(refreshToken, \"rotated refresh_token\").to.not.eql(previousRefreshToken);",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "response": []
+            },
+            {
+              "name": "Logout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/logout/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "logout", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Logout All",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/logoutall/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "logoutall", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Change Password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"old_password\": \"{{password}}\",\n  \"new_password\": \"{{new_password}}\",\n  \"confirm_password\": \"{{new_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/changepassword/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "changepassword", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Forgot Password",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{username}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/forgotpassword/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "forgotpassword", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Reset Password",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{username}}\",\n  \"otp\": \"{{otp}}\",\n  \"new_password\": \"{{new_password}}\",\n  \"confirm_password\": \"{{new_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/resetpassword/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "resetpassword", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Resend OTP",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{username}}\",\n  \"purpose\": \"login\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/resendotp/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "resendotp", ""]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "School Dashboard APIs",
+          "item": [
+            {
+              "name": "Get Students Under School",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getstudentsunderschool/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getstudentsunderschool", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Deactivate Student",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"student_id\": \"{{student_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/deactivatestudent/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "deactivatestudent", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get School Dashboard Data",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getschooldashboarddata/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getschooldashboarddata", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activate Student",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"student_id\": \"{{student_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/activatestudent/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "activatestudent", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Register Student",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"student\": {\n    \"ssid\": \"{{student_school_id}}\",\n    \"student_first_name\": \"Test\",\n    \"student_last_name\": \"Student\",\n    \"student_dob\": \"2010-01-01\"\n  },\n  \"card_number\": \"{{card_number}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/registerstudent/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "registerstudent", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Student Details By School",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"student_id\": \"{{student_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getstudentdetails/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getstudentdetails", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Onboard Vendor With Owner",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"vendor_name\": \"{{vendor_name}}\",\n  \"school_id\": \"{{school_id}}\",\n  \"owner_email\": \"{{vendor_owner_email}}\",\n  \"owner_first_name\": \"John\",\n  \"owner_last_name\": \"Kasaija\",\n  \"contact\": \"{{contact}}\",\n  \"national_id\": \"{{national_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/onboardvendorwithowner/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "onboardvendorwithowner", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Vendor Entities Under School",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getvendorentitiesunderschool/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getvendorentitiesunderschool", ""]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Vendor Entity Details By School",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/getvendorentitydetailsbyschool/?vendor_entity_id={{vendor_entity_id}}",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "getvendorentitydetailsbyschool", ""],
+                  "query": [
+                    {
+                      "key": "vendor_entity_id",
+                      "value": "{{vendor_entity_id}}"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Vendor Entity Status By School",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"vendor_entity_id\": \"{{vendor_entity_id}}\",\n  \"new_status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{stg_base_url}}/api/updatevendorentitystatusbyschool/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "updatevendorentitystatusbyschool", ""]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Admin Dashboard APIs",
+          "item": [
+            {
+              "name": "Get Admin Dashboard Overview",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/dashboard/overview/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "dashboard", "overview"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Schools",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/schools/?search=&status=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "schools",
+                    "?search=&status=&page=1&page_size=25"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get School Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/schools/{{school_id}}/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "schools", "{{school_id}}"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update School Status",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/schools/{{school_id}}/status/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "schools", "{{school_id}}", "status"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Students",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/students/?search=&status=&school_id=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "students",
+                    "?search=&status=&school_id=&page=1&page_size=25"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Student Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/students/{{student_id}}/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "students", "{{student_id}}"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Student Status",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/students/{{student_id}}/status/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "students",
+                    "{{student_id}}",
+                    "status"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Parents",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/parents/?search=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "parents",
+                    "?search=&page=1&page_size=25"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Parent Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/parents/{{parent_profile_id}}/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "parents", "{{parent_profile_id}}"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Vendors",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/vendors/?search=&status=&school_id=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "vendors",
+                    "?search=&status=&school_id=&page=1&page_size=25"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Vendor Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/vendors/{{vendor_entity_id}}/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "vendors", "{{vendor_entity_id}}"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Vendor Status",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/vendors/{{vendor_entity_id}}/status/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "vendors",
+                    "{{vendor_entity_id}}",
+                    "status"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Cards",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/cards/?search=&status=&school_id=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "cards",
+                    "?search=&status=&school_id=&page=1&page_size=25"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Card Status",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/cards/{{card_id}}/status/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "cards", "{{card_id}}", "status"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Transactions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/transactions/?search=&status=&school_id=&date_from=&date_to=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "transactions",
+                    "?search=&status=&school_id=&date_from=&date_to=&page=1&page_size=25"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Transaction Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/transactions/{{transaction_id}}/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "transactions", "{{transaction_id}}"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Sales",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/sales/?search=&school_id=&vendor_id=&date_from=&date_to=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "sales",
+                    "?search=&school_id=&vendor_id=&date_from=&date_to=&page=1&page_size=25"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Activity Logs",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/activitylogs/?search=&date_from=&date_to=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "activitylogs",
+                    "?search=&date_from=&date_to=&page=1&page_size=25"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Admin Users",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/users/?search=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "users",
+                    "?search=&page=1&page_size=25"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Admin Groups And Permissions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/groups-permissions/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "groups-permissions"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Admin User Roles",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/users/{{admin_user_id}}/roles/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "users",
+                    "{{admin_user_id}}",
+                    "roles"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"groups\": [\n    \"Support Auditor\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Onboard School",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/onboardschoolwithmainbursar/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "onboardschoolwithmainbursar"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"school_name\": \"{{school_name}}\",\n  \"school_address\": \"{{school_address}}\",\n  \"first_name\": \"School\",\n  \"last_name\": \"Admin\",\n  \"email\": \"{{school_user_email}}\",\n  \"contact\": \"{{contact}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Items",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/items/?search=&school_id=&vendor_id=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "items"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Item Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/items/{{item_id}}/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "items", "{{item_id}}"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Sale Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/sales/{{sale_id}}/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "sales", "{{sale_id}}"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Student Accounts",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/student-accounts/?search=&school_id=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "student-accounts"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Student Account Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/student-accounts/{{student_account_id}}/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "student-accounts",
+                    "{{student_account_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Recalculate Student Account",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/student-accounts/{{student_account_id}}/recalculate/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "student-accounts",
+                    "{{student_account_id}}",
+                    "recalculate"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List User Accounts",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/user-accounts/?search=&user_category=&school_id=&vendor_id=&page=1&page_size=25",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "user-accounts"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get User Account Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/user-accounts/{{user_account_id}}/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "user-accounts",
+                    "{{user_account_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Recalculate User Account",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/user-accounts/{{user_account_id}}/recalculate/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": [
+                    "api",
+                    "admin",
+                    "user-accounts",
+                    "{{user_account_id}}",
+                    "recalculate"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Inventory Card",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/cards/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "cards"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"card_number\": \"{{new_card_number}}\",\n  \"card_serial_number\": \"{{new_card_serial_number}}\",\n  \"card_pin\": \"{{card_pin}}\",\n  \"expiration_date\": \"2031-01-01\",\n  \"status\": \"pending\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Card Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/cards/{{card_id}}/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "cards", "{{card_id}}"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Bulk Import Cards CSV",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/cards/bulk-import/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "cards", "bulk-import"]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "{{card_import_file}}"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Assign Card To Student",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/cards/{{card_id}}/assign/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "cards", "{{card_id}}", "assign"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"student_id\": \"{{student_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Replace Student Card",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{stg_base_url}}/api/admin/cards/{{card_id}}/replace/",
+                  "host": ["{{stg_base_url}}"],
+                  "path": ["api", "admin", "cards", "{{card_id}}", "replace"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"new_card_id\": \"{{new_card_id}}\",\n  \"reason\": \"Damaged card\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "prod_base_url",
+      "value": ""
+    },
+    {
+      "key": "stg_base_url",
+      "value": ""
+    },
+    {
+      "key": "local_base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "login_pin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "otp",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "parent_email",
+      "value": "parent@example.test",
+      "type": "string"
+    },
+    {
+      "key": "vendor_owner_email",
+      "value": "vendor.owner@example.test",
+      "type": "string"
+    },
+    {
+      "key": "school_user_email",
+      "value": "school.user@example.test",
+      "type": "string"
+    },
+    {
+      "key": "contact",
+      "value": "256700000000",
+      "type": "string"
+    },
+    {
+      "key": "national_id",
+      "value": "TEST-ID-001",
+      "type": "string"
+    },
+    {
+      "key": "school_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "school_name",
+      "value": "Demo School",
+      "type": "string"
+    },
+    {
+      "key": "school_address",
+      "value": "Kampala",
+      "type": "string"
+    },
+    {
+      "key": "student_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "student_school_id",
+      "value": "STD-001",
+      "type": "string"
+    },
+    {
+      "key": "card_number",
+      "value": "4000000000000000",
+      "type": "string"
+    },
+    {
+      "key": "card_serial_number",
+      "value": "CARD-001",
+      "type": "string"
+    },
+    {
+      "key": "card_pin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vendor_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vendor_entity_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vendor_name",
+      "value": "Demo Canteen",
+      "type": "string"
+    },
+    {
+      "key": "item_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "item_name",
+      "value": "Lunch",
+      "type": "string"
+    },
+    {
+      "key": "unit_price",
+      "value": "1200.00",
+      "type": "string"
+    },
+    {
+      "key": "amount",
+      "value": "1000",
+      "type": "string"
+    },
+    {
+      "key": "phone_number",
+      "value": "256700000000",
+      "type": "string"
+    },
+    {
+      "key": "payment_transaction_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "payment_transaction_reference",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "parent_profile_id",
+      "value": ""
+    },
+    {
+      "key": "card_id",
+      "value": ""
+    },
+    {
+      "key": "transaction_id",
+      "value": ""
+    },
+    {
+      "key": "admin_user_id",
+      "value": ""
+    },
+    {
+      "key": "sale_id",
+      "value": ""
+    },
+    {
+      "key": "student_account_id",
+      "value": ""
+    },
+    {
+      "key": "user_account_id",
+      "value": ""
+    },
+    {
+      "key": "new_card_id",
+      "value": ""
+    },
+    {
+      "key": "new_card_number",
+      "value": "9000000000000000"
+    },
+    {
+      "key": "new_card_serial_number",
+      "value": "CARD-NEW-001"
+    },
+    {
+      "key": "card_import_file",
+      "value": ""
+    }
+  ]
+}

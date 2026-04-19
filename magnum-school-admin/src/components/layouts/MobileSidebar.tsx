@@ -8,31 +8,23 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import Sidebar from './Sidebar';
-import { closeSidebar } from '@/redux-store/slices/sidebarSlice';
-import { useDispatch, useSelector } from '@/redux-store/hooks';
 
-const MobileSidebar: React.FC = () => {
-  const dispatch = useDispatch();
-  const isOpen = useSelector((state) => state.sidebar.isOpen);
+interface MobileSidebarProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
+const MobileSidebar: React.FC<MobileSidebarProps> = ({
+  open,
+  onOpenChange,
+}) => {
   return (
-    <Sheet
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) {
-          dispatch(closeSidebar());
-        }
-      }}
-    >
-      {/* 
-        Instead of w-64, we can use w-[260px] or any narrower value that suits 
-        your design. Also removing extra padding so the sidebar fits neatly. 
-      */}
-      <SheetContent side="left" className="w-[260px] p-0">
-        <SheetHeader className="px-4 sr-only pt-4 pb-2">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="left" className="w-[280px] border-0 p-0 shadow-none">
+        <SheetHeader className="sr-only">
           <SheetTitle>Menu</SheetTitle>
         </SheetHeader>
-        <Sidebar mobile />
+        <Sidebar mobile onNavigate={() => onOpenChange(false)} />
       </SheetContent>
     </Sheet>
   );

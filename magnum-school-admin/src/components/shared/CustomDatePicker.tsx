@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/@core/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface DatePickerProps {
   value: Date | null;

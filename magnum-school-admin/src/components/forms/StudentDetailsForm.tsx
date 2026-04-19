@@ -3,7 +3,7 @@ import { MdClose } from 'react-icons/md';
 import { CustomInputField, CustomButton } from '@/components/shared';
 import RecentTransactions, {
   Transaction,
-} from '@/views/pages/students/RecentTransactions';
+} from '@/features/students/RecentTransactions';
 import { format } from 'date-fns';
 
 interface CardData {
@@ -25,15 +25,6 @@ interface StudentDetails {
   dob: string;
   status: string;
   account_balance: number;
-}
-
-interface StudentDetailsFormProps {
-  student: StudentDetails;
-  card: CardData;
-  transactions: Transaction[];
-  parents: ParentData[];
-  onClose?: () => void;
-  onToggleStatus?: () => void;
 }
 
 interface StudentDetailsFormProps {

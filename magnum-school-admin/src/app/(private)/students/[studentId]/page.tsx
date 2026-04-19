@@ -1,17 +1,17 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import StudentDetailsForm from '@components/forms/StudentDetailsForm';
 import { useRouter } from 'next/navigation';
 import {
-  getStudentDetailsPost,
+  getStudentDetails,
   activateStudent,
   deactivateStudent,
-} from '@/app/server/students/service';
+} from '@/services/students/service';
 import ErrorState from '@/components/shared/ErrorState';
 import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 import NoData from '@/components/shared/NoData';
-import { useStudentsContext } from '@/contexts/StudentsContext';
+import { showErrorToast } from '@/lib/toast';
 
 export default function StudentDetailsPage({
   params,
@@ -19,14 +19,13 @@ export default function StudentDetailsPage({
   params: { studentId: string };
 }) {
   const router = useRouter();
-  const { selectedStudent } = useStudentsContext();
   const [studentData, setStudentData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [toggleLoading, setToggleLoading] = useState(false);
 
   // Refetch student details
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     setIsLoading(true);
     setIsError(false);
     try {
@@ -36,26 +35,36 @@ export default function StudentDetailsPage({
         setIsLoading(false);
         return;
       }
-      const response: any = await getStudentDetailsPost({
+      const response: any = await getStudentDetails({
         student_id: String(studentId),
       });
-      if (!response || !response.data || !response.data.student) {
+      const payload = response?.data ?? response;
+      const student = payload?.student || payload?.data?.student;
+      if (!student) {
         setStudentData(null);
       } else {
-        setStudentData(response.data);
+        setStudentData({
+          student,
+          card: payload?.card || payload?.data?.card || {},
+          transactions:
+            payload?.transactions || payload?.data?.transactions || [],
+          parents: payload?.parents || payload?.data?.parents || [],
+        });
       }
-    } catch {
+    } catch (error) {
+      showErrorToast(
+        error,
+        'Unable to load student details. Please try again.',
+      );
       setIsError(true);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.studentId]);
 
   useEffect(() => {
     fetchDetails();
-    // Only re-run if the selectedStudent changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStudent]);
+  }, [fetchDetails]);
 
   if (isLoading) return <LoadingSkeleton />;
   if (isError) {
@@ -98,6 +107,7 @@ export default function StudentDetailsPage({
       // Optionally: show error toast
       // eslint-disable-next-line no-console
       console.error('Failed to toggle student status', err);
+      showErrorToast(err, 'Failed to update student status. Please retry.');
     } finally {
       setToggleLoading(false);
     }

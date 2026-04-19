@@ -1,17 +1,17 @@
 // Type Imports
-import type { ChildrenType } from '@core/types';
+import type { ChildrenType } from '@/types/shared';
 
 // HOC Imports
-import Provider from '@/components/Provider';
-import GuestOnlyRoute from '@/@core/hocs/GuestOnlyRoute';
+import AppProviders from '@/providers/AppProviders';
+import GuestOnlyRoute from '@/guards/GuestOnlyRoute';
 
 const Layout = async (props: ChildrenType) => {
   const { children } = props;
 
   return (
-    <Provider>
+    <AppProviders>
       <GuestOnlyRoute>{children}</GuestOnlyRoute>
-    </Provider>
+    </AppProviders>
   );
 };
 

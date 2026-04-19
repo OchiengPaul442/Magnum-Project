@@ -3,11 +3,11 @@ import React from 'react';
 import VendorDetailsForm from '@/components/forms/VendorDetailsForm';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { getVendorDetails } from '@/app/server/vendors/api';
+import { getVendorEntityDetailsBySchool } from '@/services/vendors/service';
 import ErrorState from '@/components/shared/ErrorState';
 import NoData from '@/components/shared/NoData';
 import VendorDetailsSkeleton from '@/components/shared/loaders/vendor-details-skeleton';
-import { useVendorsContext } from '@/contexts/VendorsContext';
+import { showErrorToast } from '@/lib/toast';
 
 export default function VendorDetailsPage({
   params,
@@ -15,7 +15,6 @@ export default function VendorDetailsPage({
   params: { vendorId: string };
 }) {
   const router = useRouter();
-  const { selectedVendor, setSelectedVendor } = useVendorsContext();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [vendor, setVendor] = useState<{
@@ -44,14 +43,15 @@ export default function VendorDetailsPage({
             setError('No vendor selected. Please go back and select a vendor.');
           return;
         }
-        const details: any = await getVendorDetails({
+        const details: any = await getVendorEntityDetailsBySchool({
           vendor_entity_id: Number(vendorId),
         });
-        if (!details || !details.vendor_entity) {
+        const payload = details?.data ?? details;
+        if (!payload || !payload.vendor_entity) {
           if (!ignore) setError('No details found for this vendor.');
           return;
         }
-        const entity = details.vendor_entity;
+        const entity = payload.vendor_entity;
         const entityName = entity.vendor_entity_name || 'N/A';
         const entityOwner =
           entity.vendor_owner_details?.full_name ||
@@ -74,10 +74,11 @@ export default function VendorDetailsPage({
         }
       } catch (err: any) {
         if (!ignore) {
-          setError(
+          const message =
             err?.response?.data?.message ||
-              'Failed to fetch vendor details. Please try again later.',
-          );
+            'Failed to fetch vendor details. Please try again later.';
+          setError(message);
+          showErrorToast(err, message);
         }
       } finally {
         if (!ignore) setLoading(false);
@@ -87,7 +88,7 @@ export default function VendorDetailsPage({
     return () => {
       ignore = true;
     };
-  }, [selectedVendor, setSelectedVendor, params.vendorId]);
+  }, [params.vendorId]);
 
   const handleClose = () => router.push('/vendors');
 

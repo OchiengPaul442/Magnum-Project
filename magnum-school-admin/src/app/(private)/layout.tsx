@@ -1,19 +1,19 @@
-import type { ChildrenType } from '@core/types';
+import type { ChildrenType } from '@/types/shared';
 
 // Component Imports
-import Provider from '@/components/Provider';
-import AuthGuard from '@/@core/hocs/AuthGuard';
+import AppProviders from '@/providers/AppProviders';
+import AuthGuard from '@/guards/AuthGuard';
 import MainLayout from '@/components/layouts/MainLayout';
 
 const Layout = async (props: ChildrenType) => {
   const { children } = props;
 
   return (
-    <Provider>
+    <AppProviders>
       <AuthGuard>
         <MainLayout>{children}</MainLayout>
       </AuthGuard>
-    </Provider>
+    </AppProviders>
   );
 };
 

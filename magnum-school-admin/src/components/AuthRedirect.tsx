@@ -1,10 +1,11 @@
 'use client';
 
-// Next.js Imports
-import { redirect, usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 const AuthRedirect = () => {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Define the login URL
   const loginUrl = '/sign-in';
@@ -12,8 +13,11 @@ const AuthRedirect = () => {
   // Determine the redirect URL
   const redirectUrl = `${loginUrl}?redirectTo=${pathname}`;
 
-  // Redirect logic
-  return redirect(pathname === loginUrl ? loginUrl : redirectUrl);
+  useEffect(() => {
+    router.replace(pathname === loginUrl ? loginUrl : redirectUrl);
+  }, [pathname, loginUrl, redirectUrl, router]);
+
+  return null;
 };
 
 export default AuthRedirect;

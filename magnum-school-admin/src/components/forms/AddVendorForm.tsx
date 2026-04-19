@@ -1,16 +1,16 @@
 'use client';
-import { useSelector } from '@/redux-store/hooks';
 
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { toast } from 'sonner';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 import CustomInputField from '@/components/shared/CustomInputField';
 import CustomButton from '@/components/shared/CustomButton';
 
-import { onboardVendorWithOwner } from '@/app/server/vendors/service';
+import { onboardVendorWithOwner } from '@/services/vendors/service';
+import { useUserProfileStore } from '@/store/useUserProfileStore';
 
 // 1. Define your vendor form schema (fields required by onboarding API, schoolId is hidden)
 const formSchema = z.object({
@@ -48,7 +48,7 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
   const [isRegistering, setIsRegistering] = React.useState(false);
 
   // Get schoolId from user profile redux slice
-  const userProfile = useSelector((state) => state.userProfile.data);
+  const userProfile = useUserProfileStore((state) => state.data);
   const schoolId = userProfile?.data?.school?.id || 1;
 
   const {
@@ -89,27 +89,23 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
         response.status !== 200 &&
         response.status !== 201
       ) {
-        toast.error(response?.message || 'Failed to onboard vendor.');
+        showErrorToast(response?.message || 'Failed to onboard vendor.');
         return;
       }
       if (
         response?.error ||
         response?.message?.toLowerCase().includes('error')
       ) {
-        toast.error(
+        showErrorToast(
           response?.message || response?.error || 'Failed to onboard vendor.',
         );
         return;
       }
-      toast.success('Vendor onboarded successfully!');
+      showSuccessToast('Vendor onboarded successfully!');
       if (onSuccess) onSuccess();
     } catch (err: any) {
       console.error('Onboarding error:', err);
-      toast.error(
-        err?.response?.data?.message ||
-          err?.message ||
-          'Error onboarding new vendor. Please try again.',
-      );
+      showErrorToast(err, 'Error onboarding new vendor. Please try again.');
     } finally {
       setIsRegistering(false);
     }

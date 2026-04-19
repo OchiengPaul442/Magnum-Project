@@ -1,0 +1,18 @@
+// Authentication service URLs
+export const AUTH_URLS = {
+  LOGIN: '/login/',
+  VERIFY_OTP: '/verifyotp/',
+  RESEND_OTP: '/resendotp/',
+  FORGOT_PASSWORD: '/forgotpassword/',
+  CHANGE_PASSWORD: '/changepassword/',
+  RESET_PASSWORD: '/resetpassword/',
+  LOGOUT: '/logout/',
+  GET_USER_PROFILE: '/getuserprofile/',
+} as const;
+
+// Authentication service configuration
+export const AUTH_CONFIG = {
+  SECURE: false, // Login/OTP/reset endpoints are public; secure service used for protected endpoints
+  BASE_RESOURCE: 'auth',
+  TIMEOUT: 10000,
+} as const;

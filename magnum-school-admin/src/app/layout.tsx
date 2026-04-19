@@ -1,9 +1,10 @@
 import './globals.css';
 import { Toaster } from 'sonner';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import Loading from '@/components/loading';
 import { Suspense } from 'react';
+import NextTopbar from '@/components/NextTopbar';
 
 // Lato font configurations
 const lato = localFont({
@@ -63,8 +64,73 @@ const lato = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'Magnum Admin panel',
-  description: 'Magnum School Admin',
+  title: {
+    default: 'Magnum School Admin',
+    template: '%s | Magnum School Admin',
+  },
+  description:
+    'Magnum School Admin dashboard — manage students, vendors, and school settings securely.',
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  ),
+  applicationName: 'Magnum School Admin',
+  authors: [{ name: 'Magnum' }],
+  keywords: [
+    'Magnum',
+    'Magnum School Admin',
+    'school admin',
+    'school dashboard',
+    'student management',
+    'vendor management',
+    'school analytics',
+  ],
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/assets/images/MAIN_LOGO.webp',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'Magnum School Admin',
+    title: 'Magnum School Admin',
+    description:
+      'Magnum School Admin dashboard — manage students, vendors, and school settings securely.',
+    images: [
+      {
+        url: '/assets/images/MAIN_LOGO.webp',
+        width: 512,
+        height: 512,
+        alt: 'Magnum Logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Magnum School Admin',
+    description:
+      'Magnum School Admin dashboard — manage students, vendors, and school settings securely.',
+    images: ['/assets/images/MAIN_LOGO.webp'],
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
 };
 
 export default function RootLayout({
@@ -75,6 +141,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${lato.variable} antialiased overflow-hidden`}>
+        <NextTopbar />
         <Suspense fallback={<Loading />}>{children}</Suspense>
         <Toaster richColors position="bottom-right" />
       </body>

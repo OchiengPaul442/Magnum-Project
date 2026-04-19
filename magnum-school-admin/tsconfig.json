@@ -12,11 +12,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
     "typeRoots": ["./src/types", "./node_modules/@types"],
     "paths": {
       "@/*": ["./src/*"],
@@ -25,10 +21,13 @@
       "@images/*": ["./public/assets/images/*"],
       "@icons/*": ["./public/assets/icons/*"],
       "@fonts/*": ["./public/assets/fonts/*"],
-      "@views/*": ["./src/views/*"],
-      "@core/*": ["./src/@core/*"],
-      "@data/*": ["./src/data/*"],
-      "@contexts/*": ["./src/contexts/*"]
+      "@features/*": ["./src/features/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@services/*": ["./src/services/*"],
+      "@config/*": ["./src/config/*"],
+      "@types/*": ["./src/types/*"],
+      "@providers/*": ["./src/providers/*"],
+      "@store/*": ["./src/store/*"]
     }
   },
   "include": [

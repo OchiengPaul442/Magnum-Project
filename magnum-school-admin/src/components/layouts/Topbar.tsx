@@ -2,44 +2,69 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { SearchInput } from '@/components/shared';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { RiMenu2Fill } from 'react-icons/ri';
+
+import { SearchInput } from '@/components/shared';
+import { Button } from '@/components/ui/button';
 import { AddStudentDialog } from '../dialogs/add-student-dialog';
 import { AddVendorDialog } from '../dialogs/add-vendor-dialog';
-import { toggleSidebar } from '@/redux-store/slices/sidebarSlice';
-import { useDispatch } from '@/redux-store/hooks';
 
 interface TopbarProps {
   showAddButton?: boolean;
+  collapsed: boolean;
+  onMenuClick: () => void;
+  onCollapseToggle: () => void;
 }
 
-const Topbar: React.FC<TopbarProps> = ({ showAddButton = true }) => {
+const Topbar: React.FC<TopbarProps> = ({
+  showAddButton = true,
+  collapsed,
+  onMenuClick,
+  onCollapseToggle,
+}) => {
   const pathname = usePathname();
-  const dispatch = useDispatch();
 
   const isVendorsRoute = pathname.startsWith('/vendors');
 
   return (
-    <div className="bg-white">
-      <div className="flex items-center px-6 py-5 justify-between w-full max-w-7xl mx-auto">
-        {/* Mobile Menu Trigger */}
-        <button
+    <div className="border-b border-gray-200 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
+        <Button
           type="button"
-          onClick={() => dispatch(toggleSidebar())}
+          variant="ghost"
+          size="icon"
           className="lg:hidden"
+          onClick={onMenuClick}
+          aria-label="Open navigation"
         >
-          <RiMenu2Fill size={30} color="#553C9A" className="mr-3" />
-        </button>
+          <RiMenu2Fill className="h-5 w-5" />
+        </Button>
 
-        {/* Search Input Field (hidden on small screens) */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="hidden lg:inline-flex"
+          onClick={onCollapseToggle}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? (
+            <FiChevronRight className="h-5 w-5" />
+          ) : (
+            <FiChevronLeft className="h-5 w-5" />
+          )}
+        </Button>
+
         <SearchInput
           placeholder="Search for students"
-          className="lg:flex flex-1 mr-4 w-full max-w-[800px] hidden"
+          className="hidden w-full max-w-[800px] flex-1 lg:flex"
         />
 
-        {/* Add Student or Vendor Dialog Trigger */}
-        {showAddButton && !isVendorsRoute && <AddStudentDialog />}
-        {isVendorsRoute && <AddVendorDialog />}
+        <div className="ml-auto flex items-center gap-3">
+          {showAddButton && !isVendorsRoute && <AddStudentDialog />}
+          {isVendorsRoute && <AddVendorDialog />}
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
+import { withSentryConfig } from '@sentry/nextjs';
+
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  basePath: process.env.BASEPATH,
   redirects: async () => {
     return [
       {
@@ -12,6 +13,34 @@ const nextConfig = {
       },
     ];
   },
+  rewrites: async () => {
+    return {
+      beforeFiles: [
+        {
+          source: '/api/:path((?!auth/|proxy/).*)',
+          destination: '/api/proxy/:path*',
+        },
+      ],
+    };
+  },
+  poweredByHeader: false,
+  reactStrictMode: true,
 };
 
-export default nextConfig;
+export default withSentryConfig(
+  nextConfig,
+  {
+    silent: true,
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+  },
+  {
+    widenClientFileUpload: true,
+    transpileClientSDK: true,
+    hideSourceMaps: true,
+    sourcemaps: {
+      deleteSourcemapsAfterUpload: true,
+    },
+    disableLogger: true,
+  },
+);

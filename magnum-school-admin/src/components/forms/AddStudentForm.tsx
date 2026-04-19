@@ -5,12 +5,13 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format, isValid, parse } from 'date-fns';
-import { toast } from 'sonner';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 import CustomInputField from '@/components/shared/CustomInputField';
 import CustomButton from '@/components/shared/CustomButton';
 import { CustomDatePicker } from '../shared/CustomDatePicker';
-import { registerNewStudent } from '@/app/server/students/service';
+import { registerNewStudent } from '@/services/students/service';
+import type { RegisterStudentPayload } from '@/types/student';
 
 // Define the form schema
 const formSchema = z.object({
@@ -74,7 +75,7 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
       const formattedDob = format(parsedDate, 'yyyy-MM-dd');
 
       // Build the request body as required by the API
-      const requestBody: any = {
+      const requestBody: RegisterStudentPayload = {
         student: {
           ssid: formData.ssid,
           student_first_name: formData.firstName,
@@ -86,9 +87,9 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
 
       const response = await registerNewStudent(requestBody);
       if (response.status === 201 || response.status === 200) {
-        toast.success(response.message);
+        showSuccessToast(response.message);
       } else {
-        toast.error(response.message);
+        showErrorToast(response.message);
       }
       if (onSuccess) onSuccess();
     } catch (err: any) {
@@ -96,7 +97,7 @@ const AddStudentForm: React.FC<AddStudentFormProps> = ({ onSuccess }) => {
       const errorMessage =
         err?.response?.data?.message ||
         'Error registering new student. Please try again.';
-      toast.error(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setIsRegistering(false);
     }

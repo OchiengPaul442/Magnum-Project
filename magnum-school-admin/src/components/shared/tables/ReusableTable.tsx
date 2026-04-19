@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FileText } from 'lucide-react';
-import { cn } from '@/@core/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface TableColumn {
   header: string;
