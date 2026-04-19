@@ -1,4 +1,4 @@
-import type { AxiosInstance, AxiosError } from 'axios';
+import type { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import * as Sentry from '@sentry/nextjs';
 
@@ -63,12 +63,97 @@ const TIMEOUT_CONFIG = {
   timeoutErrorMessage: 'Request timeout - please try again',
 } as const;
 
+const AUTH_FAILURE_STORAGE_KEY = 'magnum-auth-401-count';
+const AUTH_FAILURE_LOGOUT_THRESHOLD = 3;
+
+let sessionRefreshPromise: Promise<boolean> | null = null;
+let logoutPromise: Promise<void> | null = null;
+
+type RetryAwareRequestConfig = AxiosRequestConfig & {
+  _magnumAuthRetryAttempted?: boolean;
+};
+
+const readAuthFailureCount = () => {
+  if (typeof window === 'undefined') {
+    return 0;
+  }
+
+  const value = window.sessionStorage.getItem(AUTH_FAILURE_STORAGE_KEY);
+  const count = Number(value);
+
+  return Number.isFinite(count) && count > 0 ? count : 0;
+};
+
+const writeAuthFailureCount = (count: number) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.sessionStorage.setItem(AUTH_FAILURE_STORAGE_KEY, String(count));
+};
+
+const resetAuthFailureCount = () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.sessionStorage.removeItem(AUTH_FAILURE_STORAGE_KEY);
+};
+
+const incrementAuthFailureCount = () => {
+  const nextCount = readAuthFailureCount() + 1;
+  writeAuthFailureCount(nextCount);
+  return nextCount;
+};
+
+const refreshClientSession = async () => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  if (!sessionRefreshPromise) {
+    sessionRefreshPromise = import('next-auth/react')
+      .then(({ getSession }) => getSession())
+      .then((session) => Boolean(session && !(session as any).error))
+      .catch(() => false)
+      .finally(() => {
+        sessionRefreshPromise = null;
+      });
+  }
+
+  return sessionRefreshPromise;
+};
+
+const logoutClientSession = async () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (!logoutPromise) {
+    logoutPromise = import('next-auth/react')
+      .then(({ signOut }) =>
+        signOut({ callbackUrl: '/sign-in' }).catch(() => {
+          window.location.assign('/sign-in');
+        }),
+      )
+      .catch(() => {
+        window.location.assign('/sign-in');
+      })
+      .finally(() => {
+        logoutPromise = null;
+        resetAuthFailureCount();
+      });
+  }
+
+  return logoutPromise;
+};
+
 // Factory to create configured Axios instances
 function createInstance(options: {
   secure?: boolean;
   multipart?: boolean;
 }): AxiosInstance {
-  const { multipart = false } = options;
+  const { multipart = false, secure = false } = options;
 
   const instance = axios.create({
     baseURL: BASE_URL,
@@ -79,9 +164,12 @@ function createInstance(options: {
 
   // Requests are routed through same-origin API paths and rewritten server-side.
 
-  // Response interceptor with enhanced error handling
   instance.interceptors.response.use(
     (response) => {
+      if (secure) {
+        resetAuthFailureCount();
+      }
+
       if (process.env.NODE_ENV === 'development') {
         console.log(
           `✅ ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`,
@@ -90,11 +178,70 @@ function createInstance(options: {
 
       return response;
     },
-    (error: AxiosError<ApiErrorResponse>) => {
+    async (error: AxiosError<ApiErrorResponse>) => {
       if (isAxiosError(error)) {
         const { response, request, config } = error;
 
-        // Log error details
+        if (secure && response?.status === 401) {
+          const retryConfig = (config || {}) as RetryAwareRequestConfig;
+
+          if (!retryConfig._magnumAuthRetryAttempted) {
+            retryConfig._magnumAuthRetryAttempted = true;
+
+            const refreshed = await refreshClientSession();
+            if (refreshed) {
+              try {
+                return await instance.request(retryConfig);
+              } catch (retryError) {
+                const retryResponse = (
+                  retryError as AxiosError<ApiErrorResponse>
+                ).response;
+
+                if (retryResponse?.status === 401) {
+                  const nextCount = incrementAuthFailureCount();
+                  if (nextCount >= AUTH_FAILURE_LOGOUT_THRESHOLD) {
+                    await logoutClientSession();
+                  }
+                } else {
+                  const retryConfigData = (
+                    retryError as AxiosError<ApiErrorResponse>
+                  ).config;
+                  const retryErrorLog = {
+                    method: retryConfigData?.method?.toUpperCase(),
+                    url: retryConfigData?.url,
+                    status: retryResponse?.status,
+                    statusText: retryResponse?.statusText,
+                    message:
+                      retryResponse?.data?.message ||
+                      (retryError as AxiosError<ApiErrorResponse>).message,
+                    timestamp: new Date().toISOString(),
+                  };
+
+                  console.error('API Error:', retryErrorLog);
+                  Sentry.captureException(retryError, {
+                    tags: {
+                      request_url: retryConfigData?.url || 'unknown',
+                      request_method: retryConfigData?.method || 'unknown',
+                      status: retryResponse?.status?.toString() || 'unknown',
+                    },
+                    extra: retryErrorLog,
+                  });
+                }
+
+                return Promise.reject(retryError);
+              }
+            }
+          }
+
+          const nextCount = incrementAuthFailureCount();
+          if (nextCount >= AUTH_FAILURE_LOGOUT_THRESHOLD) {
+            await logoutClientSession();
+          }
+
+          console.warn('Authentication failed - token may be expired');
+          return Promise.reject(error);
+        }
+
         const errorLog = {
           method: config?.method?.toUpperCase(),
           url: config?.url,
@@ -114,12 +261,8 @@ function createInstance(options: {
           extra: errorLog,
         });
 
-        // Handle specific error cases
         if (response) {
           switch (response.status) {
-            case 401:
-              console.warn('Authentication failed - token may be expired');
-              break;
             case 403:
               console.warn('Access forbidden - insufficient permissions');
               break;

@@ -8,6 +8,7 @@ export {
   handleLogout,
   handleResetPassword,
   getUserProfile,
+  updateUserProfile,
 } from './auth/service';
 
 // Re-export student functions

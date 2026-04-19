@@ -14,6 +14,8 @@ import { MdSwitchAccount } from 'react-icons/md';
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import themeConfig from '@/config/theme';
 import { handleLogout as handleLogoutRequest } from '@/services/auth/service';
+import { normalizeUserProfile, getProfileInitials } from '@/lib/auth/profile';
+import { useUserProfileStore } from '@/store/useUserProfileStore';
 import { cn } from '@/lib/utils';
 import { showErrorToast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
@@ -67,21 +69,19 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isCollapsed = !mobile && collapsed;
+  const profileData = useUserProfileStore((state) => state.data);
 
-  const profile = session?.user;
-  const displayName =
-    profile?.name?.trim() || profile?.email?.trim() || 'Admin';
-  const email = profile?.email?.trim() || 'admin@magnum.app';
+  const profile = useMemo(
+    () => normalizeUserProfile(profileData ?? session?.user),
+    [profileData, session?.user],
+  );
+  const displayName = profile?.fullName || session?.user?.name || 'Admin';
+  const email = profile?.email || session?.user?.email || 'admin@magnum.app';
 
-  const initials = useMemo(() => {
-    const parts = displayName.split(' ').filter(Boolean);
-
-    return parts
-      .map((part) => part[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
-  }, [displayName]);
+  const initials = useMemo(
+    () => getProfileInitials(profile ?? session?.user),
+    [profile, session?.user],
+  );
 
   const isActive = (path: string) => pathname.startsWith(path);
 
@@ -93,32 +93,16 @@ const Sidebar: React.FC<SidebarProps> = ({
     setIsLoggingOut(true);
 
     try {
-      const res = await handleLogoutRequest();
-
-      // If the request returned a non-2xx status, show server message
-      // Axios wrapper throws for non-2xx in our client, but keep safe checks
-      const ok = !(
-        res &&
-        (res as any).status &&
-        ((res as any).status < 200 || (res as any).status >= 300)
-      );
-
-      if (!ok) {
-        showErrorToast(
-          (res as any)?.message || 'Unable to log out of the server session.',
-        );
-        return;
-      }
-
-      setLogoutDialogOpen(false);
-      handleNavigate();
-      void signOut({ callbackUrl: themeConfig.signOutUrl });
+      await handleLogoutRequest();
     } catch (error: any) {
       showErrorToast(
         error?.statusMessage || error?.message || error,
         'Unable to log out of the server session.',
       );
     } finally {
+      setLogoutDialogOpen(false);
+      handleNavigate();
+      void signOut({ callbackUrl: themeConfig.signOutUrl });
       setIsLoggingOut(false);
     }
   };
@@ -244,8 +228,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 
           <div
             className={cn(
-              'flex items-center justify-between rounded-2xl bg-muted/35 px-3 py-3',
-              isCollapsed && 'justify-between px-2 py-2',
+              'flex items-center rounded-2xl bg-muted/35 px-3 py-3',
+              isCollapsed ? 'justify-center px-2 py-2' : 'justify-between',
             )}
           >
             <div
@@ -277,19 +261,21 @@ const Sidebar: React.FC<SidebarProps> = ({
               ) : null}
             </div>
 
-            <button
-              type="button"
-              aria-label="Log out"
-              title="Log out"
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setLogoutDialogOpen(true);
-              }}
-              className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted/60"
-            >
-              <FiLogOut className="h-4 w-4" />
-            </button>
+            {!isCollapsed ? (
+              <button
+                type="button"
+                aria-label="Log out"
+                title="Log out"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setLogoutDialogOpen(true);
+                }}
+                className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted/60"
+              >
+                <FiLogOut className="h-4 w-4" />
+              </button>
+            ) : null}
           </div>
         </div>
       </div>

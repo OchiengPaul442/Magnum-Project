@@ -69,14 +69,18 @@ const buildBackendHeaders = ({
   isPublic,
   accessToken,
   hasBody,
+  contentType,
 }: {
   isPublic: boolean;
   accessToken?: string;
   hasBody: boolean;
+  contentType?: string | null;
 }) => {
   const headers = new Headers();
 
-  if (hasBody) {
+  if (hasBody && contentType) {
+    headers.set('Content-Type', contentType);
+  } else if (hasBody) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -154,6 +158,89 @@ const refreshAccessToken = async (refreshToken: string) => {
   };
 };
 
+const extractSessionUpdatesFromResponse = (payload: unknown) => {
+  const root = isRecord(payload) ? payload : {};
+  const container =
+    (isRecord(root.user_data) ? root.user_data : null) ||
+    (isRecord(root.userData) ? root.userData : null) ||
+    (isRecord(root.data) ? root.data : null) ||
+    root;
+
+  const userData =
+    (isRecord(container.user_data) ? container.user_data : null) ||
+    (isRecord(container.userData) ? container.userData : null) ||
+    (isRecord(container.user) ? container.user : null) ||
+    container;
+
+  const accessToken =
+    toStringValue(container.token) ||
+    toStringValue(container.access_token) ||
+    toStringValue(root.token) ||
+    toStringValue(root.access_token);
+
+  const refreshToken =
+    toStringValue(container.refresh_token) ||
+    toStringValue(container.refreshToken) ||
+    toStringValue(root.refresh_token) ||
+    toStringValue(root.refreshToken);
+
+  const firstName =
+    toStringValue(userData.first_name) || toStringValue(container.first_name);
+  const lastName =
+    toStringValue(userData.last_name) || toStringValue(container.last_name);
+  const fullName =
+    toStringValue(userData.full_name) ||
+    toStringValue(userData.fullName) ||
+    toStringValue(container.full_name) ||
+    toStringValue(container.fullName) ||
+    [firstName, lastName].filter(Boolean).join(' ').trim() ||
+    toStringValue(userData.name) ||
+    toStringValue(container.name);
+
+  const email =
+    toStringValue(userData.email) ||
+    toStringValue(userData.user_email) ||
+    toStringValue(container.email) ||
+    toStringValue(container.user_email);
+
+  const picture =
+    toStringValue(userData.user_profile_picture) ||
+    toStringValue(userData.picture) ||
+    toStringValue(userData.image) ||
+    toStringValue(container.user_profile_picture) ||
+    toStringValue(container.picture) ||
+    toStringValue(container.image);
+
+  const userCategory =
+    toStringValue(userData.user_category) ||
+    toStringValue(userData.userCategory) ||
+    toStringValue(container.user_category) ||
+    toStringValue(container.userCategory);
+
+  const school =
+    (isRecord(userData.school) ? userData.school : null) ||
+    (isRecord(container.school) ? container.school : null) ||
+    (isRecord(root.school) ? root.school : null);
+
+  const firstTimeLogin =
+    container.first_time_login ??
+    container.firstTimeLogin ??
+    root.first_time_login ??
+    root.firstTimeLogin;
+
+  return {
+    accessToken,
+    refreshToken,
+    name: fullName,
+    email,
+    picture,
+    userCategory,
+    school,
+    first_time_login:
+      typeof firstTimeLogin === 'boolean' ? firstTimeLogin : undefined,
+  };
+};
+
 const isExpiringSoon = (expiresAt?: number, bufferMs = EXPIRY_BUFFER_MS) => {
   if (typeof expiresAt !== 'number') {
     return false;
@@ -162,30 +249,26 @@ const isExpiringSoon = (expiresAt?: number, bufferMs = EXPIRY_BUFFER_MS) => {
   return Date.now() >= expiresAt - bufferMs;
 };
 
-const attachRefreshedSessionCookie = async (
+const attachSessionCookie = async (
   response: Response,
   token: Awaited<ReturnType<typeof getToken>> | null,
-  refreshedToken: {
-    accessToken?: string;
-    refreshToken?: string;
-    accessTokenExpires?: number;
-    refreshTokenExpires?: number;
-  },
+  sessionUpdates: Record<string, unknown>,
 ) => {
-  if (!AUTH_SECRET || !token || !refreshedToken.accessToken) {
+  if (!AUTH_SECRET || !token) {
     return forwardResponse(response);
   }
 
   const cookieName = getCookieName();
   const updatedToken = {
     ...token,
-    accessToken: refreshedToken.accessToken,
-    refreshToken: refreshedToken.refreshToken,
-    accessTokenExpires:
-      refreshedToken.accessTokenExpires || token?.accessTokenExpires,
-    refreshTokenExpires:
-      refreshedToken.refreshTokenExpires || token?.refreshTokenExpires,
+    error: undefined,
   };
+
+  Object.entries(sessionUpdates).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      (updatedToken as Record<string, unknown>)[key] = value;
+    }
+  });
 
   const encoded = await encode({
     token: updatedToken,
@@ -237,6 +320,7 @@ const handleRequest = async (
   const path = segments.join('/');
   const isPublic = isPublicPath(path);
   const hasBody = !['GET', 'HEAD'].includes(request.method);
+  const contentType = request.headers.get('content-type');
   const body = hasBody ? await request.arrayBuffer() : undefined;
   const targetUrl = buildTargetUrl(request, path);
 
@@ -261,7 +345,7 @@ const handleRequest = async (
     refreshTokenExpires = token?.refreshTokenExpires as number | undefined;
     tokenError = token?.error as string | undefined;
 
-    if (!accessToken || tokenError) {
+    if (!accessToken && !refreshToken) {
       return NextResponse.json(
         { message: 'Authentication required' },
         { status: 401 },
@@ -270,7 +354,9 @@ const handleRequest = async (
 
     if (
       refreshToken &&
-      (isExpiringSoon(accessTokenExpires) ||
+      (tokenError === 'RefreshAccessTokenError' ||
+        !accessToken ||
+        isExpiringSoon(accessTokenExpires) ||
         isExpiringSoon(refreshTokenExpires))
     ) {
       refreshedToken = await refreshAccessToken(refreshToken);
@@ -278,12 +364,20 @@ const handleRequest = async (
         accessToken = refreshedToken.accessToken;
       }
     }
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { message: 'Authentication required' },
+        { status: 401 },
+      );
+    }
   }
 
   const headers = buildBackendHeaders({
     isPublic,
     accessToken,
     hasBody,
+    contentType,
   });
 
   let response = await fetch(targetUrl.toString(), {
@@ -309,12 +403,38 @@ const handleRequest = async (
         cache: 'no-store',
       });
 
-      return attachRefreshedSessionCookie(response, token, refreshed);
+      return attachSessionCookie(response, token, refreshed);
     }
   }
 
-  if (!isPublic && refreshedToken?.accessToken && AUTH_SECRET) {
-    return attachRefreshedSessionCookie(response, token, refreshedToken);
+  if (!isPublic) {
+    const normalizedPath = normalizePath(path);
+    let sessionUpdates: Record<string, unknown> | null = null;
+
+    if (normalizedPath === 'updateuserprofile' && response.ok) {
+      const responseBody = await response
+        .clone()
+        .json()
+        .catch(() => null);
+      sessionUpdates = extractSessionUpdatesFromResponse(responseBody);
+    }
+
+    const hasSessionUpdates =
+      sessionUpdates &&
+      Object.values(sessionUpdates).some(
+        (value) => value !== undefined && value !== null,
+      );
+
+    if (
+      AUTH_SECRET &&
+      token &&
+      (refreshedToken?.accessToken || hasSessionUpdates)
+    ) {
+      return attachSessionCookie(response, token, {
+        ...(refreshedToken || {}),
+        ...(sessionUpdates || {}),
+      });
+    }
   }
 
   return forwardResponse(response);

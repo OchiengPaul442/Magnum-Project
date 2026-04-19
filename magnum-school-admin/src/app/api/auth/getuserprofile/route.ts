@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { getAuthSecret } from '@/lib/auth/secret';
 
 export const runtime = 'nodejs';
 
 const API_BASE_URL = process.env.MAGNUM_API_BASE_URL || '';
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || '';
+const AUTH_SECRET = getAuthSecret();
 
 const toApiBase = () => {
   if (!API_BASE_URL) {
@@ -41,7 +42,6 @@ export const GET = async (request: NextRequest) => {
     const resp = await fetch(target.toString(), {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         Authorization: `Token ${accessToken}`,
       },
     });

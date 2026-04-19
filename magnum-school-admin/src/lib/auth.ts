@@ -352,11 +352,14 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (
-        token.error === 'RefreshAccessTokenError' ||
         token.error === 'RefreshTokenMissing' ||
         token.error === 'RefreshTokenExpired'
       ) {
         return token;
+      }
+
+      if (token.error === 'RefreshAccessTokenError' && token.refreshToken) {
+        return refreshAccessToken(token as JWT);
       }
 
       if (!token.accessTokenExpires && !token.refreshTokenExpires) {
@@ -396,7 +399,10 @@ export const authOptions: NextAuthOptions = {
         session.user.school = token.school || null;
       }
 
-      if (token.error) {
+      if (
+        token.error === 'RefreshTokenMissing' ||
+        token.error === 'RefreshTokenExpired'
+      ) {
         (session as any).error = token.error;
       }
 

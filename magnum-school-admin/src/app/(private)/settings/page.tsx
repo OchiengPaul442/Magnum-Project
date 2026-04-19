@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import React from 'react';
+
+import SettingsPage from '@/features/settings/SettingsPage';
 
 export const metadata: Metadata = {
   title: 'Settings',
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
     'Manage account and application settings in Magnum School Admin.',
 };
 const page = () => {
-  return <>Coming soon</>;
+  return <SettingsPage />;
 };
 
 export default page;

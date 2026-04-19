@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { getUserProfile } from '@/services/auth/service';
 import { getErrorMessage } from '@/lib/api/swrConfig';
+import { isAxiosError } from '@/lib/api/enhancedApiClient';
 import { showErrorToast } from '@/lib/toast';
 
 export interface UserProfileState {
@@ -29,7 +30,12 @@ export const useUserProfileStore = create<UserProfileState>((set) => ({
       set({ data, status: 'succeeded', error: null });
     } catch (error) {
       const message = getErrorMessage(error);
-      showErrorToast(message, 'Unable to load user profile.');
+      const isUnauthorized =
+        isAxiosError(error) && error.response?.status === 401;
+
+      if (!isUnauthorized) {
+        showErrorToast(message, 'Unable to load user profile.');
+      }
       set({ status: 'failed', error: message });
     }
   },

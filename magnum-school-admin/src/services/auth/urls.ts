@@ -8,6 +8,7 @@ export const AUTH_URLS = {
   RESET_PASSWORD: '/auth/resetpassword',
   LOGOUT: '/auth/logout',
   GET_USER_PROFILE: '/auth/getuserprofile',
+  UPDATE_USER_PROFILE: '/updateuserprofile',
 } as const;
 
 // Authentication service configuration

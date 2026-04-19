@@ -1,4 +1,9 @@
-import { publicApi, isAxiosError } from '@/lib/api/enhancedApiClient';
+import {
+  publicApi,
+  authenticatedApi,
+  fileUploadApi,
+  isAxiosError,
+} from '@/lib/api/enhancedApiClient';
 import type {
   ChangePasswordResponse,
   ResendOTPResponse,
@@ -132,4 +137,7 @@ export const handleLogout = async (refreshToken?: string) =>
   });
 
 export const getUserProfile = async (): Promise<any> =>
-  publicApi.get(AUTH_URLS.GET_USER_PROFILE);
+  (await authenticatedApi.get(AUTH_URLS.GET_USER_PROFILE)).data;
+
+export const updateUserProfile = async (body: FormData): Promise<any> =>
+  (await fileUploadApi.patch(AUTH_URLS.UPDATE_USER_PROFILE, body)).data;

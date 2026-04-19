@@ -6,6 +6,7 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import MobileSidebar from './MobileSidebar';
 import UserProfileBootstrap from '@/components/UserProfileBootstrap';
+import SessionHeartbeat from '@/components/SessionHeartbeat';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -43,6 +44,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, showAddButton }) => {
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[#FCFBFA] text-foreground">
       <UserProfileBootstrap />
+      <SessionHeartbeat />
       <Sidebar collapsed={sidebarCollapsed} />
 
       <MobileSidebar open={mobileOpen} onOpenChange={setMobileOpen} />
