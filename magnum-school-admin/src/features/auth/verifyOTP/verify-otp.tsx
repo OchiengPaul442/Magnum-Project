@@ -1,67 +1,56 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { getSession } from 'next-auth/react';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomButton } from '@components/shared';
-import { handleResendOTP } from '@/services/auth/service';
-import { useSession } from 'next-auth/react';
-import { useAuthFlowStore } from '@/store/useAuthFlowStore';
+import { handleResendOTP, handleVerifyOTP } from '@/services/auth/service';
+import { getPostAuthRedirect, resolveCallbackUrl } from '@/lib/auth/flow';
 
 const VerifyOTP: React.FC = () => {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
+  const callbackUrl = resolveCallbackUrl(searchParams);
+  const email = searchParams.get('email')?.trim() || '';
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
-  const [loading, setLoading] = useState(false);
-  const pendingEmail = useAuthFlowStore((state) => state.pendingEmail);
-  const clearPendingEmail = useAuthFlowStore(
-    (state) => state.clearPendingEmail,
-  );
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Refs for OTP inputs to manage focus
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    if (!pendingEmail) {
-      router.push('/sign-in');
+    if (email) {
+      return;
     }
-  }, [pendingEmail, router]);
 
-  // Only redirect once after successful sign-in to avoid loop
-  const hasRedirected = useRef(false);
-  useEffect(() => {
-    if (
-      !hasRedirected.current &&
-      status === 'authenticated' &&
-      session &&
-      !(session as any).error
-    ) {
-      hasRedirected.current = true;
-      clearPendingEmail();
-      if (session.user.first_time_login) {
-        router.push('/create-password');
-      } else {
-        router.push('/dashboard');
-      }
-    }
-  }, [status, session, router, clearPendingEmail]);
+    showErrorToast('Please sign in again to continue.');
+    router.replace(`/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  }, [callbackUrl, email, router]);
 
-  // Auto-submit when all fields are filled
   useEffect(() => {
-    if (otp.every((digit) => digit !== '') && !loading) {
-      // Short delay to ensure UI updates before submission
-      const timer = setTimeout(() => {
-        formRef.current?.dispatchEvent(
-          new Event('submit', { cancelable: true, bubbles: true }),
-        );
-      }, 300);
-      return () => clearTimeout(timer);
+    if (resendCooldown <= 0) {
+      return;
     }
-  }, [otp, loading]);
+
+    const timer = window.setInterval(() => {
+      setResendCooldown((current) => {
+        if (current <= 1) {
+          window.clearInterval(timer);
+          return 0;
+        }
+
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [resendCooldown]);
 
   const handleInputChange = (index: number, value: string) => {
     // Only allow digits, single char
@@ -130,49 +119,53 @@ const VerifyOTP: React.FC = () => {
       return;
     }
 
-    setLoading(true);
+    setIsVerifying(true);
 
     try {
-      // Attempt to sign in with OTP
-      const res = await signIn('credentials', {
-        redirect: false,
-        email: pendingEmail || '',
-        otp: otpCode,
-      });
+      const response = await handleVerifyOTP(email, otpCode);
 
-      setLoading(false);
+      // On success server should set session cookie
+      if (response?.status >= 200 && response?.status < 300) {
+        const session = await getSession();
+        const redirectTarget = getPostAuthRedirect(session, callbackUrl);
+        const successMessage = session?.user?.first_time_login
+          ? 'OTP verified. Finish setting up your password.'
+          : 'Signed in successfully.';
 
-      if (res?.error) {
-        if (res.error === 'OTP_REQUIRED') {
-          showErrorToast('OTP is required for sign-in.');
-        } else {
-          showErrorToast(res.error);
-        }
+        showSuccessToast(successMessage);
+        router.replace(redirectTarget);
+        return;
       }
-      // On success, redirection will be handled by useEffect based on session
+
+      // For non-2xx statuses show backend message
+      showErrorToast(response?.message || 'OTP verification failed.');
     } catch (err: any) {
-      setLoading(false);
-      showErrorToast(err, 'An unexpected error occurred.');
+      const message = (err as any)?.statusMessage || (err as any)?.message;
+      showErrorToast(message || err, 'An unexpected error occurred.');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
   const handleResendCode = async () => {
-    if (!pendingEmail) return;
-    setLoading(true);
+    if (!email || isResending || resendCooldown > 0) return;
+
+    setIsResending(true);
     try {
-      const response = await handleResendOTP(pendingEmail);
+      const response = await handleResendOTP(email);
 
       if (response.status === 200 || response.status === 201) {
         showSuccessToast(
           response.message || 'OTP for login sent successfully.',
         );
+        setResendCooldown(30);
       } else {
         showErrorToast(response.message || 'Failed to resend OTP.');
       }
     } catch (err: any) {
       showErrorToast(err, 'Failed to resend OTP.');
     } finally {
-      setLoading(false);
+      setIsResending(false);
     }
   };
 
@@ -192,7 +185,7 @@ const VerifyOTP: React.FC = () => {
         </h2>
 
         <p className="text-lg text-gray-500 mb-8 text-center">
-          Enter the 6-digit code that has been sent to your email
+          Enter the 6-digit code sent to {email || 'your email'}.
         </p>
 
         {/* OTP Input Section */}
@@ -214,6 +207,7 @@ const VerifyOTP: React.FC = () => {
               autoFocus={index === 0}
               required
               aria-label={`OTP digit ${index + 1}`}
+              autoComplete={index === 0 ? 'one-time-code' : 'off'}
             />
           ))}
         </div>
@@ -221,16 +215,21 @@ const VerifyOTP: React.FC = () => {
         <CustomButton
           type="submit"
           className="w-full max-w-[480px] mb-6"
-          text={loading ? 'Verifying...' : 'Continue'}
-          loading={loading}
+          text={isVerifying ? 'Verifying...' : 'Continue'}
+          loading={isVerifying}
         />
 
         <button
           type="button"
           onClick={handleResendCode}
-          className="text-black font-medium hover:underline"
+          disabled={!email || isResending || resendCooldown > 0}
+          className="text-black font-medium hover:underline disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Resend Code
+          {isResending
+            ? 'Resending...'
+            : resendCooldown > 0
+              ? `Resend Code (${resendCooldown}s)`
+              : 'Resend Code'}
         </button>
       </div>
     </form>

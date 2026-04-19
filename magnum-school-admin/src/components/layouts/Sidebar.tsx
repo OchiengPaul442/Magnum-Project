@@ -93,14 +93,33 @@ const Sidebar: React.FC<SidebarProps> = ({
     setIsLoggingOut(true);
 
     try {
-      await handleLogoutRequest();
-    } catch (error) {
-      showErrorToast(error, 'Unable to log out of the server session.');
-    } finally {
-      setIsLoggingOut(false);
+      const res = await handleLogoutRequest();
+
+      // If the request returned a non-2xx status, show server message
+      // Axios wrapper throws for non-2xx in our client, but keep safe checks
+      const ok = !(
+        res &&
+        (res as any).status &&
+        ((res as any).status < 200 || (res as any).status >= 300)
+      );
+
+      if (!ok) {
+        showErrorToast(
+          (res as any)?.message || 'Unable to log out of the server session.',
+        );
+        return;
+      }
+
       setLogoutDialogOpen(false);
       handleNavigate();
       void signOut({ callbackUrl: themeConfig.signOutUrl });
+    } catch (error: any) {
+      showErrorToast(
+        error?.statusMessage || error?.message || error,
+        'Unable to log out of the server session.',
+      );
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 

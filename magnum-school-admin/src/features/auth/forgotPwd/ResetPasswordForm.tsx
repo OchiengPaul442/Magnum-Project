@@ -33,6 +33,7 @@ const ResetPasswordForm = () => {
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const resetEmail = useAuthFlowStore((state) => state.resetEmail);
+  const setResetEmail = useAuthFlowStore((state) => state.setResetEmail);
   const clearResetEmail = useAuthFlowStore((state) => state.clearResetEmail);
   const [otpValues, setOtpValues] = useState<string[]>([
     '',
@@ -42,16 +43,27 @@ const ResetPasswordForm = () => {
     '',
     '',
   ]);
+  const navigatingToSignInRef = useRef(false);
 
   // Refs for OTP inputs to manage focus
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    if (!resetEmail) {
+    if (resetEmail) {
+      return;
+    }
+
+    const storedResetEmail = sessionStorage.getItem('forgotPasswordEmail');
+    if (storedResetEmail) {
+      setResetEmail(storedResetEmail);
+      return;
+    }
+
+    if (!navigatingToSignInRef.current) {
       showErrorToast('Email not found — please start again.');
       router.push('/forgot-password');
     }
-  }, [resetEmail, router]);
+  }, [resetEmail, router, setResetEmail]);
 
   const {
     control,
@@ -140,8 +152,12 @@ const ResetPasswordForm = () => {
         confirm_password: data.confirm_password,
       });
       showSuccessToast('Password reset successfully');
-      clearResetEmail();
+      // mark navigation so the mount-effect does not redirect back
+      navigatingToSignInRef.current = true;
+      // navigate to sign-in first, then clear stored email
       router.push('/sign-in');
+      sessionStorage.removeItem('forgotPasswordEmail');
+      clearResetEmail();
     } catch (err: any) {
       console.info(err);
       showErrorToast(err, 'Failed to reset password');

@@ -87,6 +87,15 @@ const request = async <T>(
     throw new Error(extractErrorMessage(parsedBody, response.status));
   }
 
+  // Some auth endpoints return an empty response with a 2xx status
+  // (for example: 202 Accepted with no JSON body). In those cases
+  // `parsedBody` will be `null` — return a small wrapper object so
+  // callers can inspect the status (eg. `status === 202`) instead
+  // of receiving a falsy value.
+  if (parsedBody === null && response.status !== 204) {
+    return { status: response.status } as unknown as T;
+  }
+
   return parsedBody as T;
 };
 

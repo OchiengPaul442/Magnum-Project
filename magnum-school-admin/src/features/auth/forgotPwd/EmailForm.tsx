@@ -40,6 +40,7 @@ const EnterEmailForm = () => {
     setLoading(true);
     try {
       setResetEmail(data.email);
+      sessionStorage.setItem('forgotPasswordEmail', data.email);
 
       // Call the enhanced service function to handle forgot password request.
       await handleForgotPassword(data.email);

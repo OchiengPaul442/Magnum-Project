@@ -11,7 +11,7 @@ const AuthRedirect = () => {
   const loginUrl = '/sign-in';
 
   // Determine the redirect URL
-  const redirectUrl = `${loginUrl}?redirectTo=${pathname}`;
+  const redirectUrl = `${loginUrl}?callbackUrl=${encodeURIComponent(pathname)}`;
 
   useEffect(() => {
     router.replace(pathname === loginUrl ? loginUrl : redirectUrl);

@@ -1,8 +1,10 @@
-import NextAuth, { type NextAuthOptions } from 'next-auth';
+import NextAuth, { type NextAuthOptions, type User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import type { JWT } from 'next-auth/jwt';
+
+import { createAuthError, AUTH_ERROR_CODES } from '@/lib/auth/flow';
+import { getResponseMessage, hasOtpRequirement } from '@/lib/auth/session';
 import { handleSignIn, handleVerifyOTP } from '@/services/auth/service';
-import type { User } from 'next-auth';
 import type {
   AuthUserPayload,
   SignInResponse,
@@ -14,57 +16,133 @@ const DEFAULT_ACCESS_TOKEN_TTL_MS = 55 * 60 * 1000;
 const EXPIRY_BUFFER_MS = 60 * 1000;
 
 const toApiBase = () => {
-  if (!API_BASE_URL) return null;
+  if (!API_BASE_URL) {
+    return null;
+  }
+
   return API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
 };
 
-const getAccessTokenExpiry = (payload: Record<string, any>) => {
-  const expiresIn =
-    payload?.expires_in ||
-    payload?.expiresIn ||
-    payload?.token_expires_in ||
-    payload?.access_token_expires_in;
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+};
 
-  if (!expiresIn) return Date.now() + DEFAULT_ACCESS_TOKEN_TTL_MS;
+const toStringValue = (value: unknown) => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
 
-  const asNumber = Number(expiresIn);
-  return Number.isFinite(asNumber)
-    ? Date.now() + asNumber * 1000
-    : Date.now() + DEFAULT_ACCESS_TOKEN_TTL_MS;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+};
+
+const toBooleanValue = (value: unknown) => {
+  return value === true || value === 'true' || value === 1 || value === '1';
+};
+
+const getAccessTokenExpiry = (payload: unknown) => {
+  const root = isRecord(payload) ? payload : {};
+  const candidateSources = [
+    root,
+    isRecord(root.user_data) ? root.user_data : null,
+    isRecord(root.userData) ? root.userData : null,
+    isRecord(root.data) ? root.data : null,
+  ].filter(Boolean) as Record<string, unknown>[];
+
+  for (const source of candidateSources) {
+    const expiresIn =
+      source.expires_in ||
+      source.expiresIn ||
+      source.token_expires_in ||
+      source.access_token_expires_in;
+
+    if (!expiresIn) {
+      continue;
+    }
+
+    const asNumber = Number(expiresIn);
+    if (Number.isFinite(asNumber)) {
+      return Date.now() + asNumber * 1000;
+    }
+  }
+
+  return Date.now() + DEFAULT_ACCESS_TOKEN_TTL_MS;
 };
 
 const extractAuthPayload = (
-  response: SignInResponse | VerifyOTPResponse,
+  response: SignInResponse | VerifyOTPResponse | Record<string, unknown>,
 ): {
   userData?: AuthUserPayload['user_data'];
   accessToken?: string;
   refreshToken?: string;
   firstTimeLogin?: boolean;
 } => {
-  const payload: any = (response as any).user_data ?? response;
-  const nestedPayload: any = payload?.user_data ?? payload;
+  const root = isRecord(response) ? response : {};
+  const container =
+    (isRecord(root.user_data) ? root.user_data : null) ||
+    (isRecord(root.userData) ? root.userData : null) ||
+    (isRecord(root.data) ? root.data : null) ||
+    root;
 
-  const userData =
-    nestedPayload?.user_data || payload?.user_data?.user_data || payload?.user;
+  const nestedUserData =
+    (isRecord(container.user_data) ? container.user_data : null) ||
+    (isRecord(container.userData) ? container.userData : null) ||
+    (isRecord(container.user) ? container.user : null);
+
   const accessToken =
-    nestedPayload?.token ||
-    payload?.token ||
-    (response as any)?.token ||
-    (response as any)?.access_token;
-  const refreshToken =
-    nestedPayload?.refresh_token ||
-    nestedPayload?.refreshToken ||
-    payload?.refresh_token ||
-    payload?.refreshToken ||
-    (response as any)?.refresh_token ||
-    (response as any)?.refreshToken;
-  const firstTimeLogin =
-    nestedPayload?.first_time_login ||
-    payload?.first_time_login ||
-    (response as any)?.first_time_login ||
-    false;
+    toStringValue(container.token) ||
+    toStringValue(container.access_token) ||
+    toStringValue(root.token) ||
+    toStringValue(root.access_token);
 
-  return { userData, accessToken, refreshToken, firstTimeLogin };
+  const refreshToken =
+    toStringValue(container.refresh_token) ||
+    toStringValue(container.refreshToken) ||
+    toStringValue(root.refresh_token) ||
+    toStringValue(root.refreshToken);
+
+  const firstTimeLogin = toBooleanValue(
+    container.first_time_login ||
+      container.firstTimeLogin ||
+      root.first_time_login ||
+      root.firstTimeLogin,
+  );
+
+  return {
+    userData: (nestedUserData || container) as AuthUserPayload['user_data'],
+    accessToken,
+    refreshToken,
+    firstTimeLogin,
+  };
+};
+
+const buildAuthUser = (
+  response: SignInResponse | VerifyOTPResponse,
+  fallbackEmail: string,
+): User => {
+  const { userData, accessToken, refreshToken, firstTimeLogin } =
+    extractAuthPayload(response);
+
+  if (!accessToken) {
+    throw new Error(getResponseMessage(response) || 'Authentication failed');
+  }
+
+  const displayName =
+    userData?.first_name && userData?.last_name
+      ? `${userData.first_name} ${userData.last_name}`
+      : userData?.first_name || userData?.last_name || 'User';
+
+  return {
+    id: String(userData?.id ?? fallbackEmail ?? '0'),
+    name: displayName,
+    email: userData?.email || fallbackEmail,
+    image: userData?.user_profile_picture || null,
+    userCategory: userData?.user_category || '',
+    accessToken,
+    refreshToken: refreshToken || undefined,
+    first_time_login: firstTimeLogin,
+    accessTokenExpires: getAccessTokenExpiry(response),
+  } as User;
 };
 
 const refreshAccessToken = async (token: JWT): Promise<JWT> => {
@@ -110,6 +188,14 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
   }
 };
 
+const isSuccessfulResponse = (status?: number) => {
+  if (typeof status !== 'number') {
+    return false;
+  }
+
+  return status >= 200 && status < 300;
+};
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -129,105 +215,86 @@ export const authOptions: NextAuthOptions = {
           throw new Error('No credentials provided');
         }
 
-        const { email, password, otp } = credentials;
+        const email = credentials.email?.trim() || '';
+        const password = credentials.password?.toString() || '';
+        const otp = credentials.otp?.toString().trim() || '';
 
         if (!email) {
           throw new Error('Email is required');
         }
 
         try {
-          // Step 1: Initial sign-in with email/password
-          if (!otp) {
-            const signInResponse = await handleSignIn(email, password || '');
+          if (otp) {
+            const verifyResponse = await handleVerifyOTP(email, otp);
 
-            if (!signInResponse) {
-              throw new Error('Failed to start sign in');
+            if (!verifyResponse) {
+              throw new Error('Failed to verify OTP');
             }
 
-            if (signInResponse.requires_otp || signInResponse.status === 202) {
-              throw new Error('OTP_REQUIRED');
+            if (!isSuccessfulResponse(verifyResponse.status)) {
+              throw new Error(
+                getResponseMessage(verifyResponse) || 'Invalid OTP',
+              );
             }
 
-            if (signInResponse.status >= 400) {
-              throw new Error(signInResponse.message || 'Failed to sign in');
-            }
-
-            const { userData, accessToken, refreshToken, firstTimeLogin } =
-              extractAuthPayload(signInResponse);
-
-            if (!accessToken) {
-              throw new Error(signInResponse.message || 'Failed to sign in');
-            }
-
-            return {
-              id: userData?.id?.toString() || '0',
-              name:
-                userData?.first_name && userData?.last_name
-                  ? `${userData.first_name} ${userData.last_name}`
-                  : 'User',
-              email: userData?.email || email,
-              image: userData?.user_profile_picture || null,
-              userCategory: userData?.user_category || '',
-              accessToken,
-              refreshToken: refreshToken || undefined,
-              first_time_login: firstTimeLogin || false,
-              accessTokenExpires: getAccessTokenExpiry(signInResponse as any),
-            } as User;
+            return buildAuthUser(verifyResponse, email);
           }
 
-          // Step 2: OTP verification
-          const verifyResponse = await handleVerifyOTP(email, otp);
-
-          if (!verifyResponse) {
-            throw new Error('Failed to verify OTP');
+          if (!password) {
+            throw new Error('Password is required');
           }
 
-          if (verifyResponse.status >= 200 && verifyResponse.status < 300) {
-            const { userData, accessToken, refreshToken, firstTimeLogin } =
-              extractAuthPayload(verifyResponse);
+          const signInResponse = await handleSignIn(email, password);
 
-            if (!accessToken) {
-              throw new Error(verifyResponse.message || 'Invalid OTP');
-            }
-
-            return {
-              id: userData?.id?.toString() || '0',
-              name:
-                userData?.first_name && userData?.last_name
-                  ? `${userData.first_name} ${userData.last_name}`
-                  : 'User',
-              email: userData?.email || email,
-              image: userData?.user_profile_picture || null,
-              userCategory: userData?.user_category || '',
-              accessToken,
-              refreshToken: refreshToken || undefined,
-              first_time_login: firstTimeLogin || false,
-              accessTokenExpires: getAccessTokenExpiry(verifyResponse as any),
-            } as User;
+          if (!signInResponse) {
+            throw new Error('Failed to start sign in');
           }
 
-          throw new Error(verifyResponse.message || 'Invalid OTP');
-        } catch (error: any) {
-          if (error.message === 'OTP_REQUIRED') {
-            throw new Error('OTP_REQUIRED');
+          const signInStatus = Number(signInResponse.status);
+          const signInMessage = getResponseMessage(signInResponse);
+          const signInPayload = extractAuthPayload(signInResponse);
+
+          const requiresOtp =
+            hasOtpRequirement(signInResponse) ||
+            (isSuccessfulResponse(signInStatus) && !signInPayload.accessToken);
+
+          if (requiresOtp) {
+            throw new Error(
+              createAuthError(
+                AUTH_ERROR_CODES.OTP_REQUIRED,
+                signInMessage ||
+                  'OTP sent to your email. Check your inbox to continue.',
+              ),
+            );
           }
-          throw new Error(error.message || 'Failed to sign in');
+
+          if (!isSuccessfulResponse(signInStatus)) {
+            throw new Error(signInMessage || 'Failed to sign in');
+          }
+
+          return buildAuthUser(signInResponse, email);
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            error.message.startsWith('OTP_REQUIRED::')
+          ) {
+            throw error;
+          }
+
+          const message = error instanceof Error ? error.message : '';
+          throw new Error(message || 'Failed to sign in');
         }
       },
     }),
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   pages: {
     signIn: '/sign-in',
   },
   callbacks: {
-    /**
-     * The 'jwt' callback is called whenever a token is created or updated.
-     * We use it to attach custom properties (like token, userCategory, etc.) to the JWT.
-     */
     async jwt({ token, user }): Promise<any> {
       if (user) {
         token.id = user.id;
@@ -258,11 +325,6 @@ export const authOptions: NextAuthOptions = {
 
       return refreshAccessToken(token as JWT);
     },
-
-    /**
-     * The 'session' callback is called whenever a session is checked.
-     * We use it to pass custom properties from the JWT to the session.
-     */
     async session({ session, token }): Promise<any> {
       if (session.user) {
         session.user.id = token.id as string;
@@ -272,9 +334,11 @@ export const authOptions: NextAuthOptions = {
         session.user.userCategory = token.userCategory || '';
         session.user.first_time_login = token.first_time_login || false;
       }
+
       if (token.error) {
         (session as any).error = token.error;
       }
+
       return session;
     },
   },

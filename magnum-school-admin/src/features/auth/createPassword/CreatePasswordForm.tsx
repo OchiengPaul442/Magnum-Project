@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import Logo from '@public/assets/images/MAIN_LOGO.webp';
 import { CustomInputField, CustomButton } from '@components/shared';
@@ -17,10 +17,13 @@ import {
   createPasswordSchema,
 } from '@/lib/validationSchema';
 import { ChangePasswordResponse } from '@/types/auth';
+import { resolveCallbackUrl } from '@/lib/auth/flow';
 
 const CreatePasswordForm = () => {
   const { status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = resolveCallbackUrl(searchParams);
 
   const [loading, setLoading] = useState(false);
 
@@ -54,8 +57,7 @@ const CreatePasswordForm = () => {
 
       if (response.status === 200 || response.status === 201) {
         showSuccessToast(response.message || 'Password changed successfully.');
-        // Redirect to /dashboard instead of signing out
-        router.push('/dashboard');
+        router.replace(callbackUrl);
       } else {
         showErrorToast(response.message || 'Failed to change password.');
       }
