@@ -33,7 +33,7 @@ export default function Topbar({
         <Button
           variant="ghost"
           size="icon"
-          className="hidden lg:inline-flex hover:bg-[#18806B] hover:text-white transition-colors"
+          className="hidden lg:inline-flex hover:bg-[#2CE9C3] transition-colors"
           onClick={onCollapseToggle}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >

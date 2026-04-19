@@ -80,9 +80,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type="button"
             onClick={handleClear}
             aria-label="Clear"
-            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted/20 hover:text-foreground"
+            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white border border-border/60 text-muted-foreground shadow-sm hover:bg-[#f3f7f5] hover:text-foreground transition-colors"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3 w-3" />
           </button>
         ) : null}
       </div>
