@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import StudentDetailsForm from '@components/forms/StudentDetailsForm';
 import { useRouter } from 'next/navigation';
 import {
@@ -12,6 +12,7 @@ import ErrorState from '@/components/shared/ErrorState';
 import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
 import NoData from '@/components/shared/NoData';
 import { showErrorToast } from '@/lib/toast';
+import { useResourceData } from '@/lib/api/useResourceData';
 
 export default function StudentDetailsPage({
   params,
@@ -19,55 +20,43 @@ export default function StudentDetailsPage({
   params: { studentId: string };
 }) {
   const router = useRouter();
-  const [studentData, setStudentData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
   const [toggleLoading, setToggleLoading] = useState(false);
+  const studentDetailsKey = params.studentId
+    ? `student:details:${params.studentId}`
+    : null;
 
-  // Refetch student details
-  const fetchDetails = useCallback(async () => {
-    setIsLoading(true);
-    setIsError(false);
-    try {
-      const studentId = params.studentId;
-      if (!studentId) {
-        setIsError(true);
-        setIsLoading(false);
-        return;
-      }
-      const response: any = await getStudentDetails({
-        student_id: String(studentId),
-      });
-      const payload = response?.data ?? response;
-      const student = payload?.student || payload?.data?.student;
-      if (!student) {
-        setStudentData(null);
-      } else {
-        setStudentData({
-          student,
-          card: payload?.card || payload?.data?.card || {},
-          transactions:
-            payload?.transactions || payload?.data?.transactions || [],
-          parents: payload?.parents || payload?.data?.parents || [],
-        });
-      }
-    } catch (error) {
-      showErrorToast(
-        error,
-        'Unable to load student details. Please try again.',
-      );
-      setIsError(true);
-    } finally {
-      setIsLoading(false);
+  const fetchStudentDetails = async () => {
+    if (!params.studentId) {
+      throw new Error('Student ID is required to fetch details.');
     }
-  }, [params.studentId]);
 
-  useEffect(() => {
-    fetchDetails();
-  }, [fetchDetails]);
+    const response: any = await getStudentDetails({
+      student_id: String(params.studentId),
+    });
+    const payload = response?.data ?? response;
+    const student = payload?.student || payload?.data?.student;
+
+    if (!student) {
+      return null;
+    }
+
+    return {
+      student,
+      card: payload?.card || payload?.data?.card || {},
+      transactions: payload?.transactions || payload?.data?.transactions || [],
+      parents: payload?.parents || payload?.data?.parents || [],
+    };
+  };
+
+  const {
+    data: studentData,
+    error,
+    isLoading,
+    mutate,
+  } = useResourceData(studentDetailsKey, fetchStudentDetails);
 
   if (isLoading) return <LoadingSkeleton />;
-  if (isError) {
+  if (error) {
     return (
       <ErrorState
         title="Error Loading Student Details"
@@ -101,8 +90,7 @@ export default function StudentDetailsPage({
       } else {
         await activateStudent({ student_id: String(studentId) });
       }
-      // Refetch details after status change
-      await fetchDetails();
+      await mutate();
     } catch (err) {
       // Optionally: show error toast
       // eslint-disable-next-line no-console

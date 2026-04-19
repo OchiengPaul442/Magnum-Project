@@ -181,9 +181,6 @@ export class ServiceFactory {
 
     try {
       const result = await this.request<T>('POST', endpoint, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
         ...config,
       });
 

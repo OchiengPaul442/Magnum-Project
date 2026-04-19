@@ -73,9 +73,6 @@ function createInstance(options: {
   const instance = axios.create({
     baseURL: BASE_URL,
     ...TIMEOUT_CONFIG,
-    headers: {
-      ...(multipart ? {} : { 'Content-Type': 'application/json' }),
-    },
     validateStatus: (status) => status < 400,
     withCredentials: false,
   });

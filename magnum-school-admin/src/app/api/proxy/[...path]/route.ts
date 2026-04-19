@@ -1,27 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { encode, getToken } from 'next-auth/jwt';
+import { getAuthSecret } from '@/lib/auth/secret';
 
 export const runtime = 'nodejs';
 
 const API_BASE_URL = process.env.MAGNUM_API_BASE_URL || '';
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || '';
+const AUTH_SECRET = getAuthSecret();
 const EXPIRY_BUFFER_MS = 60 * 1000;
-
-const AUTH_SERVICE_ENDPOINTS = [
-  'login',
-  'verifyotp',
-  'resendotp',
-  'forgotpassword',
-  'resetpassword',
-  'changepassword',
-  'logout',
-  'getuserprofile',
-  'activateaccount',
-  'register/parent',
-  'requestloginpinreset',
-  'resetloginpin',
-  'setloginpin',
-] as const;
 
 const PUBLIC_ENDPOINTS = [
   'login',
@@ -64,14 +49,41 @@ const getCookieName = () => {
     : 'next-auth.session-token';
 };
 
-const cloneHeaders = (request: NextRequest) => {
-  const headers = new Headers(request.headers);
-  headers.delete('host');
-  headers.delete('cookie');
+const sanitizeResponseHeaders = (headers: Headers) => {
+  headers.delete('set-cookie');
+  headers.delete('content-encoding');
   headers.delete('content-length');
+  headers.delete('transfer-encoding');
   headers.delete('connection');
-  headers.delete('accept-encoding');
-  headers.delete('authorization');
+  headers.delete('keep-alive');
+  headers.delete('proxy-authenticate');
+  headers.delete('proxy-authorization');
+  headers.delete('te');
+  headers.delete('trailer');
+  headers.delete('upgrade');
+
+  return headers;
+};
+
+const buildBackendHeaders = ({
+  isPublic,
+  accessToken,
+  hasBody,
+}: {
+  isPublic: boolean;
+  accessToken?: string;
+  hasBody: boolean;
+}) => {
+  const headers = new Headers();
+
+  if (hasBody) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  if (!isPublic && accessToken) {
+    headers.set('Authorization', `Token ${accessToken}`);
+  }
+
   return headers;
 };
 
@@ -150,18 +162,53 @@ const isExpiringSoon = (expiresAt?: number, bufferMs = EXPIRY_BUFFER_MS) => {
   return Date.now() >= expiresAt - bufferMs;
 };
 
+const attachRefreshedSessionCookie = async (
+  response: Response,
+  token: Awaited<ReturnType<typeof getToken>> | null,
+  refreshedToken: {
+    accessToken?: string;
+    refreshToken?: string;
+    accessTokenExpires?: number;
+    refreshTokenExpires?: number;
+  },
+) => {
+  if (!AUTH_SECRET || !token || !refreshedToken.accessToken) {
+    return forwardResponse(response);
+  }
+
+  const cookieName = getCookieName();
+  const updatedToken = {
+    ...token,
+    accessToken: refreshedToken.accessToken,
+    refreshToken: refreshedToken.refreshToken,
+    accessTokenExpires:
+      refreshedToken.accessTokenExpires || token?.accessTokenExpires,
+    refreshTokenExpires:
+      refreshedToken.refreshTokenExpires || token?.refreshTokenExpires,
+  };
+
+  const encoded = await encode({
+    token: updatedToken,
+    secret: AUTH_SECRET,
+  });
+
+  const nextResponse = await forwardResponse(response);
+  nextResponse.cookies.set(cookieName, encoded, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: cookieName.startsWith('__Secure-'),
+    path: '/',
+  });
+
+  return nextResponse;
+};
+
 const forwardResponse = async (
   response: Response,
   extraHeaders?: HeadersInit,
 ) => {
   const body = await response.arrayBuffer();
-  const headers = new Headers(response.headers);
-
-  // Do not forward backend Set-Cookie headers (these often include
-  // cookies scoped to the backend domain, e.g. Cloudflare `__cf_bm`),
-  // which the browser will reject and log as invalid domain. We only
-  // set cookies explicitly on the proxy when required (see refresh flow).
-  headers.delete('set-cookie');
+  const headers = sanitizeResponseHeaders(new Headers(response.headers));
 
   if (extraHeaders) {
     Object.entries(extraHeaders).forEach(([key, value]) => {
@@ -189,14 +236,16 @@ const handleRequest = async (
   const segments = context.params.path || [];
   const path = segments.join('/');
   const isPublic = isPublicPath(path);
-  const headers = cloneHeaders(request);
+  const hasBody = !['GET', 'HEAD'].includes(request.method);
+  const body = hasBody ? await request.arrayBuffer() : undefined;
+  const targetUrl = buildTargetUrl(request, path);
 
-  const token = await getToken({ req: request, secret: AUTH_SECRET });
-  const accessToken = token?.accessToken as string | undefined;
-  const refreshToken = token?.refreshToken as string | undefined;
-  const accessTokenExpires = token?.accessTokenExpires as number | undefined;
-  const refreshTokenExpires = token?.refreshTokenExpires as number | undefined;
-  const tokenError = token?.error as string | undefined;
+  let token: Awaited<ReturnType<typeof getToken>> | null = null;
+  let accessToken: string | undefined;
+  let refreshToken: string | undefined;
+  let accessTokenExpires: number | undefined;
+  let refreshTokenExpires: number | undefined;
+  let tokenError: string | undefined;
   let refreshedToken: {
     accessToken?: string;
     refreshToken?: string;
@@ -205,6 +254,13 @@ const handleRequest = async (
   } | null = null;
 
   if (!isPublic) {
+    token = await getToken({ req: request, secret: AUTH_SECRET });
+    accessToken = token?.accessToken as string | undefined;
+    refreshToken = token?.refreshToken as string | undefined;
+    accessTokenExpires = token?.accessTokenExpires as number | undefined;
+    refreshTokenExpires = token?.refreshTokenExpires as number | undefined;
+    tokenError = token?.error as string | undefined;
+
     if (!accessToken || tokenError) {
       return NextResponse.json(
         { message: 'Authentication required' },
@@ -218,85 +274,47 @@ const handleRequest = async (
         isExpiringSoon(refreshTokenExpires))
     ) {
       refreshedToken = await refreshAccessToken(refreshToken);
+      if (refreshedToken?.accessToken) {
+        accessToken = refreshedToken.accessToken;
+      }
     }
-
-    headers.set(
-      'Authorization',
-      `Token ${refreshedToken?.accessToken || accessToken}`,
-    );
   }
 
-  const hasBody = !['GET', 'HEAD'].includes(request.method);
-  const body = hasBody ? await request.arrayBuffer() : undefined;
-  const targetUrl = buildTargetUrl(request, path);
+  const headers = buildBackendHeaders({
+    isPublic,
+    accessToken,
+    hasBody,
+  });
 
   let response = await fetch(targetUrl.toString(), {
     method: request.method,
     headers,
     body,
+    cache: 'no-store',
   });
 
   if (!isPublic && response.status === 401 && refreshToken) {
     const refreshed =
       refreshedToken || (await refreshAccessToken(refreshToken));
     if (refreshed?.accessToken) {
-      headers.set('Authorization', `Token ${refreshed.accessToken}`);
+      const retryHeaders = buildBackendHeaders({
+        isPublic,
+        accessToken: refreshed.accessToken,
+        hasBody,
+      });
       response = await fetch(targetUrl.toString(), {
         method: request.method,
-        headers,
+        headers: retryHeaders,
         body,
+        cache: 'no-store',
       });
 
-      if (AUTH_SECRET) {
-        const cookieName = getCookieName();
-        const updatedToken = {
-          ...token,
-          accessToken: refreshed.accessToken,
-          refreshToken: refreshed.refreshToken,
-          accessTokenExpires:
-            refreshed.accessTokenExpires || token?.accessTokenExpires,
-          refreshTokenExpires:
-            refreshed.refreshTokenExpires || token?.refreshTokenExpires,
-        };
-        const encoded = await encode({
-          token: updatedToken,
-          secret: AUTH_SECRET,
-        });
-        const nextResponse = await forwardResponse(response);
-        nextResponse.cookies.set(cookieName, encoded, {
-          httpOnly: true,
-          sameSite: 'lax',
-          secure: cookieName.startsWith('__Secure-'),
-          path: '/',
-        });
-        return nextResponse;
-      }
+      return attachRefreshedSessionCookie(response, token, refreshed);
     }
   }
 
   if (!isPublic && refreshedToken?.accessToken && AUTH_SECRET) {
-    const cookieName = getCookieName();
-    const updatedToken = {
-      ...token,
-      accessToken: refreshedToken.accessToken,
-      refreshToken: refreshedToken.refreshToken,
-      accessTokenExpires:
-        refreshedToken.accessTokenExpires || token?.accessTokenExpires,
-      refreshTokenExpires:
-        refreshedToken.refreshTokenExpires || token?.refreshTokenExpires,
-    };
-    const encoded = await encode({
-      token: updatedToken,
-      secret: AUTH_SECRET,
-    });
-    const nextResponse = await forwardResponse(response);
-    nextResponse.cookies.set(cookieName, encoded, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: cookieName.startsWith('__Secure-'),
-      path: '/',
-    });
-    return nextResponse;
+    return attachRefreshedSessionCookie(response, token, refreshedToken);
   }
 
   return forwardResponse(response);

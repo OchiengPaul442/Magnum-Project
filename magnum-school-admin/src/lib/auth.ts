@@ -4,6 +4,7 @@ import type { JWT } from 'next-auth/jwt';
 
 import { createAuthError, AUTH_ERROR_CODES } from '@/lib/auth/flow';
 import { getResponseMessage, hasOtpRequirement } from '@/lib/auth/session';
+import { getAuthSecret } from '@/lib/auth/secret';
 import { handleSignIn, handleVerifyOTP } from '@/services/auth/service';
 import type {
   AuthUserPayload,
@@ -402,7 +403,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: getAuthSecret(),
 };
 
 export default NextAuth(authOptions);

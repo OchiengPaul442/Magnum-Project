@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
   CardAnalytics,
   ChartAnalytics,
@@ -13,36 +12,21 @@ import { getAnalytics } from '@/services/dashboard/service';
 // Import custom components for error and no data states
 import ErrorState from '@/components/shared/ErrorState';
 import NoData from '@/components/shared/NoData';
-import { showErrorToast } from '@/lib/toast';
+import { useResourceData } from '@/lib/api/useResourceData';
 
 export default function DashboardPage() {
   return <DashboardContent />;
 }
 
 function DashboardContent() {
-  const [data, setData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const { data, error, isLoading, mutate } = useResourceData(
+    'dashboard:analytics',
+    getAnalytics,
+  );
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    setIsError(false);
-    try {
-      const result = await getAnalytics();
-      setData(result);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      showErrorToast(error, 'Unable to load dashboard data. Please try again.');
-      setIsError(true);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRetry = () => {
+    void mutate();
   };
-
-  // Load data on component mount
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   // Loading state
   if (isLoading) {
@@ -50,13 +34,13 @@ function DashboardContent() {
   }
 
   // Error state
-  if (isError) {
+  if (error) {
     return (
       <ErrorState
         title="Error Loading Dashboard"
         description="We encountered an issue while fetching the dashboard data. Please try again."
         actionLabel="Retry"
-        onActionClick={fetchData}
+        onActionClick={handleRetry}
       />
     );
   }
@@ -74,7 +58,7 @@ function DashboardContent() {
         title="No Dashboard Data"
         description="There is currently no data available to display."
         actionLabel="Refresh"
-        onActionClick={fetchData}
+        onActionClick={handleRetry}
       />
     );
   }

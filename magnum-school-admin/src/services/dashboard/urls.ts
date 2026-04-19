@@ -1,6 +1,6 @@
 // Dashboard service URLs
 export const DASHBOARD_URLS = {
-  GET_ANALYTICS: '/getschooldashboarddata/',
+  GET_ANALYTICS: '/getschooldashboarddata',
 } as const;
 
 // Dashboard service configuration

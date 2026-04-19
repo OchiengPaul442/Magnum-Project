@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Parser } from 'json2csv';
 import { FaEllipsisV } from 'react-icons/fa';
@@ -18,48 +18,37 @@ import {
 import ErrorState from '@/components/shared/ErrorState';
 import NoData from '@/components/shared/NoData';
 import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
-import { showErrorToast } from '@/lib/toast';
 
 import { getStudentData } from '@/services/students/service';
 import { StudentDataItem } from '@/types/student';
+import { useResourceData } from '@/lib/api/useResourceData';
 
 export default function StudentList() {
   const router = useRouter();
-  const [students, setStudents] = useState<StudentDataItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
   const [filter, setFilter] = useState<'All' | 'Activated' | 'Deactivated'>(
     'All',
   );
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    setIsError(false);
-    try {
-      const data = await getStudentData();
-      setStudents(data);
-    } catch (error) {
-      console.error('Error fetching student data:', error);
-      showErrorToast(error, 'Unable to load students. Please try again.');
-      setIsError(true);
-    } finally {
-      setIsLoading(false);
-    }
+  const {
+    data: students = [],
+    error,
+    isLoading,
+    mutate,
+  } = useResourceData('students:list', getStudentData);
+
+  const handleRetry = () => {
+    void mutate();
   };
 
-  // Load data on component mount
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   if (isLoading) return <LoadingSkeleton />;
-  if (isError) {
+
+  if (error) {
     return (
       <ErrorState
         title="Error Loading Student Data"
         description="There was an error while fetching student data. Please try again."
         actionLabel="Retry"
-        onActionClick={fetchData}
+        onActionClick={handleRetry}
       />
     );
   }
@@ -70,18 +59,16 @@ export default function StudentList() {
         title="No Students Available"
         description="There are currently no students in the system."
         actionLabel="Refresh"
-        onActionClick={fetchData}
+        onActionClick={handleRetry}
       />
     );
   }
 
-  // Filter logic
-  const filteredData = students.filter((s) => {
+  const filteredData = students.filter((student) => {
     if (filter === 'All') return true;
-    return s.status === filter;
+    return student.status === filter;
   });
 
-  // Columns for the table
   const columns = [
     {
       header: "Student's name",
@@ -157,12 +144,10 @@ export default function StudentList() {
     },
   ];
 
-  // Prepare data for the table
   const tableData = filteredData.map((student) => ({
     ...student,
   }));
 
-  // CSV Download: Transform data to remove the raw field
   const downloadCSV = () => {
     try {
       const csvExportData = filteredData.map((student) => ({
@@ -183,14 +168,13 @@ export default function StudentList() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    } catch (error: any) {
-      console.error(error);
+    } catch (downloadError) {
+      console.error(downloadError);
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Filters & Download CSV */}
       <div className="flex justify-between items-center bg-white rounded-lg p-4 shadow-sm">
         <div className="flex items-center gap-4">
           <span className="text-sm font-bold text-gray-700">Filters:</span>
@@ -219,7 +203,6 @@ export default function StudentList() {
         </Button>
       </div>
 
-      {/* Table */}
       <div>
         <ReusableTable
           columns={columns}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Parser } from 'json2csv';
 import { FaEllipsisV } from 'react-icons/fa';
@@ -18,47 +18,35 @@ import {
 import ErrorState from '@/components/shared/ErrorState';
 import NoData from '@/components/shared/NoData';
 import LoadingSkeleton from '@/components/shared/loaders/loading-skeleton';
-import { showErrorToast } from '@/lib/toast';
+import { useResourceData } from '@/lib/api/useResourceData';
 
 import { getVendorData } from '@/services/vendors/service';
 import { VendorDataItem } from '@/types/vendors';
 
 export default function VendorPage() {
   const router = useRouter();
-  const [vendors, setVendors] = useState<VendorDataItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
   const [filter, setFilter] = useState<'All' | 'Activated' | 'Deactivated'>(
     'All',
   );
-  const fetchData = async () => {
-    setIsLoading(true);
-    setIsError(false);
-    try {
-      const data = await getVendorData();
-      setVendors(data);
-    } catch (error) {
-      console.error('Error fetching vendor data:', error);
-      showErrorToast(error, 'Unable to load vendors. Please try again.');
-      setIsError(true);
-    } finally {
-      setIsLoading(false);
-    }
+  const {
+    data: vendors = [],
+    error,
+    isLoading,
+    mutate,
+  } = useResourceData('vendors:list', getVendorData);
+
+  const handleRetry = () => {
+    void mutate();
   };
 
-  // Load data on component mount
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   if (isLoading) return <LoadingSkeleton />;
-  if (isError) {
+  if (error) {
     return (
       <ErrorState
         title="Error Loading Vendor Data"
         description="There was an error while fetching vendor data. Please try again."
         actionLabel="Retry"
-        onActionClick={fetchData}
+        onActionClick={handleRetry}
       />
     );
   }
@@ -68,7 +56,7 @@ export default function VendorPage() {
         title="No Vendors Available"
         description="There are currently no vendors in the system."
         actionLabel="Refresh"
-        onActionClick={fetchData}
+        onActionClick={handleRetry}
       />
     );
   }

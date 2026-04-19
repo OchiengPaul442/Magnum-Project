@@ -1,10 +1,10 @@
 // Student service URLs
 export const STUDENT_URLS = {
-  GET_STUDENTS: '/getstudentsunderschool/',
-  REGISTER_STUDENT: '/registerstudent/',
-  ACTIVATE_STUDENT: '/activatestudent/',
-  DEACTIVATE_STUDENT: '/deactivatestudent/',
-  GET_STUDENT_DETAILS: '/getstudentdetails/',
+  GET_STUDENTS: '/getstudentsunderschool',
+  REGISTER_STUDENT: '/registerstudent',
+  ACTIVATE_STUDENT: '/activatestudent',
+  DEACTIVATE_STUDENT: '/deactivatestudent',
+  GET_STUDENT_DETAILS: '/getstudentdetails',
 } as const;
 
 // Student service configuration

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { encode } from 'next-auth/jwt';
+import { getAuthSecret } from '@/lib/auth/secret';
 
 export const runtime = 'nodejs';
 
 const API_BASE_URL = process.env.MAGNUM_API_BASE_URL || '';
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || '';
+const AUTH_SECRET = getAuthSecret();
 const DEFAULT_ACCESS_TOKEN_TTL_MS = 55 * 60 * 1000;
 const DEFAULT_REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
