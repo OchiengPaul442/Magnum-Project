@@ -52,15 +52,21 @@ export default function DataTable<T>({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm",
+        "overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm",
         className,
       )}
     >
       <Table>
-        <TableHeader>
-          <TableRow>
+        <TableHeader className="bg-gray-50 [&_tr]:border-gray-200">
+          <TableRow className="border-b border-gray-200 bg-gray-50 hover:bg-gray-50">
             {columns.map((column) => (
-              <TableHead key={column.key} className={column.className}>
+              <TableHead
+                key={column.key}
+                className={cn(
+                  "px-6 py-4 text-left text-sm font-semibold text-gray-700",
+                  column.className,
+                )}
+              >
                 {column.header}
               </TableHead>
             ))}
@@ -72,14 +78,17 @@ export default function DataTable<T>({
                 <TableRow
                   key={`skeleton-row-${rowIndex}`}
                   className={cn(
-                    rowIndex % 2 === 1 && "bg-muted/30",
+                    rowIndex % 2 === 1 && "bg-gray-50",
                     "pointer-events-none",
                   )}
                 >
                   {columns.map((column, columnIndex) => (
                     <TableCell
                       key={`skeleton-${rowIndex}-${column.key}`}
-                      className={column.className}
+                      className={cn(
+                        "px-6 py-4 text-sm text-gray-600",
+                        column.className,
+                      )}
                     >
                       <Skeleton
                         className={cn(
@@ -100,9 +109,9 @@ export default function DataTable<T>({
                   <TableRow
                     key={resolvedRowKey}
                     className={cn(
-                      "transition-colors",
-                      index % 2 === 1 && "bg-muted/25",
-                      onRowClick && "cursor-pointer hover:bg-muted/35",
+                      "border-b border-gray-100 transition-colors",
+                      index % 2 === 1 && "bg-[#EEECF3]/50",
+                      onRowClick && "cursor-pointer hover:bg-gray-50",
                     )}
                     onClick={(event) => {
                       const target = event.target;
@@ -120,6 +129,7 @@ export default function DataTable<T>({
                       <TableCell
                         key={`${resolvedRowKey}-${column.key}`}
                         className={cn(
+                          "px-6 py-4 text-sm text-gray-600",
                           column.className,
                           isDateLikeColumn(column.key) && "whitespace-nowrap",
                         )}

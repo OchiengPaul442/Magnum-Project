@@ -11,7 +11,6 @@ import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import { Button, buttonVariants } from "@/components/ui/button";
 import PasswordField from "@/components/shared/password-field";
-import { captureError } from "@/lib/logging";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +22,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { authApi } from "@/lib/api/auth";
+import { authApi, getAuthErrorMessage } from "@/lib/api/auth";
+import { cn } from "@/lib/utils";
 
 const changePasswordSchema = z
   .object({
@@ -61,8 +61,7 @@ export default function AccountPage() {
     try {
       await update();
       toast.success("Session refreshed");
-    } catch (error) {
-      captureError(error, { source: "refresh-session" });
+    } catch {
       toast.error("Failed to refresh session");
     } finally {
       setRefreshing(false);
@@ -75,8 +74,9 @@ export default function AccountPage() {
       await authApi.logoutAll();
       toast.success("Logged out of all sessions");
     } catch (error) {
-      captureError(error, { source: "logout-all" });
-      toast.error("Failed to logout all sessions");
+      toast.error(
+        getAuthErrorMessage(error, "Failed to log out of all sessions."),
+      );
     } finally {
       setLoggingOutAll(false);
     }
@@ -88,8 +88,7 @@ export default function AccountPage() {
       toast.success("Password changed successfully");
       reset();
     } catch (error) {
-      captureError(error, { source: "change-password" });
-      toast.error("Failed to change password");
+      toast.error(getAuthErrorMessage(error, "Failed to change password."));
     }
   };
 
@@ -101,7 +100,9 @@ export default function AccountPage() {
         actions={
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline">Log out</Button>
+              <Button variant="outline" className="rounded-full">
+                Log out
+              </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -111,9 +112,14 @@ export default function AccountPage() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel className="rounded-full">
+                  Cancel
+                </AlertDialogCancel>
                 <AlertDialogAction
-                  className={buttonVariants({ variant: "destructive" })}
+                  className={cn(
+                    buttonVariants({ variant: "destructive" }),
+                    "rounded-full",
+                  )}
                   onClick={() => void signOut({ callbackUrl: "/login" })}
                 >
                   Log out
@@ -144,7 +150,7 @@ export default function AccountPage() {
         <h3 className="text-lg font-semibold text-foreground">
           Security Actions
         </h3>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="mt-1 text-sm text-muted-foreground">
           Change your current password, refresh your session, or log out all
           sessions from the back office.
         </p>
@@ -188,7 +194,11 @@ export default function AccountPage() {
           </div>
 
           <div className="flex justify-start">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-full"
+            >
               {isSubmitting ? "Updating..." : "Update Password"}
             </Button>
           </div>
@@ -197,6 +207,7 @@ export default function AccountPage() {
         <div className="mt-4 flex flex-wrap gap-3">
           <Button
             variant="outline"
+            className="rounded-full"
             onClick={handleRefresh}
             disabled={refreshing}
           >
@@ -204,6 +215,7 @@ export default function AccountPage() {
           </Button>
           <Button
             variant="destructive"
+            className="rounded-full"
             onClick={handleLogoutAll}
             disabled={loggingOutAll}
           >

@@ -32,14 +32,16 @@ export default function PasswordField({
 
   return (
     <div className={cn("space-y-2", className)}>
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className="text-sm font-medium text-gray-700">
+        {label}
+      </Label>
       <div className="relative">
         <Input
           id={id}
           type={visible ? "text" : "password"}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className="!rounded-full pr-12"
+          className="h-12 !rounded-full !border-gray-300 !bg-white pr-12 shadow-sm placeholder:text-gray-400 focus-visible:!ring-2 focus-visible:!ring-[#6f54c5]/20 focus-visible:!ring-offset-0"
           {...registration}
         />
         <Button

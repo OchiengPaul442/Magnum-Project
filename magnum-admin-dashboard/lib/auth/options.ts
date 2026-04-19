@@ -182,6 +182,7 @@ export const authOptions: NextAuthOptions = {
         username: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
         otp: { label: "OTP", type: "text" },
+        verifiedPayload: { label: "Verified payload", type: "text" },
       },
       async authorize(credentials) {
         if (!API_BASE_URL || !credentials?.username) {
@@ -189,9 +190,20 @@ export const authOptions: NextAuthOptions = {
         }
 
         const username = credentials.username.trim();
+        const verifiedPayload = getString(credentials.verifiedPayload);
         const otp = getString(credentials.otp);
         const password = getString(credentials.password);
         const isOtpFlow = Boolean(otp);
+
+        if (verifiedPayload) {
+          try {
+            const parsedPayload = JSON.parse(verifiedPayload) as unknown;
+            return toUser(parsedPayload, username);
+          } catch (error) {
+            captureError(error, { source: "nextauth-authorize-payload" });
+            return null;
+          }
+        }
 
         if (!isOtpFlow && !password) {
           return null;
