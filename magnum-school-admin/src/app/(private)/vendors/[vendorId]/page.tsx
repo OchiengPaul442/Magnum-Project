@@ -38,11 +38,14 @@ export default function VendorDetailsPage({
     }
 
     const entity = payload.vendor_entity;
+    const vendorEntityId = String(entity.vendor_entity_id || params.vendorId);
     const entityName = entity.vendor_entity_name || 'N/A';
     const entityOwner =
       entity.vendor_owner_details?.full_name || entity.vendor_owner || 'N/A';
     const salesAmount =
       entity.vendor_entity_total_today_operator_transactions?.toString() || '0';
+    const status =
+      entity.vendor_entity_status === 'active' ? 'Activated' : 'Deactivated';
     const operators = Array.isArray(entity.vendor_entity_operators)
       ? entity.vendor_entity_operators.map((op: any) => ({
           id: op.id?.toString() || '',
@@ -52,7 +55,14 @@ export default function VendorDetailsPage({
         }))
       : [];
 
-    return { entityName, entityOwner, salesAmount, operators };
+    return {
+      vendorEntityId,
+      entityName,
+      entityOwner,
+      salesAmount,
+      status,
+      operators,
+    };
   };
 
   const {
@@ -89,5 +99,11 @@ export default function VendorDetailsPage({
     );
   }
 
-  return <VendorDetailsForm vendor={vendor} onClose={handleClose} />;
+  return (
+    <VendorDetailsForm
+      vendor={vendor}
+      onClose={handleClose}
+      onStatusUpdated={() => void mutate()}
+    />
+  );
 }

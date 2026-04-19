@@ -53,7 +53,7 @@ export const updateVendorEntityStatusBySchool = async (body: {
 
 export const onboardVendorWithOwner = async (body: {
   vendor_name: string;
-  school_id: number;
+  school_id: string | number;
   owner_email: string;
   owner_first_name: string;
   owner_last_name: string;

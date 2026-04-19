@@ -95,11 +95,11 @@ export default function VendorPage() {
       Cell: ({ value }: { value: string }) => (
         <div className="flex items-center gap-2">
           <span
-            className={`h-2.5 w-2.5 rounded-full ${value === 'Activated' ? 'bg-teal-500' : 'bg-red-500'}`}
+            className={`h-2.5 w-2.5 rounded-full ${value === 'Activated' ? 'bg-[#18806B]' : 'bg-red-500'}`}
           />
           <span
             className={
-              value === 'Activated' ? 'text-gray-700' : 'text-gray-500'
+              value === 'Activated' ? 'text-[#18806B]' : 'text-gray-500'
             }
           >
             {value}

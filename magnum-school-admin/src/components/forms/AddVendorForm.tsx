@@ -10,6 +10,8 @@ import CustomInputField from '@/components/shared/CustomInputField';
 import CustomButton from '@/components/shared/CustomButton';
 
 import { onboardVendorWithOwner } from '@/services/vendors/service';
+import { normalizeUserProfile } from '@/lib/auth/profile';
+import { useSession } from 'next-auth/react';
 import { useUserProfileStore } from '@/store/useUserProfileStore';
 
 // 1. Define your vendor form schema (fields required by onboarding API, schoolId is hidden)
@@ -17,8 +19,8 @@ const formSchema = z.object({
   vendorName: z.string().min(2, {
     message: 'Vendor name must be at least 2 characters.',
   }),
-  // schoolId is injected, not shown to user
-  schoolId: z.number().min(1, {
+  // schoolId is injected, not shown to user. Use string because session uses UUIDs.
+  schoolId: z.string().min(1, {
     message: 'School ID is required.',
   }),
   ownerEmail: z.string().email({
@@ -47,19 +49,54 @@ interface AddVendorFormProps {
 const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
   const [isRegistering, setIsRegistering] = React.useState(false);
 
-  // Get schoolId from user profile redux slice
+  // Resolve schoolId from the loaded profile; do not guess a fallback value.
   const userProfile = useUserProfileStore((state) => state.data);
-  const schoolId = userProfile?.data?.school?.id || 1;
+  const profileStatus = useUserProfileStore((state) => state.status);
+  const normalizedProfile = React.useMemo(
+    () => normalizeUserProfile(userProfile),
+    [userProfile],
+  );
+
+  const { data: session } = useSession();
+  const sessionProfile = React.useMemo(
+    () => normalizeUserProfile(session?.user),
+    [session],
+  );
+
+  const resolvedSchoolId =
+    normalizedProfile?.school?.id ?? sessionProfile?.school?.id ?? '';
+  const resolvedSchoolName =
+    normalizedProfile?.school?.name ?? sessionProfile?.school?.name ?? '';
+
+  const schoolIdReady = Boolean(
+    resolvedSchoolId && String(resolvedSchoolId).trim(),
+  );
+
+  let infoMessage = '';
+  if (schoolIdReady) {
+    infoMessage = `Vendor will be onboarded under ${
+      resolvedSchoolName || 'your school'
+    }.`;
+  } else if (
+    profileStatus === 'loading' &&
+    !sessionProfile?.school?.id &&
+    !normalizedProfile?.school?.id
+  ) {
+    infoMessage =
+      'Loading your school profile so the vendor is linked to the correct school.';
+  }
 
   const {
     control,
+    register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       vendorName: '',
-      schoolId: schoolId,
+      schoolId: '',
       ownerEmail: '',
       ownerFirstName: '',
       ownerLastName: '',
@@ -68,14 +105,33 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
     },
   });
 
+  React.useEffect(() => {
+    if (!schoolIdReady) {
+      return;
+    }
+
+    setValue('schoolId', resolvedSchoolId, {
+      shouldValidate: true,
+      shouldDirty: false,
+      shouldTouch: false,
+    });
+  }, [resolvedSchoolId, schoolIdReady, setValue]);
+
   // 2. Handle form submission
   const onSubmit = async (formData: FormData) => {
     try {
+      if (!schoolIdReady) {
+        showErrorToast(
+          'Your school profile is still loading. Please try again in a moment.',
+        );
+        return;
+      }
+
       setIsRegistering(true);
       // Map form fields to API body
       const apiBody = {
         vendor_name: formData.vendorName,
-        school_id: schoolId,
+        school_id: formData.schoolId,
         owner_email: formData.ownerEmail,
         owner_first_name: formData.ownerFirstName,
         owner_last_name: formData.ownerLastName,
@@ -124,6 +180,10 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
       className="space-y-6 relative"
       onKeyDown={handleKeyDown}
     >
+      <div className="rounded-2xl border border-dashed border-[#18806B]/20 bg-[#18806B]/5 px-4 py-3 text-sm text-slate-600">
+        {infoMessage}
+      </div>
+
       {/* Vendor Name */}
       <Controller
         name="vendorName"
@@ -135,17 +195,13 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
             value={field.value}
             onChange={field.onChange}
             error={errors.vendorName?.message}
+            containerClassName="mb-0 max-w-none"
           />
         )}
       />
 
       {/* School ID is hidden and injected automatically */}
-      <input
-        type="hidden"
-        value={schoolId}
-        {...control.register('schoolId')}
-        readOnly
-      />
+      <input type="hidden" {...register('schoolId')} />
 
       {/* Owner First & Last Name side by side */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 -mb-4">
@@ -159,6 +215,7 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
               value={field.value}
               onChange={field.onChange}
               error={errors.ownerFirstName?.message}
+              containerClassName="mb-0 max-w-none"
             />
           )}
         />
@@ -172,6 +229,7 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
               value={field.value}
               onChange={field.onChange}
               error={errors.ownerLastName?.message}
+              containerClassName="mb-0 max-w-none"
             />
           )}
         />
@@ -188,6 +246,7 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
             value={field.value}
             onChange={field.onChange}
             error={errors.ownerEmail?.message}
+            containerClassName="mb-0 max-w-none"
           />
         )}
       />
@@ -203,6 +262,7 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
             value={field.value}
             onChange={field.onChange}
             error={errors.contact?.message}
+            containerClassName="mb-0 max-w-none"
           />
         )}
       />
@@ -218,6 +278,7 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
             value={field.value}
             onChange={field.onChange}
             error={errors.nationalId?.message}
+            containerClassName="mb-0 max-w-none"
           />
         )}
       />
@@ -225,7 +286,7 @@ const AddVendorForm: React.FC<AddVendorFormProps> = ({ onSuccess }) => {
       <CustomButton
         type="submit"
         text={isRegistering ? 'Registering...' : 'Continue'}
-        disabled={isRegistering}
+        disabled={isRegistering || !schoolIdReady}
         className="w-full bg-purple-700 hover:bg-purple-800 text-white rounded-full py-3"
       />
     </form>

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -30,11 +31,18 @@ export function AddVendorDialog() {
         />
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[640px]">
         <DialogHeader>
-          <DialogTitle>Vendor Details</DialogTitle>
+          <DialogTitle className="text-2xl">Add Vendor</DialogTitle>
+          <DialogDescription className="max-w-xl text-sm text-muted-foreground">
+            Create the vendor entity and owner account in one step. The form
+            will use the currently loaded school profile automatically.
+          </DialogDescription>
         </DialogHeader>
-        <AddVendorForm onSuccess={handleSuccess} />
+
+        <div className="max-h-[70vh] overflow-y-auto">
+          <AddVendorForm onSuccess={handleSuccess} />
+        </div>
       </DialogContent>
     </Dialog>
   );
