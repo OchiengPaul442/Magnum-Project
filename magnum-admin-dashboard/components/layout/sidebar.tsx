@@ -114,6 +114,7 @@ export default function Sidebar({
           : isCollapsed
             ? "hidden w-20 shrink-0 lg:flex"
             : "hidden w-72 shrink-0 lg:flex",
+        !mobile && "border-r border-border/60",
       )}
     >
       <div className={cn("flex-none px-4 py-5", isCollapsed && "px-2")}>
@@ -123,7 +124,7 @@ export default function Sidebar({
 
       <div
         className={cn(
-          "min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-2",
+          "min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-2 border-t border-border/60",
           isCollapsed && "px-2",
         )}
       >
