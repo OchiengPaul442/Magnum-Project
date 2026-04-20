@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
 import ContentLoader from "@/components/shared/content-loader";
@@ -24,6 +23,7 @@ interface StudentAccountDetail {
 }
 
 export default function StudentAccountDetailPage() {
+  const router = useRouter();
   const routeParams = useParams<{ accountId?: string | string[] }>();
   const accountId = Array.isArray(routeParams.accountId)
     ? (routeParams.accountId[0] ?? null)
@@ -61,18 +61,16 @@ export default function StudentAccountDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <DetailGrid
         title="Student Account Detail"
         subtitle="Balance and transaction limit details."
-        backHref="/student-accounts"
+        onClose={() => router.push("/student-accounts")}
+        className="rounded-2xl border-border/60 bg-card p-4 shadow-sm sm:p-6"
         actions={
           <Button onClick={handleRecalculate} disabled={recalculating}>
             {recalculating ? "Recalculating..." : "Recalculate Balance"}
           </Button>
         }
-      />
-      <DetailGrid
-        title="Account Summary"
         fields={[
           { label: "UUID", value: account?.id },
           { label: "Account ID", value: account?.student_account_id },

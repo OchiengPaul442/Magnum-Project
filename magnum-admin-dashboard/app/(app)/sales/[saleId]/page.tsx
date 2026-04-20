@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
 import NoData from "@/components/shared/no-data";
@@ -33,6 +32,7 @@ interface SaleItemRow {
 }
 
 export default function SaleDetailPage() {
+  const router = useRouter();
   const routeParams = useParams<{ saleId?: string | string[] }>();
   const saleId = Array.isArray(routeParams.saleId)
     ? (routeParams.saleId[0] ?? null)
@@ -62,13 +62,11 @@ export default function SaleDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <DetailGrid
         title="Sale Detail"
         subtitle="Audit sale line items."
-        backHref="/sales"
-      />
-      <DetailGrid
-        title="Sale Summary"
+        onClose={() => router.push("/sales")}
+        className="rounded-2xl border-border/60 bg-card p-4 shadow-sm sm:p-6"
         fields={[
           { label: "UUID", value: sale?.id },
           { label: "Sale ID", value: sale?.sale_id },

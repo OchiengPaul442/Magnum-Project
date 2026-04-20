@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
 import NoData from "@/components/shared/no-data";
@@ -70,6 +69,7 @@ interface SaleRow {
 }
 
 export default function VendorDetailPage() {
+  const router = useRouter();
   const routeParams = useParams<{ vendorId?: string | string[] }>();
   const vendorId = Array.isArray(routeParams.vendorId)
     ? (routeParams.vendorId[0] ?? null)
@@ -119,10 +119,11 @@ export default function VendorDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <DetailGrid
         title="Vendor Detail"
         subtitle="Vendor operations and activity."
-        backHref="/vendors"
+        onClose={() => router.push("/vendors")}
+        className="rounded-2xl border-border/60 bg-card p-4 shadow-sm sm:p-6"
         actions={
           <UpdateStatusDialog
             title="Update Vendor Status"
@@ -135,9 +136,6 @@ export default function VendorDetailPage() {
             }}
           />
         }
-      />
-      <DetailGrid
-        title="Vendor Profile"
         fields={[
           { label: "UUID", value: vendor?.id },
           { label: "Vendor ID", value: vendor?.vendor_id },

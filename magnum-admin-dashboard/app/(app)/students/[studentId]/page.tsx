@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
 import NoData from "@/components/shared/no-data";
@@ -58,6 +57,7 @@ interface SaleRow {
 }
 
 export default function StudentDetailPage() {
+  const router = useRouter();
   const routeParams = useParams<{ studentId?: string | string[] }>();
   const studentId = Array.isArray(routeParams.studentId)
     ? (routeParams.studentId[0] ?? null)
@@ -121,10 +121,10 @@ export default function StudentDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <DetailGrid
         title="Student Detail"
         subtitle="Student profile and activity."
-        backHref="/students"
+        onClose={() => router.push("/students")}
         actions={
           <UpdateStatusDialog
             title="Update Student Status"
@@ -140,9 +140,7 @@ export default function StudentDetailPage() {
             }}
           />
         }
-      />
-      <DetailGrid
-        title="Student Profile"
+        className="rounded-2xl border-border/60 bg-card p-4 shadow-sm sm:p-6"
         fields={[
           { label: "UUID", value: student?.id },
           { label: "Student ID", value: student?.student_id },

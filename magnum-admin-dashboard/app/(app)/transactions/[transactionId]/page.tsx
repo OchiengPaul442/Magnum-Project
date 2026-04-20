@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
 import ContentLoader from "@/components/shared/content-loader";
@@ -21,6 +20,7 @@ interface TransactionDetail {
 }
 
 export default function TransactionDetailPage() {
+  const router = useRouter();
   const routeParams = useParams<{ transactionId?: string | string[] }>();
   const transactionId = Array.isArray(routeParams.transactionId)
     ? (routeParams.transactionId[0] ?? null)
@@ -41,13 +41,11 @@ export default function TransactionDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <DetailGrid
         title="Transaction Detail"
         subtitle="Review transaction metadata and status."
-        backHref="/transactions"
-      />
-      <DetailGrid
-        title="Transaction Summary"
+        onClose={() => router.push("/transactions")}
+        className="rounded-2xl border-border/60 bg-card p-4 shadow-sm sm:p-6"
         fields={[
           { label: "UUID", value: transaction?.id },
           { label: "Transaction ID", value: transaction?.transaction_id },

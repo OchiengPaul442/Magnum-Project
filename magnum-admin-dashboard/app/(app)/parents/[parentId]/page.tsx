@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
 import NoData from "@/components/shared/no-data";
@@ -55,6 +54,7 @@ interface TransactionRow {
 }
 
 export default function ParentDetailPage() {
+  const router = useRouter();
   const routeParams = useParams<{ parentId?: string | string[] }>();
   const parentId = Array.isArray(routeParams.parentId)
     ? (routeParams.parentId[0] ?? null)
@@ -104,13 +104,11 @@ export default function ParentDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <DetailGrid
         title="Parent Detail"
         subtitle="Parent profile and activity."
-        backHref="/parents"
-      />
-      <DetailGrid
-        title="Parent Profile"
+        onClose={() => router.push("/parents")}
+        className="rounded-2xl border-border/60 bg-card p-4 shadow-sm sm:p-6"
         fields={[
           { label: "UUID", value: parent?.id },
           { label: "Profile ID", value: parent?.user_profile_id },

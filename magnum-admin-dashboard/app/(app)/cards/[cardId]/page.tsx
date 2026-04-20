@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
 import ContentLoader from "@/components/shared/content-loader";
@@ -26,6 +25,7 @@ interface CardDetail {
 }
 
 export default function CardDetailPage() {
+  const router = useRouter();
   const routeParams = useParams<{ cardId?: string | string[] }>();
   const cardId = Array.isArray(routeParams.cardId)
     ? (routeParams.cardId[0] ?? null)
@@ -46,10 +46,10 @@ export default function CardDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <DetailGrid
         title="Card Detail"
         subtitle="Card profile and assignment status."
-        backHref="/cards"
+        onClose={() => router.push("/cards")}
         actions={
           <>
             <AssignCardDialog
@@ -66,9 +66,7 @@ export default function CardDetailPage() {
             />
           </>
         }
-      />
-      <DetailGrid
-        title="Card Profile"
+        className="rounded-2xl border-border/60 bg-card p-4 shadow-sm sm:p-6"
         fields={[
           { label: "UUID", value: card?.id },
           { label: "Card ID", value: card?.card_id },

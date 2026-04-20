@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import PageHeader from "@/components/layout/page-header";
 import DetailGrid from "@/components/shared/detail-grid";
 import ErrorState from "@/components/shared/error-state";
 import ContentLoader from "@/components/shared/content-loader";
@@ -21,6 +20,7 @@ interface ItemDetail {
 }
 
 export default function ItemDetailPage() {
+  const router = useRouter();
   const routeParams = useParams<{ itemId?: string | string[] }>();
   const itemId = Array.isArray(routeParams.itemId)
     ? (routeParams.itemId[0] ?? null)
@@ -41,13 +41,11 @@ export default function ItemDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <DetailGrid
         title="Item Detail"
         subtitle="Review the catalog item."
-        backHref="/items"
-      />
-      <DetailGrid
-        title="Item Profile"
+        onClose={() => router.push("/items")}
+        className="rounded-2xl border-border/60 bg-card p-4 shadow-sm sm:p-6"
         fields={[
           { label: "UUID", value: item?.id },
           { label: "Item ID", value: item?.item_id },

@@ -20,7 +20,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-full border border-border/60 bg-card px-3 py-1.5 shadow-sm transition-colors focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10",
+        "flex w-full items-center gap-2 rounded-full border border-border/60 bg-card px-3 py-1.5 shadow-sm transition-colors focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10",
         className,
       )}
     >
@@ -31,7 +31,8 @@ const SearchInput: React.FC<SearchInputProps> = ({
         value={value}
         onChange={(event) => onChange?.(event.target.value)}
         clearable
-        className="flex-grow h-8 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus:outline-none focus-visible:!ring-0 focus-visible:!border-transparent"
+        wrapperClassName="min-w-0 flex-1"
+        className="h-8 w-full border-0 bg-transparent px-0 text-sm placeholder:text-muted-foreground focus:outline-none focus-visible:!ring-0 focus-visible:!border-transparent"
       />
     </div>
   );
